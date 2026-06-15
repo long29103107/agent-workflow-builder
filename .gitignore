@@ -1,0 +1,63 @@
+# .NET
+bin/
+obj/
+*/bin/
+*/obj/
+src/AgentWorkflow.Api/bin/
+src/AgentWorkflow.Api/obj/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.DotSettings.user
+
+# Frontend
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm-cache/
+
+# Environment and local settings
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.local.json
+
+# Docker / local runtime data
+docker-data/
+run-logs/
+*.pid
+*.log
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+~$*

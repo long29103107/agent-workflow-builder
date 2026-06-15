@@ -1,0 +1,7 @@
+[project]
+name = "agent-workflow-builder"
+description = "Runnable MVP for a Lead Agent orchestrating mock subagents, MCP tools, repository context, and memory services."
+
+[defaults]
+primary_prompt = ".codex/prompts/feature.md"
+review_prompt = ".codex/prompts/review.md"
