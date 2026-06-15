@@ -31,6 +31,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .npm-cache/
+.bun-cache/
+.bun-temp/
 
 # Environment and local settings
 .env

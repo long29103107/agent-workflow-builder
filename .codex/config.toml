@@ -3,5 +3,72 @@ name = "agent-workflow-builder"
 description = "Runnable MVP for a Lead Agent orchestrating mock subagents, MCP tools, repository context, and memory services."
 
 [defaults]
-primary_prompt = ".codex/prompts/feature.md"
+primary_prompt = ".codex/prompts/implement-task.md"
 review_prompt = ".codex/prompts/review.md"
+
+[workflow]
+context = ".codex/context/project-context.md"
+task_workflow = ".codex/context/task-workflow.md"
+phases = ".codex/phases"
+memories = ".codex/memories/tasks"
+task_id_format = "PPP_TTT"
+
+[agents.lead]
+description = "Lead orchestration agent"
+prompt = ".codex/agents/lead-task-agent.md"
+
+[agents.backend]
+description = "Backend specialist for Core, ASP.NET API, contracts, DI, and provider boundaries"
+prompt = ".codex/agents/backend-agent.md"
+
+[agents.frontend]
+description = "Frontend specialist for the Bun + React investigation console"
+prompt = ".codex/agents/frontend-agent.md"
+
+[agents.repository]
+description = "Repository context specialist"
+prompt = ".codex/agents/repository-investigator-agent.md"
+
+[agents.jira_notion]
+description = "Jira and Notion MCP context specialist"
+prompt = ".codex/agents/jira-notion-context-agent.md"
+
+[agents.memory]
+description = "Memory and graph research specialist"
+prompt = ".codex/agents/memory-research-agent.md"
+
+[agents.planning]
+description = "Execution planning specialist"
+prompt = ".codex/agents/planning-agent.md"
+
+[agents.core]
+description = "AgentWorkflow.Core source-of-truth specialist"
+prompt = ".codex/agents/core-platform-agent.md"
+
+[agents.api]
+description = "ASP.NET Core HTTP API adapter specialist"
+prompt = ".codex/agents/api-adapter-agent.md"
+
+[agents.cli]
+description = "CLI adapter specialist"
+prompt = ".codex/agents/cli-adapter-agent.md"
+
+[agents.mcp]
+description = "MCP stdio adapter specialist"
+prompt = ".codex/agents/mcp-adapter-agent.md"
+
+[agents.openai]
+description = "OpenAI SDK reasoning specialist"
+prompt = ".codex/agents/openai-reasoning-agent.md"
+
+[agents.docs]
+description = "Documentation and repo-local Codex assets specialist"
+prompt = ".codex/agents/docs-agent.md"
+
+[agents.qa]
+description = "Verification and smoke-test specialist"
+prompt = ".codex/agents/qa-agent.md"
+
+[agents.security]
+description = "Security review and threat-modeling specialist"
+prompt = ".codex/agents/security-agent.md"

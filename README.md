@@ -18,7 +18,11 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 ```text
 .
 |-- .codex/
+|   |-- agents/
 |   |-- config.toml
+|   |-- context/
+|   |-- memories/
+|   |-- phases/
 |   |-- prompts/
 |   `-- skills/
 |-- AGENTS.md

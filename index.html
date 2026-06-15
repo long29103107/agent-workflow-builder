@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Workflow Builder - Workflow Overview</title>
+    <style>
+      :root {
+        color: #18202f;
+        background: #f4f6f9;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      main {
+        min-height: 100vh;
+      }
+
+      .hero {
+        background:
+          linear-gradient(rgba(18, 27, 42, 0.7), rgba(18, 27, 42, 0.72)),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='760' viewBox='0 0 1600 760'%3E%3Crect width='1600' height='760' fill='%23121b2a'/%3E%3Cg opacity='.45'%3E%3Cpath d='M0 580 C260 500 380 650 610 560 C810 480 930 330 1160 380 C1370 425 1480 300 1600 240 L1600 760 L0 760 Z' fill='%232f855a'/%3E%3Cpath d='M0 310 C240 250 390 370 570 300 C760 225 940 130 1180 180 C1390 224 1490 160 1600 100 L1600 760 L0 760 Z' fill='%232b6cb0'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.24' stroke-width='2'%3E%3Cpath d='M190 180 L430 280 L650 180 L900 300 L1190 180 L1400 300'/%3E%3Ccircle cx='190' cy='180' r='18'/%3E%3Ccircle cx='430' cy='280' r='18'/%3E%3Ccircle cx='650' cy='180' r='18'/%3E%3Ccircle cx='900' cy='300' r='18'/%3E%3Ccircle cx='1190' cy='180' r='18'/%3E%3Ccircle cx='1400' cy='300' r='18'/%3E%3C/g%3E%3C/svg%3E")
+            center / cover;
+        color: #ffffff;
+        min-height: 520px;
+        padding: 40px 28px 58px;
+      }
+
+      .hero-inner,
+      .content {
+        margin: 0 auto;
+        max-width: 1180px;
+      }
+
+      .topline {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-bottom: 96px;
+      }
+
+      .brand {
+        font-size: 0.86rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .badge {
+        border: 1px solid rgba(255, 255, 255, 0.38);
+        border-radius: 999px;
+        color: #dbeafe;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 8px 12px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 3.4rem;
+        line-height: 1.02;
+        margin-bottom: 18px;
+        max-width: 760px;
+      }
+
+      .hero p {
+        color: #dce6f5;
+        font-size: 1.08rem;
+        line-height: 1.65;
+        max-width: 770px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .pill {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 700;
+        padding: 9px 13px;
+      }
+
+      .content {
+        padding: 34px 28px 64px;
+      }
+
+      .section-heading {
+        display: grid;
+        gap: 10px;
+        margin: 12px 0 22px;
+      }
+
+      .section-heading h2 {
+        font-size: 1.45rem;
+        margin-bottom: 0;
+      }
+
+      .section-heading p {
+        color: #556174;
+        line-height: 1.6;
+        margin-bottom: 0;
+        max-width: 850px;
+      }
+
+      .purpose-grid,
+      .adapter-grid,
+      .module-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .purpose-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-bottom: 34px;
+      }
+
+      .purpose-card,
+      .adapter,
+      .module,
+      .flow-panel,
+      .note {
+        background: #ffffff;
+        border: 1px solid #dce3ec;
+        border-radius: 8px;
+        box-shadow: 0 14px 32px rgba(31, 42, 68, 0.08);
+      }
+
+      .purpose-card,
+      .adapter,
+      .module,
+      .note {
+        padding: 18px;
+      }
+
+      .purpose-card h3,
+      .adapter h3,
+      .module h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .purpose-card p,
+      .adapter p,
+      .module p,
+      .note p {
+        color: #586577;
+        line-height: 1.55;
+        margin-bottom: 0;
+      }
+
+      .flow-panel {
+        margin-bottom: 34px;
+        overflow: hidden;
+      }
+
+      .flow-scroll {
+        overflow-x: auto;
+        padding: 18px;
+      }
+
+      .workflow {
+        min-width: 1040px;
+      }
+
+      .node rect {
+        fill: #ffffff;
+        stroke: #c8d3e0;
+        stroke-width: 2;
+        rx: 8;
+      }
+
+      .node.primary rect {
+        fill: #e7f0ff;
+        stroke: #2f6fbd;
+      }
+
+      .node.core rect {
+        fill: #e8f7f1;
+        stroke: #24805a;
+      }
+
+      .node.output rect {
+        fill: #fff7df;
+        stroke: #be7b00;
+      }
+
+      .node text {
+        fill: #1e2b3b;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .node .small {
+        fill: #536173;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .arrow {
+        fill: none;
+        marker-end: url(#arrow);
+        stroke: #6f7d91;
+        stroke-width: 2.2;
+      }
+
+      .adapter-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 34px;
+      }
+
+      .adapter strong {
+        color: #24538f;
+      }
+
+      .module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .module ul,
+      .note ul {
+        color: #586577;
+        line-height: 1.7;
+        margin: 10px 0 0;
+        padding-left: 18px;
+      }
+
+      .note {
+        margin-top: 18px;
+      }
+
+      code {
+        background: #eef2f7;
+        border-radius: 6px;
+        color: #1f4f82;
+        font-family: "Cascadia Code", Consolas, monospace;
+        font-size: 0.9em;
+        padding: 2px 5px;
+      }
+
+      @media (max-width: 900px) {
+        h1 {
+          font-size: 2.45rem;
+        }
+
+        .topline {
+          align-items: flex-start;
+          flex-direction: column;
+          margin-bottom: 72px;
+        }
+
+        .purpose-grid,
+        .adapter-grid,
+        .module-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .hero {
+          min-height: 500px;
+          padding: 28px 18px 44px;
+        }
+
+        .content {
+          padding: 28px 18px 48px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="topline">
+            <div class="brand">Agent Workflow Builder</div>
+            <div class="badge">Source of truth: AgentWorkflow.Core</div>
+          </div>
+          <h1>Nền tảng điều phối agent cho việc điều tra task và lập kế hoạch thực thi</h1>
+          <p>
+            Dự án này gom UI, API, CLI và MCP vào cùng một lõi dùng chung.
+            Người dùng hoặc hệ thống bên ngoài đưa task vào, Lead Agent đọc context,
+            gọi các subagent, tra memory, đọc repository, rồi tạo summary và execution plan.
+          </p>
+          <div class="hero-actions" aria-label="Project surfaces">
+            <span class="pill">React UI</span>
+            <span class="pill">ASP.NET Core API</span>
+            <span class="pill">CLI adapter</span>
+            <span class="pill">MCP stdio adapter</span>
+            <span class="pill">OpenAI SDK reasoning</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="content">
+        <div class="section-heading">
+          <h2>Dự án này dùng để làm gì?</h2>
+          <p>
+            Mục tiêu là tạo một control plane cho agent workflow: nhận task,
+            thu thập bối cảnh từ nhiều nguồn, điều phối subagent chuyên trách,
+            và xuất ra kế hoạch có thể review trước khi triển khai thật.
+          </p>
+        </div>
+
+        <div class="purpose-grid">
+          <article class="purpose-card">
+            <h3>Điều tra task có cấu trúc</h3>
+            <p>
+              Lead Agent gom Jira/Notion context, repository context, memory và graph links
+              để tránh lập kế hoạch dựa trên thông tin rời rạc.
+            </p>
+          </article>
+          <article class="purpose-card">
+            <h3>Một lõi dùng chung</h3>
+            <p>
+              `AgentWorkflow.Core` giữ domain model, interfaces, orchestration và mock integrations.
+              API, CLI, MCP chỉ là adapter mỏng.
+            </p>
+          </article>
+          <article class="purpose-card">
+            <h3>Sẵn sàng thay mock bằng thật</h3>
+            <p>
+              Jira, Notion, repository reader, memory stores và OpenAI reasoning đều nằm sau interface,
+              nên có thể thay bằng provider thật theo từng phase.
+            </p>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <h2>Workflow tổng thể</h2>
+          <p>
+            Các entrypoint khác nhau đều đi vào `AgentWorkflow.Core`, sau đó Core điều phối
+            Lead Agent và subagents để tạo kết quả nhất quán cho UI, API, CLI hoặc MCP caller.
+          </p>
+        </div>
+
+        <section class="flow-panel" aria-label="Workflow diagram">
+          <div class="flow-scroll">
+            <svg class="workflow" viewBox="0 0 1040 620" role="img" aria-labelledby="diagram-title diagram-desc">
+              <title id="diagram-title">Agent Workflow Builder workflow diagram</title>
+              <desc id="diagram-desc">
+                Diagram showing UI API CLI MCP adapters flowing into AgentWorkflow.Core,
+                then Lead Agent, context providers, subagents, OpenAI reasoning and final plan output.
+              </desc>
+              <defs>
+                <marker id="arrow" markerHeight="10" markerWidth="10" orient="auto" refX="9" refY="3">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#6f7d91"></path>
+                </marker>
+              </defs>
+
+              <g class="node primary">
+                <rect x="30" y="55" width="170" height="78"></rect>
+                <text x="58" y="88">React UI</text>
+                <text class="small" x="58" y="112">drag task, view plan</text>
+              </g>
+              <g class="node primary">
+                <rect x="30" y="170" width="170" height="78"></rect>
+                <text x="58" y="203">HTTP API</text>
+                <text class="small" x="58" y="227">ASP.NET Core</text>
+              </g>
+              <g class="node primary">
+                <rect x="30" y="285" width="170" height="78"></rect>
+                <text x="58" y="318">CLI</text>
+                <text class="small" x="58" y="342">external users</text>
+              </g>
+              <g class="node primary">
+                <rect x="30" y="400" width="170" height="78"></rect>
+                <text x="58" y="433">MCP stdio</text>
+                <text class="small" x="58" y="457">tool hosts</text>
+              </g>
+
+              <g class="node core">
+                <rect x="290" y="218" width="210" height="102"></rect>
+                <text x="327" y="258">AgentWorkflow.Core</text>
+                <text class="small" x="327" y="282">source of truth</text>
+                <text class="small" x="327" y="302">contracts + orchestration</text>
+              </g>
+
+              <g class="node core">
+                <rect x="590" y="218" width="180" height="102"></rect>
+                <text x="626" y="258">Lead Agent</text>
+                <text class="small" x="626" y="282">loads context</text>
+                <text class="small" x="626" y="302">delegates work</text>
+              </g>
+
+              <g class="node">
+                <rect x="850" y="35" width="160" height="78"></rect>
+                <text x="878" y="68">Jira/Notion</text>
+                <text class="small" x="878" y="92">MCP tools</text>
+              </g>
+              <g class="node">
+                <rect x="850" y="145" width="160" height="78"></rect>
+                <text x="878" y="178">Repository</text>
+                <text class="small" x="878" y="202">local reader</text>
+              </g>
+              <g class="node">
+                <rect x="850" y="255" width="160" height="78"></rect>
+                <text x="878" y="288">Memory</text>
+                <text class="small" x="878" y="312">Qdrant + Neo4j</text>
+              </g>
+              <g class="node">
+                <rect x="850" y="365" width="160" height="78"></rect>
+                <text x="878" y="398">Subagents</text>
+                <text class="small" x="878" y="422">repo, context, memory, plan</text>
+              </g>
+              <g class="node">
+                <rect x="850" y="475" width="160" height="78"></rect>
+                <text x="878" y="508">OpenAI SDK</text>
+                <text class="small" x="878" y="532">summary reasoning</text>
+              </g>
+
+              <g class="node output">
+                <rect x="430" y="465" width="270" height="95"></rect>
+                <text x="477" y="503">Investigation Result</text>
+                <text class="small" x="477" y="527">summary + execution plan</text>
+                <text class="small" x="477" y="547">risks + open questions</text>
+              </g>
+
+              <path class="arrow" d="M200 94 C245 94 245 235 290 250"></path>
+              <path class="arrow" d="M200 209 C245 209 245 255 290 265"></path>
+              <path class="arrow" d="M200 324 C245 324 245 285 290 280"></path>
+              <path class="arrow" d="M200 439 C250 439 242 305 290 295"></path>
+              <path class="arrow" d="M500 269 L590 269"></path>
+              <path class="arrow" d="M770 252 C805 120 812 78 850 74"></path>
+              <path class="arrow" d="M770 262 C810 222 812 185 850 184"></path>
+              <path class="arrow" d="M770 282 C810 292 812 294 850 294"></path>
+              <path class="arrow" d="M770 300 C810 350 812 398 850 404"></path>
+              <path class="arrow" d="M770 315 C815 420 812 510 850 514"></path>
+              <path class="arrow" d="M680 320 C680 390 645 430 595 465"></path>
+              <path class="arrow" d="M850 514 C775 570 720 565 700 540"></path>
+            </svg>
+          </div>
+        </section>
+
+        <div class="section-heading">
+          <h2>Các cách gọi vào hệ thống</h2>
+          <p>
+            Bốn adapter phục vụ bốn nhóm người dùng khác nhau nhưng không nhân đôi logic.
+            Tất cả cùng gọi vào Core.
+          </p>
+        </div>
+
+        <div class="adapter-grid">
+          <article class="adapter">
+            <h3><strong>UI</strong></h3>
+            <p>Cho người dùng kéo task vào lane điều tra, xem timeline agent và đọc execution plan.</p>
+          </article>
+          <article class="adapter">
+            <h3><strong>API</strong></h3>
+            <p>Cung cấp endpoint HTTP như `/api/tasks` và `/api/workflows/investigate` cho frontend hoặc service khác.</p>
+          </article>
+          <article class="adapter">
+            <h3><strong>CLI</strong></h3>
+            <p>Cho automation hoặc developer chạy workflow từ terminal và nhận JSON output ổn định.</p>
+          </article>
+          <article class="adapter">
+            <h3><strong>MCP</strong></h3>
+            <p>Cho tool host gọi workflow qua stdio JSON, chuẩn bị đường mở rộng sang MCP server thật.</p>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <h2>Thành phần chính trong Core</h2>
+          <p>
+            Core giữ các interface và implementation mock đầu tiên, để sau này thay từng mảnh
+            bằng provider thật mà không làm đổi API/CLI/MCP/UI.
+          </p>
+        </div>
+
+        <div class="module-grid">
+          <article class="module">
+            <h3>Lead Agent</h3>
+            <ul>
+              <li>Nhận task từ request.</li>
+              <li>Đọc Jira/Notion context, repository context và memory.</li>
+              <li>Gọi các subagent chuyên trách.</li>
+              <li>Tổng hợp kết quả thành plan.</li>
+            </ul>
+          </article>
+          <article class="module">
+            <h3>Subagents</h3>
+            <ul>
+              <li>Repository Investigator Agent.</li>
+              <li>Jira/Notion Context Agent.</li>
+              <li>Memory Research Agent.</li>
+              <li>Planning Agent.</li>
+            </ul>
+          </article>
+          <article class="module">
+            <h3>Memory và repo context</h3>
+            <ul>
+              <li>Mock vector memory chuẩn bị cho Qdrant.</li>
+              <li>Mock graph relationships chuẩn bị cho Neo4j.</li>
+              <li>Local repository reader để lấy file và technology signals.</li>
+            </ul>
+          </article>
+          <article class="module">
+            <h3>OpenAI reasoning</h3>
+            <ul>
+              <li>Dùng OpenAI .NET SDK khi có `OPENAI_API_KEY`.</li>
+              <li>Fallback deterministic khi chưa cấu hình key.</li>
+              <li>Ẩn sau `IAgentReasoningService` để thay model/provider dễ hơn.</li>
+            </ul>
+          </article>
+        </div>
+
+        <section class="note">
+          <h2>Ý nghĩa kiến trúc</h2>
+          <p>
+            Điểm quan trọng nhất là dependency đi vào trong: UI, API, CLI và MCP không tự xử lý agent logic.
+            Chúng gọi `AgentWorkflow.Core`, nơi giữ workflow thật. Nhờ vậy hệ thống có thể mở rộng
+            thêm real Jira, real Notion, Qdrant, Neo4j, GitHub/GitLab hoặc OpenAI model khác mà không làm
+            mỗi entrypoint phát triển lệch nhau.
+          </p>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
