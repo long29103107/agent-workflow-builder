@@ -57,3 +57,14 @@ Things to do:
 - Draw workflow from UI/API/CLI/MCP to Core and outputs.
 
 Status: done
+
+### 001_006: Restructure React Investigation Console
+
+Things to do:
+
+- Split the React UI into common feature folders.
+- Keep API calls, workflow types, state hooks, and presentation components separate.
+- Preserve the existing investigation console behavior.
+- Verify the Bun frontend build.
+
+Status: done
