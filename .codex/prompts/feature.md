@@ -4,7 +4,7 @@ Implement the requested feature inside the existing Agent Workflow Builder archi
 
 Before editing:
 
-1. Read `REQUEST.md`, `AGENTS.md`, `README.md`, and the relevant source files.
+1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and the relevant source files.
 2. Preserve the central Lead Agent / workflow engine shape.
 3. Keep API, CLI, MCP, and UI changes runnable with mock integrations first.
 
@@ -14,7 +14,7 @@ Implementation preferences:
 - Keep `src/AgentWorkflow.Core` as the source of truth.
 - Keep `src/AgentWorkflow.Api`, `src/AgentWorkflow.Cli`, and `src/AgentWorkflow.Mcp` as thin adapters.
 - Keep the React UI as the actual investigation console, not a marketing page.
-- Update README/API docs when behavior or commands change.
+- Update `docs/knowledge` and README/API docs when behavior or commands change.
 
 Verify with:
 

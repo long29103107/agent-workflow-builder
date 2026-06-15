@@ -15,6 +15,7 @@ Add project-local context, phases, task IDs, and memory logging so future task i
 ## Implementation Log
 
 - Added `.codex/context/` for durable project context and task workflow rules.
+- Note: `.codex/context/` was later superseded by `docs/knowledge/` during the Open Knowledge Format migration and removed in task `001_013`.
 - Added `.codex/phases/` with phase files based on the project roadmap.
 - Established task ID format `PPP_TTT`, for example `001_002`.
 - Added memory structure under `.codex/memories/`.
@@ -23,7 +24,7 @@ Add project-local context, phases, task IDs, and memory logging so future task i
 
 ## Verification
 
-- Inspect `.codex/context/`, `.codex/phases/`, and `.codex/memories/`.
+- Inspect `docs/knowledge/`, `.codex/phases/`, and `.codex/memories/`.
 - Confirm `001_004` exists in `.codex/phases/001-skeleton.md`.
 - Confirm this memory file uses the same task ID.
 - Confirm `AGENTS.md` and `.codex/prompts/implement-task.md` reference `.codex/phases` and `.codex/memories/tasks`.

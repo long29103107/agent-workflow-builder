@@ -6,12 +6,13 @@ Maintain documentation, diagrams, and repo-local Codex assets.
 
 ## Use For
 
-- `README.md`, `AGENTS.md`, `.codex/prompts`, `.codex/skills`, `.codex/agents`, `.codex/memories`, and `index.html`.
-- `.codex/context` and `.codex/phases` when project workflow, phases, task IDs, or durable task memory rules change.
+- `docs/knowledge`, `README.md`, `AGENTS.md`, `.codex/prompts`, `.codex/skills`, `.codex/agents`, `.codex/memories`, and `index.html`.
+- `.codex/phases` when project workflow, phases, task IDs, or durable task memory rules change.
 
 ## Actions
 
 - Keep docs aligned with actual runtime behavior.
+- Keep `docs/knowledge` as the durable project knowledge surface.
 - Keep `AGENTS.md` compact and durable.
 - Put detailed reusable workflows in `.codex` assets.
 - Update repo structure snippets when folders change.

@@ -24,8 +24,8 @@ This repository is a runnable skeleton for an Agent Workflow Orchestration Platf
 - `src/AgentWorkflow.Mcp` is a thin MCP/stdio adapter over `AgentWorkflow.Core`.
 - `src/agent-workflow-ui` contains the React investigation console and uses Bun for frontend dependency and script execution.
 - `docker-compose.yml` starts API, UI, Neo4j, Qdrant, and Postgres for local development.
+- `docs/knowledge` contains durable project knowledge in Open Knowledge Format style.
 - `.codex/agents` contains repo-local Codex agent roles split by responsibility and action.
-- `.codex/context` contains durable project context and task workflow rules.
 - `.codex/phases` contains phase files with task IDs in `PPP_TTT` format.
 - `.codex/prompts` contains reusable Codex prompts for feature work, reviews, and MVP runs.
 - `.codex/skills` contains repo-local implementation guidance for agent-platform work.
@@ -33,7 +33,7 @@ This repository is a runnable skeleton for an Agent Workflow Orchestration Platf
 
 ## Implementation Notes
 
-- Before implementing a new task, read `.codex/context/project-context.md`, `.codex/context/task-workflow.md`, `.codex/phases/README.md`, the relevant phase file, and related `.codex/memories/tasks/*.md`.
+- Before implementing a new task, read `docs/knowledge/index.md`, the related knowledge files, `.codex/phases/README.md`, the relevant phase file, and related `.codex/memories/tasks/*.md`.
 - Every implementation task must use a task ID in `PPP_TTT` format, where `PPP` is phase number and `TTT` is task number. Example: `001_002`.
 - If no task ID exists for the requested work, add the next task to the relevant `.codex/phases/*.md` file before editing source.
 - After implementation, create or update `.codex/memories/tasks/PPP_TTT-short-slug.md` with phase, task, implementation log, verification, goal achieved, and next idea.
@@ -77,7 +77,22 @@ This repository is a runnable skeleton for an Agent Workflow Orchestration Platf
 - Task memory logs live in `.codex/memories/tasks/`.
 - Task IDs must match between phase files and memory files.
 - Use existing phase/task/memory context to develop the next idea instead of starting from scratch.
-- `AGENTS.md` is the routing surface; detailed phase/task/memory details belong in `.codex/context`, `.codex/phases`, and `.codex/memories`.
+- `AGENTS.md` is the routing surface; durable project knowledge belongs in `docs/knowledge`, while phase/task/memory details belong in `.codex/phases` and `.codex/memories`.
+
+## Knowledge-first workflow
+
+Before modifying code, always read:
+
+1. `docs/knowledge/index.md`
+2. Related service file in `docs/knowledge/services/`
+3. Related business rule in `docs/knowledge/business/`
+4. Related architecture or ADR files if the task changes design
+
+When behavior changes:
+
+- Update the related knowledge file.
+- Add or update tests.
+- Mention which knowledge files were changed in the final response.
 
 ## Project Skill Setup Rule
 

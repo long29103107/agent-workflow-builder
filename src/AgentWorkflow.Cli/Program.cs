@@ -1,24 +1,13 @@
-using System.Text.Json;
-using AgentWorkflow.Core.Application;
-using AgentWorkflow.Core.Domain;
-using AgentWorkflow.Core.Infrastructure;
+using AgentWorkflow.Cli.Application;
+using AgentWorkflow.Cli.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
-var taskId = args.Length > 0 ? args[0] : "jira-awb-101";
-var repositoryPath = args.Length > 1 ? args[1] : null;
+var options = CliOptions.FromArgs(args);
 
 var services = new ServiceCollection()
-    .AddAgentWorkflowCore()
+    .AddAgentWorkflowCli()
     .BuildServiceProvider();
 
-var workflowEngine = services.GetRequiredService<IWorkflowEngine>();
-var run = await workflowEngine.StartInvestigationAsync(
-    new InvestigationRequest(taskId, repositoryPath, RequestedAgents: []),
-    CancellationToken.None);
+var runner = services.GetRequiredService<CliRunner>();
 
-var json = JsonSerializer.Serialize(run, new JsonSerializerOptions
-{
-    WriteIndented = true
-});
-
-Console.WriteLine(json);
+return await runner.RunAsync(options, CancellationToken.None);

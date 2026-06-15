@@ -1,0 +1,35 @@
+using AgentWorkflow.Core.Application;
+using AgentWorkflow.Core.Domain;
+
+namespace AgentWorkflow.Core.Infrastructure;
+
+public sealed class WorkflowEngine : IWorkflowEngine
+{
+    private readonly IWorkflowRunStore _store;
+    private readonly ILeadAgent _leadAgent;
+
+    public WorkflowEngine(IWorkflowRunStore store, ILeadAgent leadAgent)
+    {
+        _store = store;
+        _leadAgent = leadAgent;
+    }
+
+    public async Task<WorkflowRun> StartInvestigationAsync(InvestigationRequest request, CancellationToken cancellationToken)
+    {
+        var run = _store.CreateRun(request.TaskId);
+
+        try
+        {
+            var result = await _leadAgent.InvestigateAsync(
+                request,
+                (agent, message) => _store.AddEvent(run.Id, agent, "Activity", message),
+                cancellationToken);
+
+            return _store.CompleteRun(run.Id, result);
+        }
+        catch (Exception ex)
+        {
+            return _store.FailRun(run.Id, ex.Message);
+        }
+    }
+}

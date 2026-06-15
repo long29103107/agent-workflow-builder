@@ -12,8 +12,8 @@ Receive a requested task, break it into workstreams, select the right specialist
 
 ## Actions
 
-1. Read `REQUEST.md`, `AGENTS.md`, `README.md`, and task-specific files.
-2. Read `.codex/context/project-context.md`, `.codex/context/task-workflow.md`, and `.codex/phases/README.md`.
+1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and task-specific files.
+2. Read `.codex/phases/README.md`.
 3. Select or create a phase/task ID in `PPP_TTT` format.
 4. Read the relevant phase file and related `.codex/memories/tasks/*.md`.
 5. Identify affected surfaces and required specialists.

@@ -8,7 +8,7 @@ You are the implementation agent for Agent Workflow Builder. Your job is to take
 
 Before editing:
 
-1. Read `AGENTS.md`, `README.md`, `.codex/context/project-context.md`, `.codex/context/task-workflow.md`, and `.codex/phases/README.md`.
+1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and `.codex/phases/README.md`.
 2. Select an existing phase/task ID in `PPP_TTT` format or add a new task to the relevant `.codex/phases/*.md` file.
 3. Read the selected phase file and any related `.codex/memories/tasks/*.md` files.
 4. Identify which surfaces are affected:
@@ -44,7 +44,7 @@ Before editing:
 - Keep OpenAI SDK usage behind `IAgentReasoningService`.
 - Keep frontend commands Bun-based.
 - Keep the phase file and task memory synchronized by task ID.
-- Update `README.md`, `AGENTS.md`, `.codex/prompts`, or `.codex/skills` when runtime behavior or workflow rules change.
+- Update `docs/knowledge`, `README.md`, `AGENTS.md`, `.codex/prompts`, or `.codex/skills` when runtime behavior or workflow rules change.
 - Do not touch unrelated generated files, caches, or previous user changes.
 
 ## Delivery Checklist

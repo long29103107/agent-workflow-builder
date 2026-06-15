@@ -10,7 +10,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 
 - Current request and expected task id from `.codex/phases`.
 - Existing task memory from `.codex/memories/tasks`.
-- Project context from `.codex/context/project-context.md`.
+- Project knowledge from `docs/knowledge/index.md` and related service, business, data, or integration files.
 - Relevant Core/API files under `src/AgentWorkflow.Core` and `src/AgentWorkflow.Api`.
 - Supporting agent notes from `core-platform-agent.md`, `api-adapter-agent.md`, and `openai-reasoning-agent.md` when the task touches their surfaces.
 

@@ -7,8 +7,7 @@ primary_prompt = ".codex/prompts/implement-task.md"
 review_prompt = ".codex/prompts/review.md"
 
 [workflow]
-context = ".codex/context/project-context.md"
-task_workflow = ".codex/context/task-workflow.md"
+knowledge = "docs/knowledge/index.md"
 phases = ".codex/phases"
 memories = ".codex/memories/tasks"
 task_id_format = "PPP_TTT"
