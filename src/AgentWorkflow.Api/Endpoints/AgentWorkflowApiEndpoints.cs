@@ -67,11 +67,27 @@ public static class AgentWorkflowApiEndpoints
 
         api.MapGet("/repos/context", async (
             string? path,
+            string? url,
+            IRepositoryConnectionService repositoryConnection,
             IRepositoryReader repositoryReader,
             CancellationToken cancellationToken) =>
         {
-            var context = await repositoryReader.GetContextAsync(path, cancellationToken);
+            var connection = repositoryConnection.ResolveConnection(path, url);
+            var context = await repositoryReader.GetContextAsync(connection, cancellationToken);
             return Results.Ok(context);
+        });
+
+        api.MapGet("/repos/connection", (IRepositoryConnectionService repositoryConnection) =>
+        {
+            return Results.Ok(repositoryConnection.GetConnection());
+        });
+
+        api.MapPost("/repos/connection", (
+            RepositoryConnection connection,
+            IRepositoryConnectionService repositoryConnection) =>
+        {
+            var updated = repositoryConnection.UpdateConnection(connection);
+            return Results.Ok(updated);
         });
 
         api.MapGet("/settings", (ISettingsStore settingsStore) =>

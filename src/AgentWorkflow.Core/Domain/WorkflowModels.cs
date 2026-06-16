@@ -70,19 +70,33 @@ public sealed record GraphEntity(
 public sealed record RepositoryContext(
     string Path,
     string Name,
+    RepositoryConnection Connection,
     IReadOnlyList<string> ImportantFiles,
     IReadOnlyList<string> Technologies,
+    string Summary);
+
+public sealed record RepositoryConnection(
+    string Provider,
+    string? Url,
+    string? LocalPath,
+    string Owner,
+    string Name,
+    string DefaultBranch,
+    string Status,
     string Summary);
 
 public sealed record InvestigationRequest(
     string TaskId,
     string? RepositoryPath,
+    string? RepositoryUrl,
     IReadOnlyList<string>? RequestedAgents);
 
 public sealed record ToolEndpointSettings(
     string JiraMcpEndpoint,
     string NotionMcpEndpoint,
-    string RepositoryPath);
+    string RepositoryPath,
+    string RepositoryUrl,
+    string RepositoryProvider);
 
 public sealed record AgentWorkContext(
     TaskItem Task,

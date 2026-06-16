@@ -32,13 +32,18 @@ export async function updateSettings(settings: ToolEndpointSettings): Promise<To
   return readJson<ToolEndpointSettings>(response, "Settings API");
 }
 
-export async function startWorkflowInvestigation(taskId: string, repositoryPath: string): Promise<WorkflowRun> {
+export async function startWorkflowInvestigation(
+  taskId: string,
+  repositoryPath: string,
+  repositoryUrl: string
+): Promise<WorkflowRun> {
   const response = await fetch(`${apiBaseUrl}/workflows/investigate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       taskId,
       repositoryPath,
+      repositoryUrl,
       requestedAgents: []
     })
   });

@@ -34,7 +34,7 @@ dotnet run --project src/AgentWorkflow.Mcp
 Example request:
 
 ```json
-{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","requestedAgents":[]}
+{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","repositoryUrl":"https://github.com/example/repository","requestedAgents":[]}
 ```
 
 ## Dependencies
@@ -55,7 +55,7 @@ Example request:
 
 ## Configuration
 
-Uses Core environment variables such as `OPENAI_API_KEY`, `OPENAI_MODEL`, and `AGENT_WORKFLOW_REPOSITORY_PATH`.
+Uses Core environment variables such as `OPENAI_API_KEY`, `OPENAI_MODEL`, `AGENT_WORKFLOW_REPOSITORY_PATH`, and `AGENT_WORKFLOW_REPOSITORY_URL`.
 
 ## Related Files
 

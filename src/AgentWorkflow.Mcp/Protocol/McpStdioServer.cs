@@ -37,7 +37,7 @@ public sealed class McpStdioServer(IWorkflowEngine workflowEngine)
             }
 
             var run = await workflowEngine.StartInvestigationAsync(
-                new InvestigationRequest(request.TaskId, request.RepositoryPath, request.RequestedAgents ?? []),
+                new InvestigationRequest(request.TaskId, request.RepositoryPath, request.RepositoryUrl, request.RequestedAgents ?? []),
                 cancellationToken);
 
             WriteResponse(new { result = run });

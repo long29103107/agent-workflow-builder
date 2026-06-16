@@ -13,7 +13,7 @@ PPP_TTT
 ## Phase Index
 
 - `001-skeleton.md`: runnable skeleton and repo-local operating system.
-- `002-real-memory.md`: Qdrant, Neo4j, memory ingestion, entity linking.
+- `002-github-repository-workspace.md`: GitHub repository connection, clone workspace, checkout, repository context.
 - `003-real-mcp.md`: Jira MCP, Notion MCP, auth, tool execution logs.
 - `004-repo-intelligence.md`: GitHub/GitLab, code search, dependency graph, file summarization.
 - `005-advanced-orchestration.md`: parallel agents, retries, approval gates, human review, plan-to-PR.

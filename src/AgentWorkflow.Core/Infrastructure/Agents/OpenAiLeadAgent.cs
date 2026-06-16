@@ -7,6 +7,7 @@ public sealed class OpenAiLeadAgent : ILeadAgent
 {
     private readonly ITaskSource _tasks;
     private readonly INotionContextTool _notion;
+    private readonly IRepositoryConnectionService _repositoryConnection;
     private readonly IRepositoryReader _repositoryReader;
     private readonly IMemoryService _memory;
     private readonly IAgentReasoningService _reasoning;
@@ -15,6 +16,7 @@ public sealed class OpenAiLeadAgent : ILeadAgent
     public OpenAiLeadAgent(
         ITaskSource tasks,
         INotionContextTool notion,
+        IRepositoryConnectionService repositoryConnection,
         IRepositoryReader repositoryReader,
         IMemoryService memory,
         IAgentReasoningService reasoning,
@@ -22,6 +24,7 @@ public sealed class OpenAiLeadAgent : ILeadAgent
     {
         _tasks = tasks;
         _notion = notion;
+        _repositoryConnection = repositoryConnection;
         _repositoryReader = repositoryReader;
         _memory = memory;
         _reasoning = reasoning;
@@ -39,8 +42,11 @@ public sealed class OpenAiLeadAgent : ILeadAgent
 
         var notionContext = await _notion.GetTaskContextAsync(task, cancellationToken);
 
-        emitEvent("LeadAgent", "Reading repository context.");
-        var repository = await _repositoryReader.GetContextAsync(request.RepositoryPath, cancellationToken);
+        emitEvent("LeadAgent", "Resolving repository connection.");
+        var connection = _repositoryConnection.ResolveConnection(request.RepositoryPath, request.RepositoryUrl);
+
+        emitEvent("LeadAgent", $"Reading repository context from {connection.Provider} target.");
+        var repository = await _repositoryReader.GetContextAsync(connection, cancellationToken);
 
         emitEvent("LeadAgent", "Querying vector and graph memory.");
         var memories = await _memory.SearchVectorMemoryAsync($"{task.Title} {task.Description}", cancellationToken);

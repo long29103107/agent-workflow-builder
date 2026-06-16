@@ -5,11 +5,34 @@ namespace AgentWorkflow.Core.Infrastructure;
 
 public sealed class LocalRepositoryReader : IRepositoryReader
 {
-    public Task<RepositoryContext> GetContextAsync(string? repositoryPath, CancellationToken cancellationToken)
+    public Task<RepositoryContext> GetContextAsync(RepositoryConnection connection, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrWhiteSpace(repositoryPath)
+        if (!string.IsNullOrWhiteSpace(connection.Url))
+        {
+            var remoteFiles = new[]
+            {
+                "README.md",
+                "AGENTS.md",
+                "src/",
+                ".github/workflows/"
+            };
+
+            var remoteTechnologies = new[] { "GitHub", "Mock Repository Workspace" };
+            var remotePath = $"mock-git://{connection.Owner}/{connection.Name}";
+            var remoteSummary = $"Mock GitHub repository workspace resolved for '{connection.Owner}/{connection.Name}' on branch '{connection.DefaultBranch}'. Clone and checkout are planned for the next workspace slice.";
+
+            return Task.FromResult(new RepositoryContext(
+                remotePath,
+                connection.Name,
+                connection,
+                remoteFiles,
+                remoteTechnologies,
+                remoteSummary));
+        }
+
+        var path = string.IsNullOrWhiteSpace(connection.LocalPath)
             ? RepositoryPathDefaults.Resolve()
-            : repositoryPath;
+            : connection.LocalPath;
 
         var fullPath = Path.GetFullPath(path);
         var name = new DirectoryInfo(fullPath).Name;
@@ -34,7 +57,13 @@ public sealed class LocalRepositoryReader : IRepositoryReader
             ? $"Local repository '{name}' inspected; {files.Count} representative files captured."
             : "Mock repository context generated because the configured path does not exist.";
 
-        return Task.FromResult(new RepositoryContext(fullPath, name, files, technologies, summary));
+        var localConnection = connection with
+        {
+            LocalPath = fullPath,
+            Name = string.IsNullOrWhiteSpace(connection.Name) ? name : connection.Name
+        };
+
+        return Task.FromResult(new RepositoryContext(fullPath, name, localConnection, files, technologies, summary));
     }
 
     private static bool IsRelevantRepositoryFile(string relativePath)

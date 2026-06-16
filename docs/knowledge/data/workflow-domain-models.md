@@ -4,7 +4,7 @@ title: Workflow Domain Models
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-16
 tags:
   - data-model
   - workflow
@@ -25,8 +25,9 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `ExecutionPlan`: title, ordered steps, risks, and open questions.
 - `MemoryItem`: vector-memory-style item with tags and creation timestamp.
 - `GraphEntity`: graph-memory-style entity with related entity IDs.
-- `RepositoryContext`: repository path, name, important files, detected technologies, and summary.
-- `ToolEndpointSettings`: Jira endpoint, Notion endpoint, and repository path.
+- `RepositoryContext`: repository path, name, repository connection, important files, detected technologies, and summary.
+- `RepositoryConnection`: provider, URL, local path, owner, repository name, default branch, status, and summary.
+- `ToolEndpointSettings`: Jira endpoint, Notion endpoint, repository path, repository URL, and repository provider.
 
 ## Persistence
 

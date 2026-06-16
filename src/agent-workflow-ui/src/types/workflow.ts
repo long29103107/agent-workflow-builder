@@ -44,6 +44,7 @@ export type InvestigationResult = {
   repositoryContext: {
     path: string;
     name: string;
+    connection: RepositoryConnection;
     importantFiles: string[];
     technologies: string[];
     summary: string;
@@ -65,4 +66,17 @@ export type ToolEndpointSettings = {
   jiraMcpEndpoint: string;
   notionMcpEndpoint: string;
   repositoryPath: string;
+  repositoryUrl: string;
+  repositoryProvider: string;
+};
+
+export type RepositoryConnection = {
+  provider: string;
+  url: string | null;
+  localPath: string | null;
+  owner: string;
+  name: string;
+  defaultBranch: string;
+  status: string;
+  summary: string;
 };

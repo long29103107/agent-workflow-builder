@@ -50,7 +50,19 @@ Outputs `WorkflowRun` JSON from [Workflow Domain Models](../data/workflow-domain
 
 ## Configuration
 
-Uses Core environment variables such as `OPENAI_API_KEY`, `OPENAI_MODEL`, and `AGENT_WORKFLOW_REPOSITORY_PATH`.
+Uses Core environment variables such as `OPENAI_API_KEY`, `OPENAI_MODEL`, `AGENT_WORKFLOW_REPOSITORY_PATH`, and `AGENT_WORKFLOW_REPOSITORY_URL`.
+
+The positional CLI shape remains:
+
+```powershell
+dotnet run --project src/AgentWorkflow.Cli -- jira-awb-101 .
+```
+
+The optional mock GitHub target flag is:
+
+```powershell
+dotnet run --project src/AgentWorkflow.Cli -- jira-awb-101 . --repo-url https://github.com/example/repository
+```
 
 ## Related Files
 

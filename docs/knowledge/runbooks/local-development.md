@@ -60,7 +60,7 @@ dotnet run --project src/AgentWorkflow.Mcp
 Send one JSON request per line:
 
 ```json
-{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","requestedAgents":[]}
+{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","repositoryUrl":"https://github.com/example/repository","requestedAgents":[]}
 ```
 
 ## Optional Environment
@@ -69,6 +69,7 @@ Send one JSON request per line:
 $env:OPENAI_API_KEY='your-api-key'
 $env:OPENAI_MODEL='gpt-5.1'
 $env:AGENT_WORKFLOW_REPOSITORY_PATH=(Get-Location).Path
+$env:AGENT_WORKFLOW_REPOSITORY_URL='https://github.com/example/repository'
 ```
 
 ## Related Knowledge

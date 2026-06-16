@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IJiraMcpTool>(provider => provider.GetRequiredService<MockJiraMcpTool>());
         services.AddSingleton<ITaskSource>(provider => provider.GetRequiredService<MockJiraMcpTool>());
         services.AddSingleton<INotionContextTool, MockNotionContextTool>();
+        services.AddSingleton<IRepositoryConnectionService, MockRepositoryConnectionService>();
         services.AddSingleton<IRepositoryReader, LocalRepositoryReader>();
         services.AddSingleton<IMemoryService, MockMemoryService>();
         services.AddSingleton<ISettingsStore, InMemorySettingsStore>();

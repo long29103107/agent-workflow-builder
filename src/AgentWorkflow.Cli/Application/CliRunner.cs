@@ -14,7 +14,7 @@ public sealed class CliRunner(IWorkflowEngine workflowEngine)
     public async Task<int> RunAsync(CliOptions options, CancellationToken cancellationToken)
     {
         var run = await workflowEngine.StartInvestigationAsync(
-            new InvestigationRequest(options.TaskId, options.RepositoryPath, RequestedAgents: []),
+            new InvestigationRequest(options.TaskId, options.RepositoryPath, options.RepositoryUrl, RequestedAgents: []),
             cancellationToken);
 
         var json = JsonSerializer.Serialize(run, SerializerOptions);

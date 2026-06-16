@@ -7,9 +7,13 @@ type SettingsPanelProps = {
   notionEndpoint: string;
   onJiraEndpointChange: (value: string) => void;
   onNotionEndpointChange: (value: string) => void;
+  onRepoProviderChange: (value: string) => void;
   onRepoPathChange: (value: string) => void;
+  onRepoUrlChange: (value: string) => void;
   onSave: () => void;
+  repoProvider: string;
   repoPath: string;
+  repoUrl: string;
 };
 
 export function SettingsPanel({
@@ -19,9 +23,13 @@ export function SettingsPanel({
   notionEndpoint,
   onJiraEndpointChange,
   onNotionEndpointChange,
+  onRepoProviderChange,
   onRepoPathChange,
+  onRepoUrlChange,
   onSave,
-  repoPath
+  repoProvider,
+  repoPath,
+  repoUrl
 }: SettingsPanelProps) {
   return (
     <aside className="settings-panel">
@@ -32,6 +40,17 @@ export function SettingsPanel({
       <label>
         Repository path
         <input value={repoPath} onChange={(event) => onRepoPathChange(event.target.value)} />
+      </label>
+      <label>
+        Repository URL
+        <input value={repoUrl} onChange={(event) => onRepoUrlChange(event.target.value)} />
+      </label>
+      <label>
+        Repository provider
+        <select value={repoProvider} onChange={(event) => onRepoProviderChange(event.target.value)}>
+          <option value="github">GitHub</option>
+          <option value="local">Local</option>
+        </select>
       </label>
       <label>
         Jira MCP endpoint

@@ -43,16 +43,17 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 1. A user selects a Jira task in the React task board.
 2. The user drags it into the Investigate lane and starts a run.
 3. The Lead Agent loads mock Jira and Notion context.
-4. The Lead Agent reads local repository context.
-5. The Lead Agent queries mock vector memory and graph relationships.
-6. The Lead Agent delegates to placeholder subagents:
+4. The Lead Agent resolves a local or mock GitHub repository target.
+5. The Lead Agent reads repository context.
+6. The Lead Agent queries mock vector memory and graph relationships.
+7. The Lead Agent delegates to placeholder subagents:
    - Repository Investigator Agent
    - Jira/Notion Context Agent
    - Memory Research Agent
    - Planning Agent
-7. The Lead Agent asks `IAgentReasoningService` to summarize via the OpenAI SDK when `OPENAI_API_KEY` is configured, or uses deterministic fallback output when it is not.
-8. The workflow engine persists run events in memory.
-9. API, CLI, MCP, and UI surfaces can display the same investigation summary and generated execution plan.
+8. The Lead Agent asks `IAgentReasoningService` to summarize via the OpenAI SDK when `OPENAI_API_KEY` is configured, or uses deterministic fallback output when it is not.
+9. The workflow engine persists run events in memory.
+10. API, CLI, MCP, and UI surfaces can display the same investigation summary and generated execution plan.
 
 ## Run Locally
 
@@ -84,6 +85,13 @@ $env:AGENT_WORKFLOW_REPOSITORY_PATH=(Get-Location).Path
 dotnet run --project src/AgentWorkflow.Api
 ```
 
+Optional mock GitHub repository target:
+
+```powershell
+$env:AGENT_WORKFLOW_REPOSITORY_URL='https://github.com/example/repository'
+dotnet run --project src/AgentWorkflow.Api
+```
+
 ### Frontend
 
 ```powershell
@@ -105,6 +113,7 @@ bun run dev
 
 ```powershell
 dotnet run --project src/AgentWorkflow.Cli -- jira-awb-101 .
+dotnet run --project src/AgentWorkflow.Cli -- jira-awb-101 . --repo-url https://github.com/example/repository
 ```
 
 ### MCP stdio adapter
@@ -116,7 +125,7 @@ dotnet run --project src/AgentWorkflow.Mcp
 Send one JSON request per line:
 
 ```json
-{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","requestedAgents":[]}
+{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","repositoryUrl":"https://github.com/example/repository","requestedAgents":[]}
 ```
 
 ### Docker Compose
@@ -147,6 +156,9 @@ Services:
 - `GET /api/memory/search?query=workflow`
 - `POST /api/memory`
 - `GET /api/repos/context?path=.`
+- `GET /api/repos/context?url=https://github.com/example/repository`
+- `GET /api/repos/connection`
+- `POST /api/repos/connection`
 - `GET /api/settings`
 - `POST /api/settings`
 
@@ -156,6 +168,7 @@ Example investigation request:
 {
   "taskId": "jira-awb-101",
   "repositoryPath": ".",
+  "repositoryUrl": "https://github.com/example/repository",
   "requestedAgents": []
 }
 ```
@@ -164,7 +177,8 @@ Example investigation request:
 
 - Jira tasks are served by `MockJiraMcpTool`.
 - Notion context is served by `MockNotionContextTool`.
-- Repository context is served by `LocalRepositoryReader`.
+- Repository connection targeting is served by `MockRepositoryConnectionService`.
+- Local repository context and mock GitHub workspace summaries are served by `LocalRepositoryReader`.
 - Vector and graph memory are served by `MockMemoryService`.
 - Lead Agent summarization is served by `OpenAiAgentReasoningService`; it uses the official OpenAI .NET SDK when `OPENAI_API_KEY` is set and deterministic fallback output otherwise.
 - MCP endpoint and repository defaults are served by `InMemorySettingsStore`.

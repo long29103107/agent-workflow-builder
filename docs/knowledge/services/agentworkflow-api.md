@@ -22,7 +22,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - Register API services and Core services.
 - Configure CORS for the Vite development UI.
 - Publish Swagger/OpenAPI JSON and Scalar API reference UI.
-- Map `/api` endpoints for tasks, workflow runs, memory, repository context, health, and settings.
+- Map `/api` endpoints for tasks, workflow runs, memory, repository context, repository connection, health, and settings.
 
 ## Main APIs / Entry Points
 
@@ -36,6 +36,8 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `GET /api/memory/search?query=...`
 - `POST /api/memory`
 - `GET /api/repos/context?path=...`
+- `GET /api/repos/connection`
+- `POST /api/repos/connection`
 - `GET /api/settings`
 - `POST /api/settings`
 
@@ -55,6 +57,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - `taskId` is required for investigation requests.
 - Unknown workflow run IDs return `404`.
 - Memory creation returns a `Created` response with a search URL.
+- Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
 
 ## Configuration
 

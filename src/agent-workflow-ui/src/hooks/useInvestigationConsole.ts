@@ -19,6 +19,8 @@ export function useInvestigationConsole() {
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [repoPath, setRepoPath] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
+  const [repoProvider, setRepoProvider] = useState("github");
   const [jiraEndpoint, setJiraEndpoint] = useState("mock://jira");
   const [notionEndpoint, setNotionEndpoint] = useState("mock://notion");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -66,7 +68,9 @@ export function useInvestigationConsole() {
       const settings = await updateSettings({
         jiraMcpEndpoint: jiraEndpoint,
         notionMcpEndpoint: notionEndpoint,
-        repositoryPath: repoPath
+        repositoryPath: repoPath,
+        repositoryUrl: repoUrl,
+        repositoryProvider: repoProvider
       });
       applySettings(settings);
       setSettingsMessage("Settings saved for this API session.");
@@ -86,7 +90,7 @@ export function useInvestigationConsole() {
     setEvents([]);
 
     try {
-      const nextRun = await startWorkflowInvestigation(selectedTask.id, repoPath);
+      const nextRun = await startWorkflowInvestigation(selectedTask.id, repoPath, repoUrl);
       setRun(nextRun);
       setEvents(await fetchWorkflowEvents(nextRun.id));
     } catch (err) {
@@ -98,6 +102,8 @@ export function useInvestigationConsole() {
 
   function applySettings(settings: ToolEndpointSettings) {
     setRepoPath(settings.repositoryPath);
+    setRepoUrl(settings.repositoryUrl);
+    setRepoProvider(settings.repositoryProvider);
     setJiraEndpoint(settings.jiraMcpEndpoint);
     setNotionEndpoint(settings.notionMcpEndpoint);
   }
@@ -111,13 +117,17 @@ export function useInvestigationConsole() {
     jiraEndpoint,
     loadTasks,
     notionEndpoint,
+    repoProvider,
     repoPath,
+    repoUrl,
     run,
     saveSettings,
     selectedTask,
     setJiraEndpoint,
     setNotionEndpoint,
     setRepoPath,
+    setRepoProvider,
+    setRepoUrl,
     setSelectedTaskId,
     settingsMessage,
     startInvestigation,

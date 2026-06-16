@@ -38,9 +38,13 @@ export function App() {
           notionEndpoint={consoleState.notionEndpoint}
           onJiraEndpointChange={consoleState.setJiraEndpoint}
           onNotionEndpointChange={consoleState.setNotionEndpoint}
+          onRepoProviderChange={consoleState.setRepoProvider}
           onRepoPathChange={consoleState.setRepoPath}
+          onRepoUrlChange={consoleState.setRepoUrl}
           onSave={consoleState.saveSettings}
+          repoProvider={consoleState.repoProvider}
           repoPath={consoleState.repoPath}
+          repoUrl={consoleState.repoUrl}
         />
       </section>
 

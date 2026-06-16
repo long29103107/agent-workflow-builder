@@ -33,7 +33,7 @@ Expected high-level result: JSON output with `Status` or `status` equal to `Comp
 Run the MCP stdio smoke test:
 
 ```powershell
-'{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","requestedAgents":[]}' | dotnet run --project src/AgentWorkflow.Mcp
+'{"method":"workflow.investigate","taskId":"jira-awb-101","repositoryPath":".","repositoryUrl":"https://github.com/example/repository","requestedAgents":[]}' | dotnet run --project src/AgentWorkflow.Mcp
 ```
 
 Expected high-level result: JSON output with `result.status` equal to `Completed`.

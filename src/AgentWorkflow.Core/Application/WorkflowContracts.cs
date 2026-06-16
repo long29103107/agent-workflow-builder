@@ -21,7 +21,14 @@ public interface INotionContextTool
 
 public interface IRepositoryReader
 {
-    Task<RepositoryContext> GetContextAsync(string? repositoryPath, CancellationToken cancellationToken);
+    Task<RepositoryContext> GetContextAsync(RepositoryConnection connection, CancellationToken cancellationToken);
+}
+
+public interface IRepositoryConnectionService
+{
+    RepositoryConnection GetConnection();
+    RepositoryConnection UpdateConnection(RepositoryConnection connection);
+    RepositoryConnection ResolveConnection(string? repositoryPath, string? repositoryUrl);
 }
 
 public interface IMemoryService
