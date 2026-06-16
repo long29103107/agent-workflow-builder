@@ -14,6 +14,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors();
 
+app.MapAgentWorkflowApiDocumentation();
 app.MapAgentWorkflowApi();
 
 app.Run();

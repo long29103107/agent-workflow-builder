@@ -4,7 +4,7 @@
 
 Own backend implementation across `src/AgentWorkflow.Core` and `src/AgentWorkflow.Api`, while keeping `AgentWorkflow.Core` as the source of truth.
 
-Use this agent when a task changes backend contracts, workflow orchestration, dependency injection, ASP.NET Core endpoints, mock providers, persistence interfaces, OpenAI reasoning integration, or backend behavior shared by CLI/MCP/API adapters.
+Use this agent when a task changes backend contracts, workflow orchestration, dependency injection, ASP.NET Core endpoints, CLI output, MCP stdio behavior, mock providers, persistence interfaces, OpenAI reasoning integration, memory boundaries, Jira/Notion tool abstractions, or backend behavior shared by CLI/MCP/API adapters.
 
 ## Inputs
 
@@ -12,7 +12,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 - Existing task memory from `.codex/memories/tasks`.
 - Project knowledge from `docs/knowledge/index.md` and related service, business, data, or integration files.
 - Relevant Core/API files under `src/AgentWorkflow.Core` and `src/AgentWorkflow.Api`.
-- Supporting agent notes from `core-platform-agent.md`, `api-adapter-agent.md`, and `openai-reasoning-agent.md` when the task touches their surfaces.
+- Supporting agent notes from `core-platform-agent.md` when the task touches source-of-truth Core behavior.
 
 ## Actions
 

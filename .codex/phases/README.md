@@ -23,6 +23,6 @@ PPP_TTT
 Before implementing a task:
 
 1. Select or create a task ID in a phase file.
-2. Read matching memories in `.codex/memories/tasks/`.
+2. Read matching memories in `.codex/memories/tasks/`; completed tasks may be compacted into phase-level memory files.
 3. Implement the task.
-4. Write a memory note with the same task ID.
+4. Write or update a memory note that includes the same task ID.

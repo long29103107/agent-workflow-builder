@@ -4,7 +4,7 @@ title: Local Development
 domain: operations
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-16
 tags:
   - runbook
   - local-development
@@ -29,6 +29,11 @@ dotnet run --project src/AgentWorkflow.Api
 ```
 
 Default local API URL: `http://localhost:5275`.
+
+API documentation:
+
+- Scalar UI: `http://localhost:5275/scalar/v1`
+- Swagger/OpenAPI JSON: `http://localhost:5275/swagger/v1/swagger.json`
 
 ## Frontend
 

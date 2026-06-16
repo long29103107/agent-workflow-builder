@@ -150,3 +150,47 @@ Things to do:
 - Verify documentation cleanup does not break the .NET build.
 
 Status: done
+
+### 001_014: Prune Repo-Local Codex Agents
+
+Things to do:
+
+- Keep only the seven primary repo-local Codex agents.
+- Remove optional specialist agent files that are not needed for the current MVP workflow.
+- Update `AGENTS.md`, `.codex/agents/README.md`, and prompts so future work routes through the smaller agent set.
+- Add a matching task memory entry.
+
+Status: done
+
+### 001_015: Compact Phase Task Memories
+
+Things to do:
+
+- Compact completed Phase 001 task memories into one phase-level summary file.
+- Preserve every task ID and high-signal implementation/verification notes.
+- Update AGENTS, prompts, phase guidance, and memory template to describe compact memories.
+- Keep `.codex/memories/tasks/` useful without one file per historical task.
+
+Status: done
+
+### 001_016: Add API Swagger And Scalar
+
+Things to do:
+
+- Add OpenAPI/Swagger JSON for `AgentWorkflow.Api`.
+- Add Scalar API reference UI.
+- Keep API startup thin through extension methods.
+- Update README, knowledge, and task memory with the documentation URLs.
+- Verify the API project build.
+
+Status: done
+
+### 001_017: Realign Backlog To GitHub PR Workflow
+
+Things to do:
+
+- Rewrite `BACKLOG.md` around the target flow from Jira/Notion work item to GitHub clone, branch, code change, push, and draft PR.
+- Move memory and advanced orchestration later in the roadmap.
+- Preserve mock-first vertical slice sequencing.
+
+Status: done

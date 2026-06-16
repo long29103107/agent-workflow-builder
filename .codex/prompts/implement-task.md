@@ -20,10 +20,9 @@ Before editing:
    - `.codex`
 5. Check whether repo-local agents and skills apply:
    - `.codex/agents/lead-task-agent.md`
+   - `.codex/agents/repository-investigator-agent.md`
+   - `.codex/agents/backend-agent.md`
    - `.codex/agents/core-platform-agent.md`
-   - `.codex/agents/api-adapter-agent.md`
-   - `.codex/agents/cli-adapter-agent.md`
-   - `.codex/agents/mcp-adapter-agent.md`
    - `.codex/agents/frontend-agent.md`
    - `.codex/agents/docs-agent.md`
    - `.codex/agents/qa-agent.md`
@@ -66,10 +65,12 @@ If restore/network is blocked, request scoped approval for the exact command.
 
 After implementation, create or update a note under `.codex/memories/tasks/` using `.codex/memories/task-memory-template.md`.
 
-The memory filename must start with the selected task ID:
+For active or narrow task notes, the memory filename should start with the selected task ID:
 
 ```text
 .codex/memories/tasks/PPP_TTT-short-slug.md
 ```
 
-Record phase, task, implementation log, verification, goal achieved, and next idea.
+Completed historical task notes may be compacted into a phase-level memory file when each task ID remains a searchable heading.
+
+Record phase, task ID, implementation log, verification, goal achieved, and next idea.

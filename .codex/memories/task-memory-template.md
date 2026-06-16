@@ -30,3 +30,7 @@ Yes/No. Explain briefly.
 ## Next Idea
 
 What future task should build on this.
+
+## Compact Memory Note
+
+Completed tasks may be merged into a phase-level compact memory file under `.codex/memories/tasks/` when each task ID remains visible as a heading and the important implementation, verification, and next-idea notes are preserved.

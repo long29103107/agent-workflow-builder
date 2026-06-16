@@ -64,6 +64,11 @@ dotnet run --project src/AgentWorkflow.Api
 
 The API listens on `http://localhost:5275` by default.
 
+API documentation:
+
+- Scalar UI: `http://localhost:5275/scalar/v1`
+- Swagger/OpenAPI JSON: `http://localhost:5275/swagger/v1/swagger.json`
+
 Optional OpenAI SDK reasoning:
 
 ```powershell
@@ -124,12 +129,16 @@ Services:
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:5086`
+- Backend Scalar UI: `http://localhost:5086/scalar/v1`
+- Backend Swagger/OpenAPI JSON: `http://localhost:5086/swagger/v1/swagger.json`
 - Neo4j browser: `http://localhost:7474`
 - Qdrant: `http://localhost:6333`
 - Postgres: `localhost:5432`
 
 ## API List
 
+- Scalar UI: `GET /scalar/v1`
+- Swagger/OpenAPI JSON: `GET /swagger/v1/swagger.json`
 - `GET /api/health`
 - `GET /api/tasks`
 - `POST /api/workflows/investigate`

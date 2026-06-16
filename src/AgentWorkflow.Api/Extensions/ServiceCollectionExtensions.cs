@@ -7,6 +7,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddAgentWorkflowApi(this IServiceCollection services)
     {
         services.AddProblemDetails();
+        services.AddOpenApi();
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
