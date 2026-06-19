@@ -4,7 +4,7 @@ title: AgentWorkflow.Core
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-16
+last_updated: 2026-06-19
 tags:
   - service
   - core
@@ -22,11 +22,14 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Coordinate the Lead Agent and subagents.
 - Resolve repository connection targets, then query repository, memory, Jira, and Notion abstractions.
 - Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
+- Queue task executions by priority and process claimed items through the shared workflow engine.
 - Keep fallback behavior runnable without `OPENAI_API_KEY`.
 
 ## Main APIs / Entry Points
 
 - `IWorkflowEngine.StartInvestigationAsync`
+- `ITaskScheduler.EnqueueAsync`
+- `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`
 - `IRepositoryConnectionService.ResolveConnection`
 - `AddAgentWorkflowCore`
@@ -66,3 +69,4 @@ See [Workflow Domain Models](../data/workflow-domain-models.md).
 ## Open Questions
 
 - Persistent run storage implementation is not detected from repository analysis.
+- The scheduler store is intentionally in memory until Phase 3 durable orchestration.

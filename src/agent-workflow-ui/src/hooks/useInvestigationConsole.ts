@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  enqueueScheduledTask,
   fetchSettings,
+  fetchScheduledTasks,
   fetchTasks,
   fetchWorkflowEvents,
+  fetchWorkflowRun,
+  processNextScheduledTask,
   startWorkflowInvestigation,
   updateSettings
 } from "../api/client";
-import type { TaskItem, ToolEndpointSettings, WorkflowEvent, WorkflowRun } from "../types/workflow";
+import type {
+  ScheduledTask,
+  TaskItem,
+  ToolEndpointSettings,
+  WorkflowEvent,
+  WorkflowRun
+} from "../types/workflow";
 
 const fallbackMessage = "Using local mock settings.";
 
@@ -25,6 +35,10 @@ export function useInvestigationConsole() {
   const [notionEndpoint, setNotionEndpoint] = useState("mock://notion");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
+  const [isQueueingTask, setIsQueueingTask] = useState(false);
+  const [isProcessingNext, setIsProcessingNext] = useState(false);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? null,
@@ -34,7 +48,20 @@ export function useInvestigationConsole() {
   useEffect(() => {
     void loadTasks();
     void loadSettings();
+    void loadScheduledTasks();
   }, []);
+
+  async function loadScheduledTasks() {
+    setIsLoadingSchedule(true);
+
+    try {
+      setScheduledTasks(await fetchScheduledTasks());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load scheduler queue.");
+    } finally {
+      setIsLoadingSchedule(false);
+    }
+  }
 
   async function loadTasks() {
     setIsLoadingTasks(true);
@@ -100,6 +127,42 @@ export function useInvestigationConsole() {
     }
   }
 
+  async function queueSelectedTask() {
+    if (!selectedTask) return;
+
+    setIsQueueingTask(true);
+    setError(null);
+
+    try {
+      await enqueueScheduledTask(selectedTask.id, repoPath, repoUrl);
+      await loadScheduledTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not queue task.");
+    } finally {
+      setIsQueueingTask(false);
+    }
+  }
+
+  async function processNextTask() {
+    setIsProcessingNext(true);
+    setError(null);
+
+    try {
+      const processed = await processNextScheduledTask();
+      await loadScheduledTasks();
+
+      if (processed.workflowRunId) {
+        const nextRun = await fetchWorkflowRun(processed.workflowRunId);
+        setRun(nextRun);
+        setEvents(await fetchWorkflowEvents(nextRun.id));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not process scheduled task.");
+    } finally {
+      setIsProcessingNext(false);
+    }
+  }
+
   function applySettings(settings: ToolEndpointSettings) {
     setRepoPath(settings.repositoryPath);
     setRepoUrl(settings.repositoryUrl);
@@ -112,17 +175,24 @@ export function useInvestigationConsole() {
     error,
     events,
     isInvestigating,
+    isLoadingSchedule,
     isLoadingTasks,
+    isProcessingNext,
+    isQueueingTask,
     isSavingSettings,
     jiraEndpoint,
     loadTasks,
+    loadScheduledTasks,
     notionEndpoint,
     repoProvider,
     repoPath,
     repoUrl,
     run,
+    scheduledTasks,
     saveSettings,
     selectedTask,
+    processNextTask,
+    queueSelectedTask,
     setJiraEndpoint,
     setNotionEndpoint,
     setRepoPath,

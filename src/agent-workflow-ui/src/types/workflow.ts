@@ -9,6 +9,22 @@ export type TaskItem = {
   tags: string[];
 };
 
+export type ScheduledTaskPriority = "Low" | "Medium" | "High" | "Critical";
+export type ScheduledTaskStatus = "Queued" | "Processing" | "Completed" | "Failed";
+
+export type ScheduledTask = {
+  id: string;
+  taskId: string;
+  taskTitle: string;
+  priority: ScheduledTaskPriority;
+  status: ScheduledTaskStatus;
+  queuedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  workflowRunId: string | null;
+  error: string | null;
+};
+
 export type WorkflowEvent = {
   id: string;
   timestamp: string;

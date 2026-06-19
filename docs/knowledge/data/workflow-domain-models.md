@@ -4,7 +4,7 @@ title: Workflow Domain Models
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-16
+last_updated: 2026-06-19
 tags:
   - data-model
   - workflow
@@ -28,10 +28,14 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `RepositoryContext`: repository path, name, repository connection, important files, detected technologies, and summary.
 - `RepositoryConnection`: provider, URL, local path, owner, repository name, default branch, status, and summary.
 - `ToolEndpointSettings`: Jira endpoint, Notion endpoint, repository path, repository URL, and repository provider.
+- `ScheduleTaskRequest`: task ID, optional priority override, and repository target for a queued execution.
+- `ScheduledTask`: queue identity, task metadata, priority, status, timestamps, workflow run ID, and error.
+- `ScheduledTaskPriority`: `Low`, `Medium`, `High`, or `Critical`.
+- `ScheduledTaskStatus`: `Queued`, `Processing`, `Completed`, or `Failed`.
 
 ## Persistence
 
-Current persistence is in memory through `InMemoryWorkflowRunStore` and `InMemorySettingsStore`.
+Current persistence is in memory through `InMemoryWorkflowRunStore`, `InMemorySettingsStore`, and `InMemoryTaskScheduler`.
 
 ## Database Models
 

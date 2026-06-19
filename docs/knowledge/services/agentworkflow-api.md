@@ -4,7 +4,7 @@ title: AgentWorkflow.Api
 domain: api
 owner: project
 status: draft
-last_updated: 2026-06-16
+last_updated: 2026-06-19
 tags:
   - service
   - api
@@ -22,7 +22,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - Register API services and Core services.
 - Configure CORS for the Vite development UI.
 - Publish Swagger/OpenAPI JSON and Scalar API reference UI.
-- Map `/api` endpoints for tasks, workflow runs, memory, repository context, repository connection, health, and settings.
+- Map `/api` endpoints for tasks, scheduler queue processing, workflow runs, memory, repository context, repository connection, health, and settings.
 
 ## Main APIs / Entry Points
 
@@ -30,6 +30,10 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `GET /swagger/v1/swagger.json`
 - `GET /api/health`
 - `GET /api/tasks`
+- `GET /api/scheduler/tasks`
+- `GET /api/scheduler/tasks/{scheduledTaskId}`
+- `POST /api/scheduler/tasks`
+- `POST /api/scheduler/process-next`
 - `POST /api/workflows/investigate`
 - `GET /api/workflows/{runId}`
 - `GET /api/workflows/{runId}/events`
@@ -58,6 +62,8 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Unknown workflow run IDs return `404`.
 - Memory creation returns a `Created` response with a search URL.
 - Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
+- Scheduler enqueue rejects unknown tasks and active duplicates.
+- Scheduler processing returns `404` when no queued task is available.
 
 ## Configuration
 

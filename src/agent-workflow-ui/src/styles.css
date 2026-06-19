@@ -206,6 +206,60 @@ p {
   align-self: center;
 }
 
+.scheduler-panel {
+  margin-top: 18px;
+}
+
+.scheduler-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.scheduler-actions .primary,
+.scheduler-actions .secondary {
+  width: auto;
+}
+
+.schedule-list {
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-item {
+  align-items: center;
+  border: 1px solid #dce2ea;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 12px;
+}
+
+.schedule-item small {
+  color: #788396;
+  display: block;
+  margin-top: 4px;
+}
+
+.priority,
+.queue-status {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.priority-critical { background: #ffe7e3; color: #9f2a1f; }
+.priority-high { background: #fff2d9; color: #8a5700; }
+.priority-medium { background: #eef5ff; color: #24538f; }
+.priority-low { background: #f0f3f8; color: #536173; }
+.queue-status-queued { background: #eef5ff; color: #24538f; }
+.queue-status-processing { background: #fff2d9; color: #8a5700; }
+.queue-status-completed { background: #e7f6ef; color: #14683f; }
+.queue-status-failed { background: #fff1f0; color: #9f2a1f; }
+
 .selected-meta {
   display: flex;
   flex-wrap: wrap;
@@ -422,5 +476,10 @@ dd {
 
   h1 {
     font-size: 1.7rem;
+  }
+
+  .schedule-item {
+    align-items: start;
+    grid-template-columns: 1fr;
   }
 }

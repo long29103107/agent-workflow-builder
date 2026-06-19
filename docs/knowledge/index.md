@@ -4,7 +4,7 @@ title: Agent Workflow Builder Knowledge Index
 domain: agent-workflow-builder
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-19
 tags:
   - knowledge
   - index
@@ -67,4 +67,3 @@ This folder converts project documentation and source-derived knowledge into Ope
 
 - Production deployment process is not detected from repository analysis.
 - Production rollback process is not detected from repository analysis.
-- Automated test projects are not detected from repository analysis.

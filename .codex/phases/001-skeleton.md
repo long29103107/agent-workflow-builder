@@ -194,3 +194,46 @@ Things to do:
 - Preserve mock-first vertical slice sequencing.
 
 Status: done
+
+### 001_018: Realign Phase Files To GitHub PR Workflow
+
+Things to do:
+
+- Update `.codex/phases/README.md` to match the GitHub-to-PR roadmap.
+- Replace old phase files for real MCP, repo intelligence, and advanced orchestration with the new phase sequence.
+- Add phase files for work item intake, plan approval and branch execution, push and draft PR, real code agent, repo intelligence, memory, and advanced orchestration.
+- Update the compact Phase 001 memory.
+
+Status: done
+
+### 001_019: Add Adapter Usage Guide
+
+Things to do:
+
+- Create a standalone Vietnamese HTML guide for using and smoke-testing API, UI, CLI, and MCP.
+- Keep commands, ports, payloads, and expected results aligned with current source and knowledge runbooks.
+- Clearly distinguish adapters that require the API from adapters that call Core directly.
+
+Status: done
+
+### 001_020: Realign Backlog To AI Engineering Workspace
+
+Things to do:
+
+- Update BACKLOG.md from the investigation-only roadmap to the full Project-to-approved-PR engineering workspace.
+- Move persistence, approval, evidence, and sandbox controls before code and GitHub write agents.
+- Realign Phase 002 through Phase 009 files with the new dependency order.
+- Preserve completed Phase 001 work and the delivered 002_001 repository connection boundary.
+
+Status: done
+
+### 001_021: Add Swagger UI
+
+Things to do:
+
+- Keep the existing built-in OpenAPI JSON endpoint and Scalar UI.
+- Add Swagger UI at /swagger using the existing /swagger/v1/swagger.json document.
+- Keep API documentation registration and mapping outside Program.cs.
+- Update README and API knowledge, then verify build and integration tests.
+
+Status: in progress

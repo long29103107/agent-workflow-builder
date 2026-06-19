@@ -126,3 +126,24 @@ Compact completed Phase 001 task memories into one searchable file. Each task ID
 - Implementation: rewrote the backlog around GitHub repository workspace, work item intake, approval and branch execution, push and draft PR, real code agent, repo intelligence, memory, and advanced orchestration.
 - Verification: reviewed `BACKLOG.md` for phase ordering and kept memory/Qdrant/Neo4j after the GitHub-to-PR vertical slice.
 - Next idea: convert the new Phase 2 backlog into detailed `.codex/phases` task files when implementation starts.
+
+## 001_018: Realign Phase Files To GitHub PR Workflow
+
+- Goal: make `.codex/phases/` match the GitHub-to-PR roadmap so future Codex runs do not follow the old memory-first phase sequence.
+- Implementation: updated `.codex/phases/README.md`; kept `002-github-repository-workspace.md`; replaced old phase files for real MCP, repo intelligence, and advanced orchestration with `003-work-item-intake.md`, `004-plan-approval-branch-execution.md`, `005-push-draft-pr.md`, `006-real-code-agent.md`, `007-repo-intelligence.md`, `008-memory-and-learning.md`, and `009-advanced-orchestration.md`.
+- Verification: inspect `.codex/phases/` and confirm the phase index matches `BACKLOG.md`.
+- Next idea: start implementation with `002_002: Clone Repository Into Workflow Workspace` unless `002_001` needs more hardening.
+
+## 001_019: Add Adapter Usage Guide
+
+- Goal: provide one Vietnamese, browser-friendly guide for running and smoke-testing every current adapter.
+- Implementation: added root `testing-guide.html` with prerequisites, architecture notes, PowerShell commands, expected results, copy buttons, direct local links, and troubleshooting for API, UI, CLI, and MCP.
+- Verification: checked the documented port, endpoint, payload, CLI arguments, MCP line protocol, and Bun commands against current source and service/runbook knowledge; verified the HTML contains all four adapter sections.
+- Next idea: link this guide from the project overview page if the root static documentation grows into a small documentation hub.
+
+## 001_020: Realign Backlog To AI Engineering Workspace
+
+- Goal: make BACKLOG.md and phase routing follow the audited multi-agent engineering workspace architecture.
+- Implementation: reordered delivery around platform foundation, durable orchestration, approval and evidence, isolated sandbox, investigation and architecture agents, implementation and verification agents, PR lifecycle, workspace UI and observability, then memory and hardening. Preserved completed Phase 1 work and 002_001.
+- Verification: checked BACKLOG.md and the phase index use the same Phase 002 through Phase 009 names and dependency order; confirmed approval and sandbox work precede Coder, push, PR, and merge actions.
+- Next idea: begin with 002_002 to restore the solution build and automated test baseline.

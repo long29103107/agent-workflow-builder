@@ -55,6 +55,8 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 9. The workflow engine persists run events in memory.
 10. API, CLI, MCP, and UI surfaces can display the same investigation summary and generated execution plan.
 
+The React UI can also queue a selected task in the Core-owned priority scheduler. Core processes queued tasks in Critical, High, Medium, then Low order and preserves FIFO order inside the same priority. Processing is triggered explicitly through the UI or API in this mock-first slice.
+
 ## Run Locally
 
 ### Backend
@@ -150,6 +152,10 @@ Services:
 - Swagger/OpenAPI JSON: `GET /swagger/v1/swagger.json`
 - `GET /api/health`
 - `GET /api/tasks`
+- `GET /api/scheduler/tasks`
+- `GET /api/scheduler/tasks/{scheduledTaskId}`
+- `POST /api/scheduler/tasks`
+- `POST /api/scheduler/process-next`
 - `POST /api/workflows/investigate`
 - `GET /api/workflows/{runId}`
 - `GET /api/workflows/{runId}/events`
@@ -173,6 +179,19 @@ Example investigation request:
 }
 ```
 
+Example scheduler request:
+
+```json
+{
+  "taskId": "jira-awb-101",
+  "priority": null,
+  "repositoryPath": ".",
+  "repositoryUrl": null
+}
+```
+
+When `priority` is null, Core derives it from the task source.
+
 ## Current Mock Integrations
 
 - Jira tasks are served by `MockJiraMcpTool`.
@@ -183,6 +202,17 @@ Example investigation request:
 - Lead Agent summarization is served by `OpenAiAgentReasoningService`; it uses the official OpenAI .NET SDK when `OPENAI_API_KEY` is set and deterministic fallback output otherwise.
 - MCP endpoint and repository defaults are served by `InMemorySettingsStore`.
 - Workflow runs are stored in `InMemoryWorkflowRunStore`.
+- Scheduled tasks are stored and prioritized by `InMemoryTaskScheduler`.
+
+## Verification
+
+```powershell
+dotnet restore AgentWorkflowBuilder.slnx
+dotnet build --no-restore AgentWorkflowBuilder.slnx
+dotnet test AgentWorkflowBuilder.slnx --no-restore --no-build
+cd src/agent-workflow-ui
+bun run build
+```
 
 The interfaces are intentionally stable so real MCP, Qdrant, Neo4j, GitHub/GitLab, LLM, and persistent run storage implementations can replace the mocks later.
 

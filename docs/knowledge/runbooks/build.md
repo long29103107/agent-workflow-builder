@@ -4,7 +4,7 @@ title: Build
 domain: operations
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-19
 tags:
   - runbook
   - build
@@ -19,9 +19,8 @@ Build the backend, CLI, MCP adapter, and frontend.
 ## .NET Projects
 
 ```powershell
-dotnet build src/AgentWorkflow.Api/AgentWorkflow.Api.csproj
-dotnet build src/AgentWorkflow.Cli/AgentWorkflow.Cli.csproj
-dotnet build src/AgentWorkflow.Mcp/AgentWorkflow.Mcp.csproj
+dotnet restore AgentWorkflowBuilder.slnx
+dotnet build --no-restore AgentWorkflowBuilder.slnx
 ```
 
 ## Frontend

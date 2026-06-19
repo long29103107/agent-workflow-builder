@@ -4,7 +4,7 @@ title: Test
 domain: operations
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-19
 tags:
   - runbook
   - test
@@ -18,7 +18,13 @@ Describe the current verification path.
 
 ## Automated Tests
 
-Not detected from repository analysis.
+Run Core unit tests and API integration tests:
+
+```powershell
+dotnet test AgentWorkflowBuilder.slnx --no-restore --no-build
+```
+
+The scheduler tests cover priority ordering, FIFO tie-breaking, validation, concurrent claiming, API enqueue/process behavior, and empty-queue behavior.
 
 ## Smoke Tests
 
@@ -46,4 +52,4 @@ Expected high-level result: JSON output with `result.status` equal to `Completed
 
 ## Open Questions
 
-- Unit, integration, and browser test strategy is not detected from repository analysis.
+- Browser automation is not yet configured.

@@ -10,6 +10,40 @@ public sealed record TaskItem(
     string Priority,
     IReadOnlyList<string> Tags);
 
+public enum ScheduledTaskPriority
+{
+    Low = 0,
+    Medium = 1,
+    High = 2,
+    Critical = 3
+}
+
+public enum ScheduledTaskStatus
+{
+    Queued,
+    Processing,
+    Completed,
+    Failed
+}
+
+public sealed record ScheduleTaskRequest(
+    string TaskId,
+    ScheduledTaskPriority? Priority,
+    string? RepositoryPath,
+    string? RepositoryUrl);
+
+public sealed record ScheduledTask(
+    Guid Id,
+    string TaskId,
+    string TaskTitle,
+    ScheduledTaskPriority Priority,
+    ScheduledTaskStatus Status,
+    DateTimeOffset QueuedAt,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt,
+    Guid? WorkflowRunId,
+    string? Error);
+
 public sealed record WorkflowRun(
     Guid Id,
     string TaskId,

@@ -4,7 +4,7 @@ title: Agent Workflow UI
 domain: frontend
 owner: project
 status: draft
-last_updated: 2026-06-16
+last_updated: 2026-06-19
 tags:
   - service
   - react
@@ -24,6 +24,7 @@ Provide the React investigation console for selecting tasks, saving mock endpoin
 - Start workflow investigations against a local repository path or mock GitHub repository URL.
 - Fetch workflow events.
 - Render task, investigation, settings, run status, timeline, and result views.
+- Queue selected tasks, refresh scheduler state, and process the next priority item.
 
 ## Main APIs / Entry Points
 
@@ -51,6 +52,7 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 - Settings save is scoped to the API session because the current settings store is in memory.
 - Repository URL settings select a mock GitHub workspace target until real clone and checkout are implemented.
 - If settings cannot load, the UI shows a local mock settings fallback message.
+- Priority and ordering decisions remain in Core; the UI only submits and displays scheduler state.
 
 ## Configuration
 

@@ -12,6 +12,12 @@ public static class WebApplicationExtensions
             options.Title = "Agent Workflow API";
             options.OpenApiRoutePattern = "/swagger/{documentName}/swagger.json";
         });
+        app.UseSwaggerUI(options =>
+        {
+            options.RoutePrefix = "swagger";
+            options.DocumentTitle = "Agent Workflow API - Swagger UI";
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Agent Workflow API v1");
+        });
 
         return app;
     }

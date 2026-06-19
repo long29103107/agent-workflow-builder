@@ -8,6 +8,14 @@ public interface ITaskSource
     Task<TaskItem?> GetTaskAsync(string taskId, CancellationToken cancellationToken);
 }
 
+public interface ITaskScheduler
+{
+    Task<ScheduledTask> EnqueueAsync(ScheduleTaskRequest request, CancellationToken cancellationToken);
+    IReadOnlyList<ScheduledTask> GetScheduledTasks();
+    ScheduledTask? GetScheduledTask(Guid scheduledTaskId);
+    Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken);
+}
+
 public interface IJiraMcpTool : ITaskSource
 {
     string EndpointName { get; }

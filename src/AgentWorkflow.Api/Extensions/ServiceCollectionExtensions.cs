@@ -1,4 +1,5 @@
 using AgentWorkflow.Core.Infrastructure;
+using System.Text.Json.Serialization;
 
 namespace AgentWorkflow.Api.Extensions;
 
@@ -8,6 +9,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddProblemDetails();
         services.AddOpenApi();
+        services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>

@@ -3,6 +3,7 @@ import { InvestigationLane } from "./features/investigation/InvestigationLane";
 import { Results } from "./features/results/Results";
 import { RunStatus } from "./features/runs/RunStatus";
 import { Timeline } from "./features/runs/Timeline";
+import { SchedulerPanel } from "./features/scheduler/SchedulerPanel";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { TaskPanel } from "./features/tasks/TaskPanel";
 import { useInvestigationConsole } from "./hooks/useInvestigationConsole";
@@ -47,6 +48,17 @@ export function App() {
           repoUrl={consoleState.repoUrl}
         />
       </section>
+
+      <SchedulerPanel
+        isLoading={consoleState.isLoadingSchedule}
+        isProcessing={consoleState.isProcessingNext}
+        isQueueing={consoleState.isQueueingTask}
+        onProcessNext={consoleState.processNextTask}
+        onQueueSelected={consoleState.queueSelectedTask}
+        onRefresh={consoleState.loadScheduledTasks}
+        scheduledTasks={consoleState.scheduledTasks}
+        selectedTask={consoleState.selectedTask}
+      />
 
       <section className="run-grid">
         <RunStatus run={consoleState.run} />

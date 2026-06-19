@@ -4,7 +4,7 @@ title: Investigation Workflow Rules
 domain: workflow
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-19
 tags:
   - business-rule
   - workflow
@@ -24,11 +24,16 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Subagent suggested steps are ordered by `ExecutionStep.Order`.
 - Risks and open questions are merged from subagent output and reasoning output, then de-duplicated.
 - A workflow run starts as `Running` and becomes `Completed` or `Failed`.
+- Scheduled tasks run in Critical, High, Medium, then Low order.
+- Tasks with equal priority run in FIFO enqueue order.
+- A task cannot have more than one active queued or processing item.
+- Processing claims an item before starting the investigation workflow so concurrent calls do not process the same item.
 
 ## Validation
 
 - API rejects blank `taskId` with a bad request response.
 - Missing task IDs fail through the workflow engine with a failed run.
+- Unknown scheduler task IDs are rejected before enqueue.
 
 ## Edge Cases
 

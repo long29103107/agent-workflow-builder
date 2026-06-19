@@ -13,10 +13,14 @@ PPP_TTT
 ## Phase Index
 
 - `001-skeleton.md`: runnable skeleton and repo-local operating system.
-- `002-github-repository-workspace.md`: GitHub repository connection, clone workspace, checkout, repository context.
-- `003-real-mcp.md`: Jira MCP, Notion MCP, auth, tool execution logs.
-- `004-repo-intelligence.md`: GitHub/GitLab, code search, dependency graph, file summarization.
-- `005-advanced-orchestration.md`: parallel agents, retries, approval gates, human review, plan-to-PR.
+- `002-platform-foundation.md`: engineering baseline, Project, EngineeringTask, typed lifecycle, PostgreSQL persistence.
+- `003-durable-orchestration.md`: background worker, durable state machine, approvals, evidence, artifacts.
+- `004-sandbox-github-workspace.md`: isolated execution, GitHub clone, checkout, branch, protected-path policy.
+- `005-investigation-architecture.md`: WorkItem intake, repo intelligence, Investigator, Architect, plan approval.
+- `006-implementation-testing-review.md`: Coder, Tester, Reviewer, diffs, verification, implementation approval.
+- `007-pull-request-lifecycle.md`: GitHub App, commit, push, PR Agent, checks, merge approval.
+- `008-workspace-ui-observability.md`: engineering workspace UI, activity, usage, cost, metrics, traces.
+- `009-memory-security-hardening.md`: durable memory, Qdrant, Neo4j, auth, recovery, policy hardening.
 
 ## Working Rule
 

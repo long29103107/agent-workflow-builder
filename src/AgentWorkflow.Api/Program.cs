@@ -18,3 +18,5 @@ app.MapAgentWorkflowApiDocumentation();
 app.MapAgentWorkflowApi();
 
 app.Run();
+
+public partial class Program;
