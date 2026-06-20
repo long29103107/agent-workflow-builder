@@ -27,6 +27,6 @@ PPP_TTT
 Before implementing a task:
 
 1. Select or create a task ID in a phase file.
-2. Read matching memories in `.codex/memories/tasks/`; completed tasks may be compacted into phase-level memory files.
+2. Query CodeGraph for matching source code context when `.codegraph/` is initialized; read Markdown phase and knowledge files directly.
 3. Implement the task.
-4. Write or update a memory note that includes the same task ID.
+4. Update the phase status and any durable knowledge files affected by the change.

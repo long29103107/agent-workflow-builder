@@ -21,6 +21,18 @@ Run the Agent Workflow Builder MVP locally.
 - .NET 10 SDK
 - Bun for the React UI
 - Docker when using Docker Compose
+- Optional: CodeGraph CLI for repo-local source code memory.
+
+## Repo Memory
+
+```powershell
+irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex
+codegraph install
+codegraph init
+codegraph status .
+```
+
+CodeGraph stores its local SQLite index under `.codegraph/`, which is ignored by git.
 
 ## Backend
 
@@ -33,6 +45,7 @@ Default local API URL: `http://localhost:5275`.
 API documentation:
 
 - Scalar UI: `http://localhost:5275/scalar/v1`
+- Swagger UI: `http://localhost:5275/swagger`
 - Swagger/OpenAPI JSON: `http://localhost:5275/swagger/v1/swagger.json`
 
 ## Frontend

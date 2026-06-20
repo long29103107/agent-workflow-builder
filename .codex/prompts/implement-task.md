@@ -10,7 +10,7 @@ Before editing:
 
 1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and `.codex/phases/README.md`.
 2. Select an existing phase/task ID in `PPP_TTT` format or add a new task to the relevant `.codex/phases/*.md` file.
-3. Read the selected phase file and any related `.codex/memories/tasks/*.md` files.
+3. Read the selected phase file and query CodeGraph for related source code context when `.codegraph/` is initialized.
 4. Identify which surfaces are affected:
    - `src/AgentWorkflow.Core`
    - `src/AgentWorkflow.Api`
@@ -42,7 +42,7 @@ Before editing:
 - Preserve cancellation-token plumbing in async .NET code.
 - Keep OpenAI SDK usage behind `IAgentReasoningService`.
 - Keep frontend commands Bun-based.
-- Keep the phase file and task memory synchronized by task ID.
+- Keep the phase file synchronized with the selected task ID and update durable knowledge when behavior changes.
 - Update `docs/knowledge`, `README.md`, `AGENTS.md`, `.codex/prompts`, or `.codex/skills` when runtime behavior or workflow rules change.
 - Do not touch unrelated generated files, caches, or previous user changes.
 
@@ -61,16 +61,17 @@ bun run build
 
 If restore/network is blocked, request scoped approval for the exact command.
 
-## Task Memory
+## CodeGraph Memory
 
-After implementation, create or update a note under `.codex/memories/tasks/` using `.codex/memories/task-memory-template.md`.
+Use CodeGraph as the repo-local searchable memory surface instead of Markdown memory files.
 
-For active or narrow task notes, the memory filename should start with the selected task ID:
+Useful commands:
 
-```text
-.codex/memories/tasks/PPP_TTT-short-slug.md
+```powershell
+codegraph status .
+codegraph query AgentWorkflow --limit 10
+codegraph explore "How does the scheduler process tasks?"
+codegraph node src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs
 ```
 
-Completed historical task notes may be compacted into a phase-level memory file when each task ID remains a searchable heading.
-
-Record phase, task ID, implementation log, verification, goal achieved, and next idea.
+If `codegraph` is unavailable or `.codegraph/` is not initialized, say so and fall back to targeted `rg`/file reads. Use `rg` and direct file reads for Markdown phase and knowledge files.

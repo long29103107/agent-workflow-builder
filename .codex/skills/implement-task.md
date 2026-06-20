@@ -6,16 +6,17 @@ Use this repo-local skill when the user asks to implement, wire, fix, or deliver
 
 1. Understand the requested task and affected surfaces.
 2. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, and relevant source files before editing.
-3. Use `src/AgentWorkflow.Core` as the source of truth for domain models, interfaces, orchestration, agents, memory, MCP abstractions, and OpenAI SDK reasoning.
-4. Keep entrypoints thin:
+3. Query CodeGraph for related source code context when `.codegraph/` is initialized; fall back to targeted `rg` and file reads when unavailable.
+4. Use `src/AgentWorkflow.Core` as the source of truth for domain models, interfaces, orchestration, agents, memory, MCP abstractions, and OpenAI SDK reasoning.
+5. Keep entrypoints thin:
    - `src/AgentWorkflow.Api`
    - `src/AgentWorkflow.Cli`
    - `src/AgentWorkflow.Mcp`
    - `src/agent-workflow-ui`
-5. Implement mock-first behavior unless the user explicitly asks for a real provider.
-6. Update docs, knowledge files, and repo-local agent assets when behavior, commands, or conventions change.
-7. Verify with the smallest useful command set.
-8. Summarize changed files, verification, and any follow-up risks.
+6. Implement mock-first behavior unless the user explicitly asks for a real provider.
+7. Update docs, knowledge files, and repo-local agent assets when behavior, commands, or conventions change.
+8. Verify with the smallest useful command set.
+9. Summarize changed files, verification, and any follow-up risks.
 
 ## Surface Rules
 

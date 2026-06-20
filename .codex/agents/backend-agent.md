@@ -9,7 +9,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 ## Inputs
 
 - Current request and expected task id from `.codex/phases`.
-- Existing task memory from `.codex/memories/tasks`.
+- CodeGraph context when `.codegraph/` is initialized.
 - Project knowledge from `docs/knowledge/index.md` and related service, business, data, or integration files.
 - Relevant Core/API files under `src/AgentWorkflow.Core` and `src/AgentWorkflow.Api`.
 - Supporting agent notes from `core-platform-agent.md` when the task touches source-of-truth Core behavior.
@@ -23,7 +23,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 5. Keep `Program.cs` thin: service registration and endpoint mapping only.
 6. Propagate cancellation tokens through async APIs.
 7. Update API, CLI, and MCP adapters only after the shared Core behavior is stable.
-8. Record completed work and achieved goal in the matching memory task file.
+8. Update the phase task and durable knowledge when backend behavior changes.
 
 ## Guardrails
 
@@ -31,7 +31,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 - Do not add real Jira, Notion, Qdrant, Neo4j, GitHub/GitLab, or OpenAI-only behavior without a runnable fallback.
 - Do not require `OPENAI_API_KEY` for the default local path.
 - Do not introduce peer-to-peer agent swarms.
-- Do not store secrets in source, `.codex`, examples, or task memory.
+- Do not store secrets in source, `.codex`, examples, docs, or CodeGraph-indexed files.
 
 ## Verification
 

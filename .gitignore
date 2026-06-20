@@ -34,6 +34,10 @@ pnpm-debug.log*
 .bun-cache/
 .bun-temp/
 
+# Local code intelligence
+.codegraph/
+.codegraph-*/
+
 # Environment and local settings
 .env
 .env.*

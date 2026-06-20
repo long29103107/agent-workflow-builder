@@ -38,6 +38,8 @@ Status: done
 
 ### 001_004: Setup Phase Task Memory Workflow
 
+Superseded by `001_022`, which replaces Markdown task memory files with CodeGraph.
+
 Things to do:
 
 - Add durable project context, later superseded by `docs/knowledge/`.
@@ -141,6 +143,8 @@ Status: done
 
 ### 001_013: Prune Superseded Codex Context
 
+Superseded in part by `001_022`, which removes `.codex/memories` from active routing.
+
 Things to do:
 
 - Remove `.codex/context/` after durable project knowledge moved to `docs/knowledge/`.
@@ -164,6 +168,8 @@ Status: done
 
 ### 001_015: Compact Phase Task Memories
 
+Superseded by `001_022`, which replaces compact Markdown task memories with CodeGraph.
+
 Things to do:
 
 - Compact completed Phase 001 task memories into one phase-level summary file.
@@ -174,6 +180,8 @@ Things to do:
 Status: done
 
 ### 001_016: Add API Swagger And Scalar
+
+Memory note requirement superseded by `001_022`; API documentation URLs remain current.
 
 Things to do:
 
@@ -236,4 +244,38 @@ Things to do:
 - Keep API documentation registration and mapping outside Program.cs.
 - Update README and API knowledge, then verify build and integration tests.
 
-Status: in progress
+Status: done
+
+### 001_022: Replace Markdown Task Memories With CodeGraph
+
+Things to do:
+
+- Use CodeGraph as the repo-local searchable code/task context index.
+- Remove `.codex/memories` Markdown task memory workflow from active routing.
+- Update AGENTS, config, prompts, agents, phase guidance, README, and knowledge docs.
+- Ignore `.codegraph/` local SQLite indexes and document install/init commands.
+
+Status: done
+
+### 001_023: Restructure UI Into Agent Workspace Dashboard
+
+Things to do:
+
+- Replace the investigation-console layout with a dashboard shell and sidebar.
+- Add a request intake area for direct user requests.
+- Show an Agent Planner breakdown from the current request and selected task.
+- Add a Kanban-style processing section for backlog, queued, processing, and completed work.
+- Keep repository and API key configuration in a sidebar section without changing backend secret contracts.
+
+Status: done
+
+### 001_024: Add Kanban Task Pipeline Status
+
+Things to do:
+
+- Add a GitHub-style pipeline status section for the currently queued or processing task.
+- Show pipeline stages when a Todo item starts processing.
+- Keep the Kanban board and pipeline components split by responsibility.
+- Verify the Bun frontend build.
+
+Status: in-progress

@@ -24,6 +24,7 @@ Provide repository context, vector-style memory, and graph-style relationships t
 - When a GitHub URL is provided, repository context is currently a mock GitHub workspace summary; real clone and checkout are planned in Phase 002.
 - `MockMemoryService` stores memory items in process memory.
 - `MockMemoryService` returns static graph relationships for task, repository, and workflow-memory context.
+- CodeGraph provides repository-local source-derived code memory for Codex workflow context and replaces `.codex/memories/` Markdown task logs. This is separate from runtime workflow memory exposed through `IMemoryService`; Markdown phase and knowledge files are still read directly.
 
 ## Planned Implementation
 
@@ -46,11 +47,13 @@ Inferred from source code, Docker Compose, and backlog:
 - `src/AgentWorkflow.Core/Infrastructure/Repository/MockRepositoryConnectionService.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Memory/MockMemoryService.cs`
 - `docker-compose.yml`
+- `.codex/skills/codegraph-memory.md`
 
 ## Related Knowledge
 
 - [Workflow Domain Models](../data/workflow-domain-models.md)
 - [Mock-First Provider Boundary Rules](../business/mock-first-provider-boundaries.md)
+- [CodeGraph Repo Memory](codegraph-memory.md)
 
 ## Open Questions
 

@@ -4,7 +4,7 @@ title: Agent Workflow UI
 domain: frontend
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-20
 tags:
   - service
   - react
@@ -15,16 +15,26 @@ tags:
 
 ## Purpose
 
-Provide the React investigation console for selecting tasks, saving mock endpoint settings, starting investigations, and viewing results.
+Provide the React agent workspace dashboard for capturing user requests, showing previous requests, showing a planner breakdown, processing work through a Kanban board, saving repository settings, and viewing run output.
 
 ## Responsibilities
 
-- Load tasks from the API.
-- Load and update API session settings.
-- Start workflow investigations against a local repository path or mock GitHub repository URL.
-- Fetch workflow events.
-- Render task, investigation, settings, run status, timeline, and result views.
+- Render a dashboard shell with sidebar navigation.
+- Split the dashboard into client-side routes: `/request`, `/planner`, `/kanban`, and `/configuration`.
+- Keep page and section components split by responsibility.
+- Capture a direct user request in the Request page.
+- Show previous submitted requests below the request input.
+- Submit requests into Agent Planner logs with `Pending approval` status.
+- Allow approved planner logs to generate Kanban backlog tasks.
+- Show an Agent Planner breakdown in its own routed section.
+- Load tasks from the API as the request pool.
+- Render the basic Kanban flow: Backlog, Todo, In Progress, Code Review, Testing, and Done.
+- Show a GitHub-style task pipeline for the currently queued or processing Kanban task.
 - Queue selected tasks, refresh scheduler state, and process the next priority item.
+- Load and update repository/API session settings.
+- Keep an API key field in UI session state only.
+- Start workflow investigations against a local repository path or mock GitHub repository URL.
+- Fetch workflow events and render run status, timeline, and results.
 
 ## Main APIs / Entry Points
 
@@ -48,11 +58,18 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 
 ## Business Rules
 
-- Investigation cannot start without a selected task.
-- Settings save is scoped to the API session because the current settings store is in memory.
+- Planner logs are generated from submitted free-form request text and wait for user approval before creating Kanban tasks.
+- Request history is local UI session state in this slice.
+- Planner approval and generated Kanban tasks are local UI session state in this slice.
+- Queueing or running investigation requires a selected task.
+- Repository settings save is scoped to the API session because the current settings store is in memory.
+- The API key field is not sent to the backend in this slice because the backend settings contract does not contain a secret field.
 - Repository URL settings select a mock GitHub workspace target until real clone and checkout are implemented.
 - If settings cannot load, the UI shows a local mock settings fallback message.
 - Priority and ordering decisions remain in Core; the UI only submits and displays scheduler state.
+- Current Core scheduler states map to Backlog from task source, Todo from queued tasks, In Progress from processing tasks, and Done from completed tasks. Code Review and Testing are placeholder lanes until the backend lifecycle expands.
+- Todo cards can be started from the Kanban board, including by dropping a Todo card onto In Progress. Local planner-generated tasks move directly to Processing; API-backed queued tasks use the current process-next scheduler endpoint.
+- The task pipeline section reflects the active Queued, Processing, or Completed scheduler item. Code Review and Testing remain visual pipeline stages until backend statuses exist for those lifecycle steps.
 
 ## Configuration
 
@@ -62,6 +79,15 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 
 - `src/agent-workflow-ui/src/api/client.ts`
 - `src/agent-workflow-ui/src/hooks/useInvestigationConsole.ts`
+- `src/agent-workflow-ui/src/App.tsx`
+- `src/agent-workflow-ui/src/layout/DashboardSidebar.tsx`
+- `src/agent-workflow-ui/src/pages/RequestPage.tsx`
+- `src/agent-workflow-ui/src/routes/workspaceRoutes.ts`
+- `src/agent-workflow-ui/src/sections/PlannerSection.tsx`
+- `src/agent-workflow-ui/src/sections/KanbanSection.tsx`
+- `src/agent-workflow-ui/src/sections/PipelineStatusSection.tsx`
+- `src/agent-workflow-ui/src/sections/ConfigurationSection.tsx`
+- `src/agent-workflow-ui/src/styles.css`
 - `src/agent-workflow-ui/package.json`
 
 ## Related Knowledge

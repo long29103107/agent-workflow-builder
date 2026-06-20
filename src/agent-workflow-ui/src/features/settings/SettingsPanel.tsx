@@ -1,9 +1,11 @@
 import { Loader2, Save, Settings } from "lucide-react";
 
 type SettingsPanelProps = {
+  apiKey: string;
   isSaving: boolean;
   jiraEndpoint: string;
   message: string | null;
+  onApiKeyChange: (value: string) => void;
   notionEndpoint: string;
   onJiraEndpointChange: (value: string) => void;
   onNotionEndpointChange: (value: string) => void;
@@ -17,9 +19,11 @@ type SettingsPanelProps = {
 };
 
 export function SettingsPanel({
+  apiKey,
   isSaving,
   jiraEndpoint,
   message,
+  onApiKeyChange,
   notionEndpoint,
   onJiraEndpointChange,
   onNotionEndpointChange,
@@ -34,7 +38,7 @@ export function SettingsPanel({
   return (
     <aside className="settings-panel">
       <div className="panel-header">
-        <h2>Settings</h2>
+        <h2>Repository & Secrets</h2>
         <Settings size={18} />
       </div>
       <label>
@@ -53,6 +57,15 @@ export function SettingsPanel({
         </select>
       </label>
       <label>
+        API key
+        <input
+          autoComplete="off"
+          type="password"
+          value={apiKey}
+          onChange={(event) => onApiKeyChange(event.target.value)}
+        />
+      </label>
+      <label>
         Jira MCP endpoint
         <input value={jiraEndpoint} onChange={(event) => onJiraEndpointChange(event.target.value)} />
       </label>
@@ -65,7 +78,7 @@ export function SettingsPanel({
         Save Settings
       </button>
       <p className="settings-note">
-        {message ?? "Endpoint fields are persisted in memory while the backend uses mock MCP tools."}
+        {message ?? "Repository settings are saved to the API session. The API key field stays in this UI session."}
       </p>
     </aside>
   );

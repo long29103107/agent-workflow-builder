@@ -1,71 +1,142 @@
-import { Topbar } from "./components/Topbar";
-import { InvestigationLane } from "./features/investigation/InvestigationLane";
+import { useEffect, useMemo, useState } from "react";
+import { CircleDot } from "lucide-react";
 import { Results } from "./features/results/Results";
-import { RunStatus } from "./features/runs/RunStatus";
-import { Timeline } from "./features/runs/Timeline";
-import { SchedulerPanel } from "./features/scheduler/SchedulerPanel";
-import { SettingsPanel } from "./features/settings/SettingsPanel";
-import { TaskPanel } from "./features/tasks/TaskPanel";
 import { useInvestigationConsole } from "./hooks/useInvestigationConsole";
+import { DashboardSidebar } from "./layout/DashboardSidebar";
+import { RequestPage } from "./pages/RequestPage";
+import { getWorkspaceRoutePath, resolveWorkspaceRoute } from "./routes/workspaceRoutes";
+import type { WorkspaceRoute } from "./routes/workspaceRoutes";
+import { ConfigurationSection } from "./sections/ConfigurationSection";
+import { KanbanSection } from "./sections/KanbanSection";
+import { PipelineStatusSection } from "./sections/PipelineStatusSection";
+import { PlannerSection } from "./sections/PlannerSection";
 
 export function App() {
   const consoleState = useInvestigationConsole();
+  const [route, setRoute] = useState<WorkspaceRoute>(() => resolveWorkspaceRoute(window.location.pathname));
+  const queuedTasks = consoleState.scheduledTasks.filter((task) => task.status === "Queued");
+  const processingTasks = consoleState.scheduledTasks.filter((task) => task.status === "Processing");
+  const completedTasks = consoleState.scheduledTasks.filter((task) => task.status === "Completed");
+  const currentPipelineTask = processingTasks[0] ?? queuedTasks[0] ?? completedTasks[0] ?? null;
+  const pageTitle = useMemo(() => {
+    if (route === "request") return "Request intake";
+    if (route === "planner") return "Agent planner";
+    if (route === "kanban") return "Kanban processing";
+    return "Repository and API key";
+  }, [route]);
+
+  useEffect(() => {
+    function syncRoute() {
+      setRoute(resolveWorkspaceRoute(window.location.pathname));
+    }
+
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
+  }, []);
+
+  function navigate(nextRoute: WorkspaceRoute) {
+    const path = getWorkspaceRoutePath(nextRoute);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, "", path);
+    }
+    setRoute(nextRoute);
+  }
+
+  function submitRequest() {
+    if (consoleState.submitRequest()) {
+      navigate("planner");
+    }
+  }
 
   return (
-    <main className="shell">
-      <Topbar status={consoleState.run?.status ?? "Ready"} />
-
-      {consoleState.error && <div className="alert">{consoleState.error}</div>}
-
-      <section className="workspace">
-        <TaskPanel
-          isLoading={consoleState.isLoadingTasks}
-          onRefresh={consoleState.loadTasks}
-          onSelectTask={consoleState.setSelectedTaskId}
-          tasks={consoleState.tasks}
-        />
-
-        <InvestigationLane
-          isInvestigating={consoleState.isInvestigating}
-          onDropTask={consoleState.setSelectedTaskId}
-          onStartInvestigation={consoleState.startInvestigation}
-          selectedTask={consoleState.selectedTask}
-        />
-
-        <SettingsPanel
-          isSaving={consoleState.isSavingSettings}
-          jiraEndpoint={consoleState.jiraEndpoint}
-          message={consoleState.settingsMessage}
-          notionEndpoint={consoleState.notionEndpoint}
-          onJiraEndpointChange={consoleState.setJiraEndpoint}
-          onNotionEndpointChange={consoleState.setNotionEndpoint}
-          onRepoProviderChange={consoleState.setRepoProvider}
-          onRepoPathChange={consoleState.setRepoPath}
-          onRepoUrlChange={consoleState.setRepoUrl}
-          onSave={consoleState.saveSettings}
-          repoProvider={consoleState.repoProvider}
-          repoPath={consoleState.repoPath}
-          repoUrl={consoleState.repoUrl}
-        />
-      </section>
-
-      <SchedulerPanel
-        isLoading={consoleState.isLoadingSchedule}
-        isProcessing={consoleState.isProcessingNext}
-        isQueueing={consoleState.isQueueingTask}
-        onProcessNext={consoleState.processNextTask}
-        onQueueSelected={consoleState.queueSelectedTask}
-        onRefresh={consoleState.loadScheduledTasks}
-        scheduledTasks={consoleState.scheduledTasks}
-        selectedTask={consoleState.selectedTask}
+    <main className="dashboard-shell">
+      <DashboardSidebar
+        apiKey={consoleState.apiKey}
+        completedCount={completedTasks.length}
+        currentRoute={route}
+        onNavigate={navigate}
+        queuedCount={queuedTasks.length}
+        repoPath={consoleState.repoPath}
+        repoUrl={consoleState.repoUrl}
       />
 
-      <section className="run-grid">
-        <RunStatus run={consoleState.run} />
-        <Timeline events={consoleState.events} />
-      </section>
+      <section className="dashboard-main">
+        <header className="dashboard-header">
+          <div>
+            <span className="eyebrow">Lead Agent Control Room</span>
+            <h2>{pageTitle}</h2>
+          </div>
+          <div className="status-pill">
+            <CircleDot size={16} />
+            {consoleState.run?.status ?? "Ready"}
+          </div>
+        </header>
 
-      {consoleState.run?.result && <Results result={consoleState.run.result} />}
+        {consoleState.error && <div className="alert">{consoleState.error}</div>}
+
+        {route === "request" && (
+          <RequestPage
+            onRequestChange={consoleState.setRequestText}
+            onSubmitRequest={submitRequest}
+            requestHistory={consoleState.requestHistory}
+            requestText={consoleState.requestText}
+          />
+        )}
+
+        {route === "planner" && (
+          <>
+            <PlannerSection
+              logs={consoleState.plannerLogs}
+              onApprove={consoleState.approvePlannerLog}
+              steps={consoleState.plannerSteps}
+            />
+            {consoleState.run?.result && <Results result={consoleState.run.result} />}
+          </>
+        )}
+
+        {route === "kanban" && (
+          <>
+            <PipelineStatusSection currentTask={currentPipelineTask} />
+            <KanbanSection
+              completedTasks={completedTasks}
+              isProcessing={consoleState.isProcessingNext}
+              isQueueing={consoleState.isQueueingTask}
+              onProcessNext={consoleState.processNextTask}
+              onQueueSelected={consoleState.queueSelectedTask}
+              onSelectTask={consoleState.setSelectedTaskId}
+              onStartTask={consoleState.startQueuedTask}
+              processingTasks={processingTasks}
+              queuedTasks={queuedTasks}
+              selectedTaskId={consoleState.selectedTask?.id ?? null}
+              tasks={consoleState.backlogTasks}
+            />
+          </>
+        )}
+
+        {route === "configuration" && (
+          <ConfigurationSection
+            apiKey={consoleState.apiKey}
+            events={consoleState.events}
+            isSaving={consoleState.isSavingSettings}
+            message={consoleState.settingsMessage}
+            onApiKeyChange={consoleState.setApiKey}
+            onJiraEndpointChange={consoleState.setJiraEndpoint}
+            onNotionEndpointChange={consoleState.setNotionEndpoint}
+            onRepoProviderChange={consoleState.setRepoProvider}
+            onRepoPathChange={consoleState.setRepoPath}
+            onRepoUrlChange={consoleState.setRepoUrl}
+            onSave={consoleState.saveSettings}
+            run={consoleState.run}
+            settings={{
+              jiraMcpEndpoint: consoleState.jiraEndpoint,
+              notionMcpEndpoint: consoleState.notionEndpoint,
+              repositoryPath: consoleState.repoPath,
+              repositoryProvider: consoleState.repoProvider,
+              repositoryUrl: consoleState.repoUrl
+            }}
+          />
+        )}
+      </section>
     </main>
   );
 }

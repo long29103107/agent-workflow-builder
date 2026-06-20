@@ -5,8 +5,9 @@ Implement the requested feature inside the existing Agent Workflow Builder archi
 Before editing:
 
 1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and the relevant source files.
-2. Preserve the central Lead Agent / workflow engine shape.
-3. Keep API, CLI, MCP, and UI changes runnable with mock integrations first.
+2. Query CodeGraph for related source code when `.codegraph/` is initialized.
+3. Preserve the central Lead Agent / workflow engine shape.
+4. Keep API, CLI, MCP, and UI changes runnable with mock integrations first.
 
 Implementation preferences:
 

@@ -13,5 +13,5 @@ Start with `lead-task-agent.md` for broad implementation work, then use the smal
 - `backend-agent.md`: backend work spanning Core, API, CLI, MCP, DI, contracts, provider boundaries, OpenAI reasoning, memory, and external tool abstractions.
 - `core-platform-agent.md`: source-of-truth Core changes.
 - `frontend-agent.md`: Bun + React UI changes.
-- `docs-agent.md`: README, AGENTS, diagrams, `.codex` assets.
+- `docs-agent.md`: README, AGENTS, diagrams, `.codex` assets, and CodeGraph memory guidance.
 - `qa-agent.md`: verification and smoke-test selection.

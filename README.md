@@ -20,8 +20,6 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 |-- .codex/
 |   |-- agents/
 |   |-- config.toml
-|   |-- context/
-|   |-- memories/
 |   |-- phases/
 |   |-- prompts/
 |   `-- skills/
@@ -57,6 +55,19 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 
 The React UI can also queue a selected task in the Core-owned priority scheduler. Core processes queued tasks in Critical, High, Medium, then Low order and preserves FIFO order inside the same priority. Processing is triggered explicitly through the UI or API in this mock-first slice.
 
+## Repo Memory
+
+This repository uses [CodeGraph](https://github.com/colbymchenry/codegraph) for local searchable source code context instead of Markdown task memory files under `.codex/memories/`. The CodeGraph database lives in `.codegraph/`, is ignored by git, and can be rebuilt from source. Task IDs still live in `.codex/phases/`, and durable project knowledge still lives in `docs/knowledge/`.
+
+```powershell
+irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex
+codegraph install
+codegraph init
+codegraph status .
+codegraph query AgentWorkflow --limit 10
+codegraph explore "How does the scheduler process tasks?"
+```
+
 ## Run Locally
 
 ### Backend
@@ -70,6 +81,7 @@ The API listens on `http://localhost:5275` by default.
 API documentation:
 
 - Scalar UI: `http://localhost:5275/scalar/v1`
+- Swagger UI: `http://localhost:5275/swagger`
 - Swagger/OpenAPI JSON: `http://localhost:5275/swagger/v1/swagger.json`
 
 Optional OpenAI SDK reasoning:
@@ -141,6 +153,7 @@ Services:
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:5086`
 - Backend Scalar UI: `http://localhost:5086/scalar/v1`
+- Backend Swagger UI: `http://localhost:5086/swagger`
 - Backend Swagger/OpenAPI JSON: `http://localhost:5086/swagger/v1/swagger.json`
 - Neo4j browser: `http://localhost:7474`
 - Qdrant: `http://localhost:6333`
@@ -149,6 +162,7 @@ Services:
 ## API List
 
 - Scalar UI: `GET /scalar/v1`
+- Swagger UI: `GET /swagger`
 - Swagger/OpenAPI JSON: `GET /swagger/v1/swagger.json`
 - `GET /api/health`
 - `GET /api/tasks`

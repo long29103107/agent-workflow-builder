@@ -38,6 +38,7 @@ This folder converts project documentation and source-derived knowledge into Ope
 ## Integrations
 
 - [Jira And Notion MCP Integrations](integrations/jira-notion-mcp.md)
+- [CodeGraph Repo Memory](integrations/codegraph-memory.md)
 - [OpenAI Reasoning Integration](integrations/openai-reasoning.md)
 - [Memory And Repository Integrations](integrations/memory-and-repository.md)
 

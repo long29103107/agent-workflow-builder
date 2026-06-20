@@ -2,6 +2,8 @@
 
 Review changes for the Agent Workflow Builder MVP.
 
+Use CodeGraph for repo-local context when `.codegraph/` is initialized; otherwise fall back to focused `rg` and file reads.
+
 Prioritize:
 
 - Runtime regressions in the end-to-end investigation flow.

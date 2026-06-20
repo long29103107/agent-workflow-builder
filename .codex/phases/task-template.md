@@ -10,8 +10,6 @@ Things to do:
 
 Status: planned
 
-Memory file:
+Context:
 
-```text
-.codex/memories/tasks/PPP_TTT-task-title.md
-```
+- Query CodeGraph for related source code before editing when `.codegraph/` is initialized.

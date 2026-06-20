@@ -27,7 +27,7 @@ public sealed class SchedulerEndpointsTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(HttpStatusCode.OK, documentResponse.StatusCode);
         Assert.Contains("swagger-ui", content, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(""openapi"", document, StringComparison.Ordinal);
+        Assert.Contains("\"openapi\"", document, StringComparison.Ordinal);
     }
 
     [Fact]
