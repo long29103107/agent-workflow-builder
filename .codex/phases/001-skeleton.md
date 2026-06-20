@@ -291,3 +291,15 @@ Things to do:
 - Verify the Bun frontend build.
 
 Status: done
+
+### 001_026: Integrate API Workspace Workflow
+
+Things to do:
+
+- Add workspace, request intake, planner approval, generated task, scheduler, and settings contracts to Core.
+- Add mock-first in-memory workspace services and workspace-aware scheduler behavior.
+- Expose workspace-scoped API endpoints while preserving existing routes.
+- Migrate the React UI from local workflow state to workspace API state.
+- Verify Core/API tests, API build, and Bun frontend build.
+
+Status: done

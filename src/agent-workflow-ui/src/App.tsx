@@ -42,8 +42,8 @@ export function App() {
     setRoute(nextRoute);
   }
 
-  function submitRequest() {
-    if (consoleState.submitRequest()) {
+  async function submitRequest() {
+    if (await consoleState.submitRequest()) {
       navigate("planner");
     }
   }
@@ -69,7 +69,7 @@ export function App() {
           <div>
             <span className="eyebrow">Lead Agent Control Room</span>
             <h2>{pageTitle}</h2>
-            <p className="header-workspace">{consoleState.activeWorkspace.name}</p>
+            <p className="header-workspace">{consoleState.activeWorkspace?.name ?? "Loading workspace"}</p>
           </div>
           <div className="status-pill">
             <CircleDot size={16} />

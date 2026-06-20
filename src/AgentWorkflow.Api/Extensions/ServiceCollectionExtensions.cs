@@ -1,12 +1,27 @@
 using AgentWorkflow.Core.Infrastructure;
+using AgentWorkflow.Core.Domain;
 using System.Text.Json.Serialization;
 
 namespace AgentWorkflow.Api.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAgentWorkflowApi(this IServiceCollection services)
+    public static IServiceCollection AddAgentWorkflowApi(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        var workspaceDefaults = configuration.GetSection("WorkspaceDefaults").Get<WorkspaceDefaults>()
+            ?? new WorkspaceDefaults("Project Alpha", string.Empty, string.Empty, "github");
+        var toolEndpoints = new ToolEndpointSettings(
+            configuration["ToolEndpoints:JiraMcpEndpoint"] ?? "mock://jira",
+            configuration["ToolEndpoints:NotionMcpEndpoint"] ?? "mock://notion",
+            workspaceDefaults.RepositoryPath,
+            workspaceDefaults.RepositoryUrl,
+            workspaceDefaults.RepositoryProvider);
+
+        services.AddSingleton(workspaceDefaults);
+        services.AddSingleton(toolEndpoints);
         services.AddProblemDetails();
         services.AddOpenApi();
         services.ConfigureHttpJsonOptions(options =>
@@ -16,9 +31,9 @@ public static class ServiceCollectionExtensions
             options.AddDefaultPolicy(policy =>
                 policy.AllowAnyHeader()
                     .AllowAnyMethod()
-                    .WithOrigins(
-                        "http://localhost:5173",
-                        "http://127.0.0.1:5173"));
+                    .WithOrigins(allowedOrigins.Length > 0
+                        ? allowedOrigins
+                        : ["http://localhost:5173", "http://127.0.0.1:5173"]));
         });
 
         services.AddAgentWorkflowCore();

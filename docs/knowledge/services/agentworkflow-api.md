@@ -4,7 +4,7 @@ title: AgentWorkflow.Api
 domain: api
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-20
 tags:
   - service
   - api
@@ -22,7 +22,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - Register API services and Core services.
 - Configure CORS for the Vite development UI.
 - Publish Swagger/OpenAPI JSON, Scalar API reference UI, and Swagger UI.
-- Map `/api` endpoints for tasks, scheduler queue processing, workflow runs, memory, repository context, repository connection, health, and settings.
+- Map `/api` endpoints for workspaces, request intake, planner approval, tasks, scheduler queue processing, workflow runs, memory, repository context, repository connection, health, and settings.
 
 ## Main APIs / Entry Points
 
@@ -45,6 +45,20 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `POST /api/repos/connection`
 - `GET /api/settings`
 - `POST /api/settings`
+- `GET /api/workspaces`
+- `POST /api/workspaces`
+- `GET /api/workspaces/{workspaceId}`
+- `PUT /api/workspaces/{workspaceId}`
+- `GET /api/workspaces/{workspaceId}/requests`
+- `POST /api/workspaces/{workspaceId}/requests`
+- `GET /api/workspaces/{workspaceId}/planner/logs`
+- `POST /api/workspaces/{workspaceId}/planner/logs/{plannerLogId}/approve`
+- `GET /api/workspaces/{workspaceId}/tasks`
+- `GET /api/workspaces/{workspaceId}/scheduler/tasks`
+- `POST /api/workspaces/{workspaceId}/scheduler/tasks`
+- `POST /api/workspaces/{workspaceId}/scheduler/process-next`
+- `GET /api/workspaces/{workspaceId}/settings`
+- `POST /api/workspaces/{workspaceId}/settings`
 
 ## Dependencies
 
@@ -66,6 +80,11 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
 - Scheduler enqueue rejects unknown tasks and active duplicates.
 - Scheduler processing returns `404` when no queued task is available.
+- A default workspace is seeded from `WorkspaceDefaults`.
+- Request submission creates a workspace request and pending planner log.
+- Planner approval is idempotent and creates workspace-scoped planner tasks.
+- Scheduler duplicate checks and process-next selection are scoped by workspace for workspace routes.
+- Workspace state is in memory and resets when the API process restarts.
 
 ## Configuration
 
@@ -75,11 +94,13 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Local Swagger/OpenAPI JSON URL is `http://localhost:5275/swagger/v1/swagger.json`.
 - Docker Compose maps backend `8080` to host `5086`.
 - CORS allows `http://localhost:5173` and `http://127.0.0.1:5173`.
+- `Cors:AllowedOrigins`, `WorkspaceDefaults`, and `ToolEndpoints` are read from API appsettings.
 
 ## Related Files
 
 - `src/AgentWorkflow.Api/Program.cs`
 - `src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs`
+- `src/AgentWorkflow.Api/Endpoints/WorkspaceApiEndpoints.cs`
 - `src/AgentWorkflow.Api/Extensions/ServiceCollectionExtensions.cs`
 - `src/AgentWorkflow.Api/Extensions/WebApplicationExtensions.cs`
 - `src/AgentWorkflow.Api/Dockerfile`

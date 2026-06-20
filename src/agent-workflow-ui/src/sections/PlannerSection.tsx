@@ -1,5 +1,5 @@
 import { Bot, CheckCircle2 } from "lucide-react";
-import type { PlannerLog, PlannerStep } from "../hooks/useInvestigationConsole";
+import type { PlannerLog, PlannerStep } from "../types/workflow";
 
 type PlannerSectionProps = {
   logs: PlannerLog[];

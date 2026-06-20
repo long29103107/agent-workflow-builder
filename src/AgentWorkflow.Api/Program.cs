@@ -3,7 +3,7 @@ using AgentWorkflow.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAgentWorkflowApi();
+builder.Services.AddAgentWorkflowApi(builder.Configuration);
 
 var app = builder.Build();
 

@@ -6,6 +6,7 @@ namespace AgentWorkflow.Core.Infrastructure;
 public sealed class OpenAiLeadAgent : ILeadAgent
 {
     private readonly ITaskSource _tasks;
+    private readonly IWorkspaceTaskSource _workspaceTasks;
     private readonly INotionContextTool _notion;
     private readonly IRepositoryConnectionService _repositoryConnection;
     private readonly IRepositoryReader _repositoryReader;
@@ -15,6 +16,7 @@ public sealed class OpenAiLeadAgent : ILeadAgent
 
     public OpenAiLeadAgent(
         ITaskSource tasks,
+        IWorkspaceTaskSource workspaceTasks,
         INotionContextTool notion,
         IRepositoryConnectionService repositoryConnection,
         IRepositoryReader repositoryReader,
@@ -23,6 +25,7 @@ public sealed class OpenAiLeadAgent : ILeadAgent
         IEnumerable<ISubagent> subagents)
     {
         _tasks = tasks;
+        _workspaceTasks = workspaceTasks;
         _notion = notion;
         _repositoryConnection = repositoryConnection;
         _repositoryReader = repositoryReader;
@@ -36,9 +39,14 @@ public sealed class OpenAiLeadAgent : ILeadAgent
         Action<string, string> emitEvent,
         CancellationToken cancellationToken)
     {
-        emitEvent("LeadAgent", "Loading Jira task context.");
-        var task = await _tasks.GetTaskAsync(request.TaskId, cancellationToken)
-            ?? throw new InvalidOperationException($"Task '{request.TaskId}' was not found.");
+        emitEvent("LeadAgent", "Loading task context.");
+        var task = request.WorkspaceId is null
+            ? await _tasks.GetTaskAsync(request.TaskId, cancellationToken)
+            : await _workspaceTasks.GetTaskAsync(request.WorkspaceId, request.TaskId, cancellationToken);
+        if (task is null)
+        {
+            throw new InvalidOperationException($"Task '{request.TaskId}' was not found.");
+        }
 
         var notionContext = await _notion.GetTaskContextAsync(task, cancellationToken);
 

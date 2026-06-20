@@ -35,7 +35,7 @@ Things to do:
 - Add validation for unsafe or incomplete project policies.
 - Seed one default local project without breaking current settings.
 
-Status: planned
+Status: done
 
 ### 002_004: Add EngineeringTask And WorkItem Separation
 

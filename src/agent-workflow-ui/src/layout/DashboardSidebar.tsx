@@ -1,5 +1,5 @@
 import { Bot, GitBranch, Inbox, KanbanSquare, KeyRound, Plus, Settings } from "lucide-react";
-import type { WorkspaceProject } from "../hooks/useInvestigationConsole";
+import type { WorkspaceProject } from "../types/workflow";
 import type { WorkspaceRoute } from "../routes/workspaceRoutes";
 import { workspaceRoutes } from "../routes/workspaceRoutes";
 

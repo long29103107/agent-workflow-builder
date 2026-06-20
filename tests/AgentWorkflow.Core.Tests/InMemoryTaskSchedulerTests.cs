@@ -75,7 +75,7 @@ public sealed class InMemoryTaskSchedulerTests
     }
 
     private static InMemoryTaskScheduler CreateScheduler(RecordingWorkflowEngine workflow) =>
-        new(new FakeTaskSource(), workflow);
+        new(new FakeTaskSource(), new FakeWorkspaceTaskSource(), workflow);
 
     private static ScheduleTaskRequest Request(
         string taskId,
@@ -96,6 +96,22 @@ public sealed class InMemoryTaskSchedulerTests
 
         public Task<TaskItem?> GetTaskAsync(string taskId, CancellationToken cancellationToken) =>
             Task.FromResult(Tasks.FirstOrDefault(task => task.Id == taskId));
+    }
+
+    private sealed class FakeWorkspaceTaskSource : IWorkspaceTaskSource
+    {
+        private readonly FakeTaskSource _taskSource = new();
+
+        public Task<IReadOnlyList<TaskItem>> GetTasksAsync(
+            string workspaceId,
+            CancellationToken cancellationToken) =>
+            _taskSource.GetTasksAsync(cancellationToken);
+
+        public Task<TaskItem?> GetTaskAsync(
+            string workspaceId,
+            string taskId,
+            CancellationToken cancellationToken) =>
+            _taskSource.GetTaskAsync(taskId, cancellationToken);
     }
 
     private sealed class RecordingWorkflowEngine(int delayMilliseconds = 0) : IWorkflowEngine

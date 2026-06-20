@@ -5,6 +5,7 @@ namespace AgentWorkflow.Core.Infrastructure;
 
 public sealed class InMemoryTaskScheduler(
     ITaskSource taskSource,
+    IWorkspaceTaskSource workspaceTaskSource,
     IWorkflowEngine workflowEngine) : ITaskScheduler
 {
     private readonly Lock _sync = new();
@@ -20,13 +21,19 @@ public sealed class InMemoryTaskScheduler(
             throw new ArgumentException("TaskId is required.", nameof(request));
         }
 
-        var task = await taskSource.GetTaskAsync(request.TaskId, cancellationToken)
-            ?? throw new ArgumentException($"Task '{request.TaskId}' was not found.", nameof(request));
+        var task = request.WorkspaceId is null
+            ? await taskSource.GetTaskAsync(request.TaskId, cancellationToken)
+            : await workspaceTaskSource.GetTaskAsync(request.WorkspaceId, request.TaskId, cancellationToken);
+        if (task is null)
+        {
+            throw new ArgumentException($"Task '{request.TaskId}' was not found.", nameof(request));
+        }
 
         lock (_sync)
         {
             var hasActiveDuplicate = _entries.Values.Any(entry =>
                 string.Equals(entry.Item.TaskId, task.Id, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(entry.Item.WorkspaceId, request.WorkspaceId, StringComparison.OrdinalIgnoreCase) &&
                 entry.Item.Status is ScheduledTaskStatus.Queued or ScheduledTaskStatus.Processing);
 
             if (hasActiveDuplicate)
@@ -44,7 +51,8 @@ public sealed class InMemoryTaskScheduler(
                 null,
                 null,
                 null,
-                null);
+                null,
+                request.WorkspaceId);
 
             _entries[item.Id] = new ScheduledEntry(
                 item,
@@ -58,9 +66,21 @@ public sealed class InMemoryTaskScheduler(
 
     public IReadOnlyList<ScheduledTask> GetScheduledTasks()
     {
+        return GetScheduledTasksCore(workspaceId: null, filterByWorkspace: false);
+    }
+
+    public IReadOnlyList<ScheduledTask> GetScheduledTasks(string workspaceId)
+    {
+        return GetScheduledTasksCore(workspaceId, filterByWorkspace: true);
+    }
+
+    private IReadOnlyList<ScheduledTask> GetScheduledTasksCore(string? workspaceId, bool filterByWorkspace)
+    {
         lock (_sync)
         {
             return _entries.Values
+                .Where(entry => !filterByWorkspace ||
+                    string.Equals(entry.Item.WorkspaceId, workspaceId, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(entry => StatusOrder(entry.Item.Status))
                 .ThenByDescending(entry => entry.Item.Priority)
                 .ThenBy(entry => entry.Sequence)
@@ -81,12 +101,31 @@ public sealed class InMemoryTaskScheduler(
 
     public async Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken)
     {
+        return await ProcessNextCoreAsync(workspaceId: null, filterByWorkspace: false, cancellationToken);
+    }
+
+    public async Task<ScheduledTask?> ProcessNextAsync(
+        string workspaceId,
+        CancellationToken cancellationToken)
+    {
+        return await ProcessNextCoreAsync(workspaceId, filterByWorkspace: true, cancellationToken);
+    }
+
+    private async Task<ScheduledTask?> ProcessNextCoreAsync(
+        string? workspaceId,
+        bool filterByWorkspace,
+        CancellationToken cancellationToken)
+    {
         ScheduledEntry? claimed;
 
         lock (_sync)
         {
             claimed = _entries.Values
-                .Where(entry => entry.Item.Status == ScheduledTaskStatus.Queued)
+                .Where(entry => entry.Item.Status == ScheduledTaskStatus.Queued &&
+                    (!filterByWorkspace || string.Equals(
+                        entry.Item.WorkspaceId,
+                        workspaceId,
+                        StringComparison.OrdinalIgnoreCase)))
                 .OrderByDescending(entry => entry.Item.Priority)
                 .ThenBy(entry => entry.Sequence)
                 .FirstOrDefault();
@@ -111,7 +150,8 @@ public sealed class InMemoryTaskScheduler(
                     claimed.Item.TaskId,
                     claimed.RepositoryPath,
                     claimed.RepositoryUrl,
-                    RequestedAgents: []),
+                    RequestedAgents: [],
+                    WorkspaceId: claimed.Item.WorkspaceId),
                 cancellationToken);
 
             lock (_sync)

@@ -22,7 +22,7 @@ Provide the React agent workspace dashboard for capturing user requests, showing
 - Render a dashboard shell with sidebar navigation.
 - Split the dashboard into client-side routes: `/request`, `/planner`, `/kanban`, and `/configuration`.
 - Keep page and section components split by responsibility.
-- Allow multiple local workspaces, where each workspace represents one project.
+- Allow multiple API-backed workspaces, where each workspace represents one project.
 - Capture a direct user request in the Request page.
 - Show previous submitted requests below the request input.
 - Submit requests into Agent Planner logs with `Pending approval` status.
@@ -60,10 +60,10 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 ## Business Rules
 
 - Planner logs are generated from submitted free-form request text and wait for user approval before creating Kanban tasks.
-- Workspace projects are local UI session state in this slice.
+- Workspace projects, request history, planner logs, generated tasks, scheduler queues, and repository settings are loaded from workspace-scoped API endpoints.
 - Request history is scoped to the active workspace.
 - Planner approval and generated Kanban tasks are scoped to the active workspace.
-- Repository target and API key fields are scoped to the active workspace in the UI. Saving settings still writes the active workspace repository target to the current API session.
+- Repository target and API key fields are scoped to the active workspace in the UI. Repository settings are saved to the workspace API; API keys remain local UI-only state.
 - Queueing or running investigation requires a selected task.
 - Repository settings save is scoped to the API session because the current settings store is in memory.
 - The API key field is not sent to the backend in this slice because the backend settings contract does not contain a secret field.
@@ -71,9 +71,9 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 - If settings cannot load, the UI shows a local mock settings fallback message.
 - Priority and ordering decisions remain in Core; the UI only submits and displays scheduler state.
 - Current Core scheduler states map to Backlog from task source, Todo from queued tasks, In Progress from processing tasks, and Done from completed tasks. Code Review and Testing are placeholder lanes until the backend lifecycle expands.
-- Todo cards can be started from the Kanban board, including by dropping a Todo card onto In Progress. Local planner-generated tasks move directly to Processing; API-backed queued tasks use the current process-next scheduler endpoint.
+- Todo cards can be started from the Kanban board, including by dropping a Todo card onto In Progress. Queue and process actions use workspace-scoped scheduler endpoints.
 - The task pipeline section reflects the active Queued, Processing, or Completed scheduler item. Code Review and Testing remain visual pipeline stages until backend statuses exist for those lifecycle steps.
-- API-loaded backlog tasks and API scheduler queues are shared by the current backend contract because the API does not yet expose workspace IDs.
+- Workspace switching reloads isolated requests, planner logs, tasks, scheduler state, and repository settings from the API.
 
 ## Configuration
 

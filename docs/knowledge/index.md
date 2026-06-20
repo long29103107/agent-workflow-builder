@@ -33,6 +33,7 @@ This folder converts project documentation and source-derived knowledge into Ope
 
 ## Data Models
 
+- [Project Aggregate And Policies](data/project-domain-model.md)
 - [Workflow Domain Models](data/workflow-domain-models.md)
 
 ## Integrations

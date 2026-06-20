@@ -3,7 +3,7 @@ type: implementation-plan
 title: AgentWorkflow.Api UI Workspace Integration Plan
 domain: agent-workflow-builder
 owner: backend
-status: draft
+status: implemented
 last_updated: 2026-06-20
 tags:
   - task
@@ -13,6 +13,10 @@ tags:
 ---
 
 # AgentWorkflow.Api UI Workspace Integration Plan
+
+## Implementation Result
+
+Implemented on 2026-06-20 with Core-owned workspace contracts, in-memory request and planner stores, workspace-aware scheduler behavior, Minimal API workspace endpoints, configuration binding, API integration tests, and an API-backed React workspace client.
 
 ## Goal
 

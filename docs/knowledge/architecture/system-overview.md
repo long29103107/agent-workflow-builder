@@ -4,7 +4,7 @@ title: System Overview
 domain: agent-workflow-builder
 owner: project
 status: draft
-last_updated: 2026-06-15
+last_updated: 2026-06-20
 tags:
   - architecture
   - system
@@ -21,6 +21,8 @@ The system receives a task, gathers repository and planning context, delegates i
 ## Architecture
 
 `AgentWorkflow.Core` is the source of truth for domain models, contracts, orchestration, mock integrations, repository context, memory, run persistence, and OpenAI SDK reasoning.
+
+The Core Project aggregate is the policy boundary for repository targets, GitHub metadata, agents, coding standards, commands, branches, protected paths, and approval gates. The current workspace API is a compatibility projection over this aggregate.
 
 Adapters stay thin:
 

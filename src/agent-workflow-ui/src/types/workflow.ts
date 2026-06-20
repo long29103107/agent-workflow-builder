@@ -14,6 +14,7 @@ export type ScheduledTaskStatus = "Queued" | "Processing" | "Completed" | "Faile
 
 export type ScheduledTask = {
   id: string;
+  workspaceId: string | null;
   taskId: string;
   taskTitle: string;
   priority: ScheduledTaskPriority;
@@ -23,6 +24,52 @@ export type ScheduledTask = {
   completedAt: string | null;
   workflowRunId: string | null;
   error: string | null;
+};
+
+export type WorkspaceProject = {
+  id: string;
+  name: string;
+  repositoryPath: string;
+  repositoryUrl: string;
+  repositoryProvider: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type WorkspaceUserRequest = {
+  id: string;
+  workspaceId: string;
+  content: string;
+  createdAt: string;
+};
+
+export type PlannerStep = {
+  title: string;
+  detail: string;
+  owner: string;
+};
+
+export type PlannerLogStatus = "PendingApproval" | "Approved";
+
+export type PlannerLog = {
+  id: string;
+  workspaceId: string;
+  requestId: string;
+  request: string;
+  status: PlannerLogStatus;
+  steps: PlannerStep[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RequestSubmissionResult = {
+  request: WorkspaceUserRequest;
+  plannerLog: PlannerLog;
+};
+
+export type PlannerApprovalResult = {
+  plannerLog: PlannerLog;
+  tasks: TaskItem[];
 };
 
 export type WorkflowEvent = {

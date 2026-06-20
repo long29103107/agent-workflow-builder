@@ -1,10 +1,10 @@
 import { Send } from "lucide-react";
-import type { RequestEntry } from "../hooks/useInvestigationConsole";
+import type { WorkspaceUserRequest } from "../types/workflow";
 
 type RequestPageProps = {
   onRequestChange: (value: string) => void;
   onSubmitRequest: () => void;
-  requestHistory: RequestEntry[];
+  requestHistory: WorkspaceUserRequest[];
   requestText: string;
 };
 

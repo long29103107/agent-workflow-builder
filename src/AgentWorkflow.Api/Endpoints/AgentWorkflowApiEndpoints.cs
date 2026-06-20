@@ -8,6 +8,7 @@ public static class AgentWorkflowApiEndpoints
     public static RouteGroupBuilder MapAgentWorkflowApi(this IEndpointRouteBuilder endpoints)
     {
         var api = endpoints.MapGroup("/api");
+        api.MapWorkspaceApi();
 
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 

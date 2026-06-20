@@ -12,8 +12,60 @@ public interface ITaskScheduler
 {
     Task<ScheduledTask> EnqueueAsync(ScheduleTaskRequest request, CancellationToken cancellationToken);
     IReadOnlyList<ScheduledTask> GetScheduledTasks();
+    IReadOnlyList<ScheduledTask> GetScheduledTasks(string workspaceId);
     ScheduledTask? GetScheduledTask(Guid scheduledTaskId);
     Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken);
+    Task<ScheduledTask?> ProcessNextAsync(string workspaceId, CancellationToken cancellationToken);
+}
+
+public interface IWorkspaceStore
+{
+    Task<IReadOnlyList<WorkspaceProject>> GetWorkspacesAsync(CancellationToken cancellationToken);
+    Task<WorkspaceProject?> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<WorkspaceProject> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken);
+    Task<WorkspaceProject?> UpdateWorkspaceAsync(string workspaceId, UpdateWorkspaceRequest request, CancellationToken cancellationToken);
+}
+
+public interface IProjectStore
+{
+    Task<IReadOnlyList<Project>> GetProjectsAsync(CancellationToken cancellationToken);
+    Task<Project?> GetProjectAsync(string projectId, CancellationToken cancellationToken);
+    Task<Project> CreateProjectAsync(CreateProjectRequest request, CancellationToken cancellationToken);
+    Task<Project?> UpdateProjectAsync(string projectId, UpdateProjectRequest request, CancellationToken cancellationToken);
+}
+
+public interface IProjectPolicyValidator
+{
+    IReadOnlyList<ProjectValidationError> Validate(CreateProjectRequest request);
+    IReadOnlyList<ProjectValidationError> Validate(UpdateProjectRequest request);
+}
+
+public interface IRequestIntakeStore
+{
+    Task<IReadOnlyList<WorkspaceUserRequest>> GetRequestsAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<WorkspaceUserRequest> CreateRequestAsync(string workspaceId, CreateWorkspaceUserRequest request, CancellationToken cancellationToken);
+}
+
+public interface IPlannerLogStore
+{
+    Task<IReadOnlyList<PlannerLog>> GetPlannerLogsAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<PlannerLog?> GetPlannerLogAsync(string workspaceId, string plannerLogId, CancellationToken cancellationToken);
+    Task<PlannerLog> CreatePendingPlannerLogAsync(string workspaceId, WorkspaceUserRequest request, CancellationToken cancellationToken);
+    Task<PlannerApprovalResult?> ApprovePlannerLogAsync(string workspaceId, string plannerLogId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TaskItem>> GetGeneratedTasksAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<TaskItem?> GetGeneratedTaskAsync(string workspaceId, string taskId, CancellationToken cancellationToken);
+}
+
+public interface IWorkspaceTaskSource
+{
+    Task<IReadOnlyList<TaskItem>> GetTasksAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<TaskItem?> GetTaskAsync(string workspaceId, string taskId, CancellationToken cancellationToken);
+}
+
+public interface IWorkspaceSettingsStore
+{
+    Task<ToolEndpointSettings?> GetSettingsAsync(string workspaceId, CancellationToken cancellationToken);
+    Task<ToolEndpointSettings?> UpdateSettingsAsync(string workspaceId, ToolEndpointSettings settings, CancellationToken cancellationToken);
 }
 
 public interface IJiraMcpTool : ITaskSource

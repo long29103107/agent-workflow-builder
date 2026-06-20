@@ -32,10 +32,14 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `ScheduledTask`: queue identity, task metadata, priority, status, timestamps, workflow run ID, and error.
 - `ScheduledTaskPriority`: `Low`, `Medium`, `High`, or `Critical`.
 - `ScheduledTaskStatus`: `Queued`, `Processing`, `Completed`, or `Failed`.
+- `WorkspaceProject`: project workspace identity, name, repository target, provider, and timestamps.
+- `WorkspaceUserRequest`: user request content and creation time scoped to a workspace.
+- `PlannerLog` and `PlannerStep`: approval status and agent planning breakdown for a workspace request.
+- `RequestSubmissionResult` and `PlannerApprovalResult`: stable API responses connecting request intake, planner approval, and generated tasks.
 
 ## Persistence
 
-Current persistence is in memory through `InMemoryWorkflowRunStore`, `InMemorySettingsStore`, and `InMemoryTaskScheduler`.
+Current persistence is in memory through `InMemoryWorkflowRunStore`, `InMemorySettingsStore`, `InMemoryTaskScheduler`, and the workspace request/planner stores.
 
 ## Database Models
 

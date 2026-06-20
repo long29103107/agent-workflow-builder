@@ -1,161 +1,277 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  enqueueScheduledTask,
-  fetchSettings,
-  fetchScheduledTasks,
-  fetchTasks,
+  approvePlannerLog as approvePlannerLogRequest,
+  createWorkspace as createWorkspaceRequest,
+  enqueueWorkspaceTask,
+  fetchPlannerLogs,
+  fetchWorkspaceRequests,
+  fetchWorkspaceScheduledTasks,
+  fetchWorkspaceSettings,
+  fetchWorkspaceTasks,
+  fetchWorkspaces,
   fetchWorkflowEvents,
   fetchWorkflowRun,
-  processNextScheduledTask,
+  processNextWorkspaceTask,
   startWorkflowInvestigation,
-  updateSettings
+  submitWorkspaceRequest,
+  updateWorkspaceSettings
 } from "../api/client";
 import type {
+  PlannerLog,
   ScheduledTask,
   TaskItem,
   ToolEndpointSettings,
+  WorkspaceProject,
+  WorkspaceUserRequest,
   WorkflowEvent,
   WorkflowRun
 } from "../types/workflow";
 
-const fallbackMessage = "Using local mock settings.";
-const defaultWorkspaceId = "workspace-default";
-
-type PlannerStep = {
-  title: string;
-  detail: string;
-  owner: string;
-};
-
-export type RequestEntry = {
-  id: string;
-  content: string;
-  createdAt: string;
-};
-
-export type PlannerLog = {
-  id: string;
-  requestId: string;
-  request: string;
-  createdAt: string;
-  status: "PendingApproval" | "Approved";
-  steps: PlannerStep[];
-};
-
-export type WorkspaceProject = {
-  id: string;
-  name: string;
-  apiKey: string;
-  generatedTasks: TaskItem[];
-  localScheduledTasks: ScheduledTask[];
-  requestHistory: RequestEntry[];
-  requestText: string;
-  plannerLogs: PlannerLog[];
-  repoPath: string;
-  repoProvider: string;
-  repoUrl: string;
-  selectedTaskId: string | null;
-};
-
-export type { PlannerStep };
+const fallbackMessage = "Could not load workspace settings.";
 
 export function useInvestigationConsole() {
+  const [workspaces, setWorkspaces] = useState<WorkspaceProject[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState("");
   const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
+  const [requestHistory, setRequestHistory] = useState<WorkspaceUserRequest[]>([]);
+  const [plannerLogs, setPlannerLogs] = useState<PlannerLog[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [requestDrafts, setRequestDrafts] = useState<Record<string, string>>({});
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [run, setRun] = useState<WorkflowRun | null>(null);
   const [events, setEvents] = useState<WorkflowEvent[]>([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
-  const [isInvestigating, setIsInvestigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [repoPath, setRepoPath] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
+  const [repoProvider, setRepoProvider] = useState("github");
   const [jiraEndpoint, setJiraEndpoint] = useState("mock://jira");
   const [notionEndpoint, setNotionEndpoint] = useState("mock://notion");
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
-  const [apiScheduledTasks, setApiScheduledTasks] = useState<ScheduledTask[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
+  const [isInvestigating, setIsInvestigating] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isQueueingTask, setIsQueueingTask] = useState(false);
   const [isProcessingNext, setIsProcessingNext] = useState(false);
-  const [workspaces, setWorkspaces] = useState<WorkspaceProject[]>(() => [createDefaultWorkspace()]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState(defaultWorkspaceId);
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
 
   const activeWorkspace = useMemo(
-    () => workspaces.find((workspace) => workspace.id === activeWorkspaceId) ?? workspaces[0],
+    () => workspaces.find((workspace) => workspace.id === activeWorkspaceId) ?? null,
     [activeWorkspaceId, workspaces]
   );
+  const scheduledTaskIds = useMemo(
+    () => new Set(scheduledTasks.map((task) => task.taskId)),
+    [scheduledTasks]
+  );
   const backlogTasks = useMemo(
-    () => [...activeWorkspace.generatedTasks, ...tasks],
-    [activeWorkspace.generatedTasks, tasks]
+    () => tasks.filter((task) => !scheduledTaskIds.has(task.id)),
+    [scheduledTaskIds, tasks]
   );
   const selectedTask = useMemo(
-    () => backlogTasks.find((task) => task.id === activeWorkspace.selectedTaskId) ?? null,
-    [activeWorkspace.selectedTaskId, backlogTasks]
+    () => backlogTasks.find((task) => task.id === selectedTaskId) ?? null,
+    [backlogTasks, selectedTaskId]
   );
-  const plannerSteps = useMemo(
-    () => createPlannerSteps(activeWorkspace.requestText, selectedTask),
-    [activeWorkspace.requestText, selectedTask]
-  );
-  const scheduledTasks = useMemo(
-    () => [...activeWorkspace.localScheduledTasks, ...apiScheduledTasks],
-    [activeWorkspace.localScheduledTasks, apiScheduledTasks]
-  );
+  const plannerSteps = plannerLogs[0]?.steps ?? [];
+  const requestText = requestDrafts[activeWorkspaceId] ?? "";
+  const apiKey = apiKeys[activeWorkspaceId] ?? "";
 
   useEffect(() => {
-    void loadTasks();
-    void loadSettings();
-    void loadScheduledTasks();
+    void initializeWorkspaces();
   }, []);
 
-  async function loadScheduledTasks() {
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+
+    setSelectedTaskId(null);
+    setRun(null);
+    setEvents([]);
+    void loadWorkspaceData(activeWorkspaceId);
+  }, [activeWorkspaceId]);
+
+  async function initializeWorkspaces() {
+    setError(null);
+    try {
+      const result = await fetchWorkspaces();
+      setWorkspaces(result);
+      setActiveWorkspaceId((current) => current || result[0]?.id || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load workspaces.");
+      setIsLoadingTasks(false);
+      setIsLoadingSchedule(false);
+    }
+  }
+
+  async function loadWorkspaceData(workspaceId: string) {
+    setIsLoadingTasks(true);
     setIsLoadingSchedule(true);
+    setError(null);
 
     try {
-      setApiScheduledTasks(await fetchScheduledTasks());
+      const [workspaceTasks, workspaceSchedule, requests, logs, settings] = await Promise.all([
+        fetchWorkspaceTasks(workspaceId),
+        fetchWorkspaceScheduledTasks(workspaceId),
+        fetchWorkspaceRequests(workspaceId),
+        fetchPlannerLogs(workspaceId),
+        fetchWorkspaceSettings(workspaceId)
+      ]);
+      setTasks(workspaceTasks);
+      setScheduledTasks(workspaceSchedule);
+      setRequestHistory(requests);
+      setPlannerLogs(logs);
+      applySettings(settings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load scheduler queue.");
+      setError(err instanceof Error ? err.message : "Could not load workspace data.");
     } finally {
+      setIsLoadingTasks(false);
       setIsLoadingSchedule(false);
     }
   }
 
   async function loadTasks() {
+    if (!activeWorkspaceId) return;
     setIsLoadingTasks(true);
-    setError(null);
-
     try {
-      setTasks(await fetchTasks());
+      setTasks(await fetchWorkspaceTasks(activeWorkspaceId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load tasks.");
+      setError(err instanceof Error ? err.message : "Could not load workspace tasks.");
     } finally {
       setIsLoadingTasks(false);
     }
   }
 
-  async function loadSettings() {
+  async function loadScheduledTasks() {
+    if (!activeWorkspaceId) return;
+    setIsLoadingSchedule(true);
     try {
-      const settings = await fetchSettings();
-      if (!settings) return;
-
-      applySettings(settings);
-    } catch {
-      setSettingsMessage(fallbackMessage);
+      setScheduledTasks(await fetchWorkspaceScheduledTasks(activeWorkspaceId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load workspace scheduler.");
+    } finally {
+      setIsLoadingSchedule(false);
     }
   }
 
+  async function createWorkspace() {
+    setError(null);
+    try {
+      const workspace = await createWorkspaceRequest(`Project ${workspaces.length + 1}`);
+      setWorkspaces((current) => [...current, workspace]);
+      setActiveWorkspaceId(workspace.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create workspace.");
+    }
+  }
+
+  async function submitRequest() {
+    const content = requestText.trim();
+    if (!activeWorkspaceId || !content) return false;
+
+    setError(null);
+    try {
+      const result = await submitWorkspaceRequest(activeWorkspaceId, content);
+      setRequestHistory((current) => [result.request, ...current]);
+      setPlannerLogs((current) => [result.plannerLog, ...current]);
+      setRequestText("");
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit request.");
+      return false;
+    }
+  }
+
+  async function approvePlannerLog(plannerLogId: string) {
+    if (!activeWorkspaceId) return;
+
+    setError(null);
+    try {
+      const result = await approvePlannerLogRequest(activeWorkspaceId, plannerLogId);
+      setPlannerLogs((current) =>
+        current.map((log) => (log.id === result.plannerLog.id ? result.plannerLog : log))
+      );
+      await loadTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not approve planner log.");
+    }
+  }
+
+  async function queueSelectedTask() {
+    if (!activeWorkspaceId || !selectedTask) return;
+
+    setIsQueueingTask(true);
+    setError(null);
+    try {
+      await enqueueWorkspaceTask(
+        activeWorkspaceId,
+        selectedTask.id,
+        repoPath,
+        repoUrl
+      );
+      setSelectedTaskId(null);
+      await Promise.all([loadTasks(), loadScheduledTasks()]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not queue task.");
+    } finally {
+      setIsQueueingTask(false);
+    }
+  }
+
+  async function processNextTask() {
+    if (!activeWorkspaceId) return;
+
+    setIsProcessingNext(true);
+    setError(null);
+    try {
+      const processed = await processNextWorkspaceTask(activeWorkspaceId);
+      await loadScheduledTasks();
+      await loadRun(processed.workflowRunId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not process scheduled task.");
+    } finally {
+      setIsProcessingNext(false);
+    }
+  }
+
+  async function startQueuedTask(_scheduledTaskId: string) {
+    await processNextTask();
+  }
+
+  async function loadRun(workflowRunId: string | null) {
+    if (!workflowRunId) return;
+
+    const nextRun = await fetchWorkflowRun(workflowRunId);
+    setRun(nextRun);
+    setEvents(await fetchWorkflowEvents(nextRun.id));
+  }
+
   async function saveSettings() {
+    if (!activeWorkspaceId) return;
+
     setIsSavingSettings(true);
     setSettingsMessage(null);
-
     try {
-      const settings = await updateSettings({
+      const settings = await updateWorkspaceSettings(activeWorkspaceId, {
         jiraMcpEndpoint: jiraEndpoint,
         notionMcpEndpoint: notionEndpoint,
-        repositoryPath: activeWorkspace.repoPath,
-        repositoryUrl: activeWorkspace.repoUrl,
-        repositoryProvider: activeWorkspace.repoProvider
+        repositoryPath: repoPath,
+        repositoryUrl: repoUrl,
+        repositoryProvider: repoProvider
       });
       applySettings(settings);
-      setSettingsMessage("Settings saved for this API session.");
+      setWorkspaces((current) =>
+        current.map((workspace) =>
+          workspace.id === activeWorkspaceId
+            ? {
+                ...workspace,
+                repositoryPath: settings.repositoryPath,
+                repositoryUrl: settings.repositoryUrl,
+                repositoryProvider: settings.repositoryProvider
+              }
+            : workspace
+        )
+      );
+      setSettingsMessage("Workspace settings saved.");
     } catch (err) {
-      setSettingsMessage(err instanceof Error ? err.message : "Could not save settings.");
+      setSettingsMessage(err instanceof Error ? err.message : fallbackMessage);
     } finally {
       setIsSavingSettings(false);
     }
@@ -168,9 +284,13 @@ export function useInvestigationConsole() {
     setError(null);
     setRun(null);
     setEvents([]);
-
     try {
-      const nextRun = await startWorkflowInvestigation(selectedTask.id, activeWorkspace.repoPath, activeWorkspace.repoUrl);
+      const nextRun = await startWorkflowInvestigation(
+        selectedTask.id,
+        repoPath,
+        repoUrl,
+        activeWorkspaceId
+      );
       setRun(nextRun);
       setEvents(await fetchWorkflowEvents(nextRun.id));
     } catch (err) {
@@ -180,186 +300,33 @@ export function useInvestigationConsole() {
     }
   }
 
-  async function queueSelectedTask() {
-    if (!selectedTask) return;
-
-    setIsQueueingTask(true);
-    setError(null);
-
-    try {
-      if (selectedTask.source === "agent-planner") {
-        updateActiveWorkspace((workspace) => ({
-          localScheduledTasks: [
-            {
-              id: crypto.randomUUID(),
-              taskId: selectedTask.id,
-              taskTitle: selectedTask.title,
-              priority: "Medium",
-              status: "Queued",
-              queuedAt: new Date().toISOString(),
-              startedAt: null,
-              completedAt: null,
-              workflowRunId: null,
-              error: null
-            },
-            ...workspace.localScheduledTasks
-          ],
-          generatedTasks: workspace.generatedTasks.filter((task) => task.id !== selectedTask.id),
-          selectedTaskId: null
-        }));
-        return;
-      }
-
-      await enqueueScheduledTask(selectedTask.id, activeWorkspace.repoPath, activeWorkspace.repoUrl);
-      await loadScheduledTasks();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not queue task.");
-    } finally {
-      setIsQueueingTask(false);
-    }
-  }
-
-  async function processNextTask() {
-    setIsProcessingNext(true);
-    setError(null);
-
-    try {
-      const nextLocalTask = activeWorkspace.localScheduledTasks.find((task) => task.status === "Queued");
-      if (nextLocalTask) {
-        moveLocalTaskToProcessing(nextLocalTask.id);
-        return;
-      }
-
-      const processed = await processNextScheduledTask();
-      await loadScheduledTasks();
-
-      if (processed.workflowRunId) {
-        const nextRun = await fetchWorkflowRun(processed.workflowRunId);
-        setRun(nextRun);
-        setEvents(await fetchWorkflowEvents(nextRun.id));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not process scheduled task.");
-    } finally {
-      setIsProcessingNext(false);
-    }
-  }
-
-  async function startQueuedTask(scheduledTaskId: string) {
-    setIsProcessingNext(true);
-    setError(null);
-
-    try {
-      const localTask = activeWorkspace.localScheduledTasks.find((task) => task.id === scheduledTaskId && task.status === "Queued");
-      if (localTask) {
-        moveLocalTaskToProcessing(localTask.id);
-        return;
-      }
-
-      const processed = await processNextScheduledTask();
-      await loadScheduledTasks();
-
-      if (processed.workflowRunId) {
-        const nextRun = await fetchWorkflowRun(processed.workflowRunId);
-        setRun(nextRun);
-        setEvents(await fetchWorkflowEvents(nextRun.id));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start scheduled task.");
-    } finally {
-      setIsProcessingNext(false);
-    }
-  }
-
-  function moveLocalTaskToProcessing(scheduledTaskId: string) {
-    updateActiveWorkspace((workspace) => ({
-      localScheduledTasks: workspace.localScheduledTasks.map((task) =>
-        task.id === scheduledTaskId
-          ? { ...task, status: "Processing", startedAt: new Date().toISOString() }
-          : task
-      )
-    }));
-  }
-
   function applySettings(settings: ToolEndpointSettings) {
-    updateActiveWorkspace(() => ({
-      repoPath: settings.repositoryPath,
-      repoUrl: settings.repositoryUrl,
-      repoProvider: settings.repositoryProvider
-    }));
+    setRepoPath(settings.repositoryPath);
+    setRepoUrl(settings.repositoryUrl);
+    setRepoProvider(settings.repositoryProvider);
     setJiraEndpoint(settings.jiraMcpEndpoint);
     setNotionEndpoint(settings.notionMcpEndpoint);
   }
 
-  function submitRequest() {
-    const content = activeWorkspace.requestText.trim();
-    if (!content) return false;
-
-    const requestId = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
-    const steps = createPlannerSteps(content, null);
-    updateActiveWorkspace((workspace) => ({
-      requestHistory: [
-        {
-          id: requestId,
-          content,
-          createdAt
-        },
-        ...workspace.requestHistory
-      ],
-      plannerLogs: [
-        {
-          id: crypto.randomUUID(),
-          requestId,
-          request: content,
-          createdAt,
-          status: "PendingApproval",
-          steps
-        },
-        ...workspace.plannerLogs
-      ],
-      requestText: ""
-    }));
-    return true;
+  function setRequestText(value: string) {
+    if (!activeWorkspaceId) return;
+    setRequestDrafts((current) => ({ ...current, [activeWorkspaceId]: value }));
   }
 
-  function approvePlannerLog(plannerLogId: string) {
-    const plannerLog = activeWorkspace.plannerLogs.find((log) => log.id === plannerLogId);
-    if (!plannerLog || plannerLog.status === "Approved") return;
-
-    updateActiveWorkspace((workspace) => ({
-      plannerLogs: workspace.plannerLogs.map((log) =>
-        log.id === plannerLogId ? { ...log, status: "Approved" } : log
-      ),
-      generatedTasks: [...createTasksFromPlannerLog(plannerLog), ...workspace.generatedTasks]
-    }));
-  }
-
-  function createWorkspace() {
-    const workspaceNumber = workspaces.length + 1;
-    const workspace = createWorkspaceProject(`Project ${workspaceNumber}`);
-    setWorkspaces((current) => [...current, workspace]);
-    setActiveWorkspaceId(workspace.id);
-  }
-
-  function updateActiveWorkspace(updater: (workspace: WorkspaceProject) => Partial<WorkspaceProject>) {
-    setWorkspaces((current) =>
-      current.map((workspace) =>
-        workspace.id === activeWorkspaceId ? { ...workspace, ...updater(workspace) } : workspace
-      )
-    );
-  }
-
-  function setWorkspaceValue<K extends keyof WorkspaceProject>(key: K, value: WorkspaceProject[K]) {
-    updateActiveWorkspace(() => ({ [key]: value } as Pick<WorkspaceProject, K>));
+  function setApiKey(value: string) {
+    if (!activeWorkspaceId) return;
+    setApiKeys((current) => ({ ...current, [activeWorkspaceId]: value }));
   }
 
   return {
     activeWorkspace,
     activeWorkspaceId,
+    apiKey,
+    approvePlannerLog,
+    backlogTasks,
+    createWorkspace,
     error,
     events,
-    apiKey: activeWorkspace.apiKey,
     isInvestigating,
     isLoadingSchedule,
     isLoadingTasks,
@@ -367,34 +334,31 @@ export function useInvestigationConsole() {
     isQueueingTask,
     isSavingSettings,
     jiraEndpoint,
-    loadTasks,
     loadScheduledTasks,
+    loadTasks,
     notionEndpoint,
-    repoProvider: activeWorkspace.repoProvider,
-    repoPath: activeWorkspace.repoPath,
-    repoUrl: activeWorkspace.repoUrl,
-    requestText: activeWorkspace.requestText,
-    requestHistory: activeWorkspace.requestHistory,
-    run,
-    scheduledTasks,
-    saveSettings,
-    selectedTask,
-    approvePlannerLog,
-    backlogTasks,
-    createWorkspace,
+    plannerLogs,
+    plannerSteps,
     processNextTask,
     queueSelectedTask,
-    plannerSteps,
-    plannerLogs: activeWorkspace.plannerLogs,
+    repoPath,
+    repoProvider,
+    repoUrl,
+    requestHistory,
+    requestText,
+    run,
+    saveSettings,
+    scheduledTasks,
+    selectedTask,
     setActiveWorkspaceId,
-    setApiKey: (value: string) => setWorkspaceValue("apiKey", value),
+    setApiKey,
     setJiraEndpoint,
     setNotionEndpoint,
-    setRepoPath: (value: string) => setWorkspaceValue("repoPath", value),
-    setRepoProvider: (value: string) => setWorkspaceValue("repoProvider", value),
-    setRepoUrl: (value: string) => setWorkspaceValue("repoUrl", value),
-    setRequestText: (value: string) => setWorkspaceValue("requestText", value),
-    setSelectedTaskId: (value: string | null) => setWorkspaceValue("selectedTaskId", value),
+    setRepoPath,
+    setRepoProvider,
+    setRepoUrl,
+    setRequestText,
+    setSelectedTaskId,
     settingsMessage,
     startInvestigation,
     startQueuedTask,
@@ -402,74 +366,4 @@ export function useInvestigationConsole() {
     tasks,
     workspaces
   };
-}
-
-function createWorkspaceProject(name: string): WorkspaceProject {
-  return {
-    id: crypto.randomUUID(),
-    name,
-    apiKey: "",
-    generatedTasks: [],
-    localScheduledTasks: [],
-    requestHistory: [],
-    requestText: "",
-    plannerLogs: [],
-    repoPath: "",
-    repoProvider: "github",
-    repoUrl: "",
-    selectedTaskId: null
-  };
-}
-
-function createDefaultWorkspace(): WorkspaceProject {
-  return {
-    ...createWorkspaceProject("Project Alpha"),
-    id: defaultWorkspaceId
-  };
-}
-
-function createTasksFromPlannerLog(plannerLog: PlannerLog): TaskItem[] {
-  return plannerLog.steps.map((step, index) => ({
-    id: `planner-${plannerLog.id}-${index + 1}`,
-    source: "agent-planner",
-    key: `PLAN-${index + 1}`,
-    title: step.title,
-    description: step.detail,
-    status: "Backlog",
-    priority: index === 0 ? "High" : "Medium",
-    tags: [step.owner, "planner"]
-  }));
-}
-
-function createPlannerSteps(requestText: string, selectedTask: TaskItem | null): PlannerStep[] {
-  const trimmedRequest = requestText.trim();
-  const requestFocus = trimmedRequest.length > 0
-    ? trimmedRequest
-    : "Clarify the user request and define the implementation target.";
-  const taskFocus = selectedTask
-    ? `${selectedTask.key}: ${selectedTask.title}`
-    : "Select or create a work item for execution.";
-
-  return [
-    {
-      title: "Capture request",
-      detail: requestFocus,
-      owner: "Request intake"
-    },
-    {
-      title: "Ground in work item",
-      detail: taskFocus,
-      owner: "Agent planner"
-    },
-    {
-      title: "Plan execution",
-      detail: "Break the request into repository investigation, implementation, verification, and review slices.",
-      owner: "Lead agent"
-    },
-    {
-      title: "Prepare processing",
-      detail: "Queue the selected task, process the next priority item, then inspect run output and agent activity.",
-      owner: "Scheduler"
-    }
-  ];
 }

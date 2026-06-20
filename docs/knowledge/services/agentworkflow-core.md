@@ -4,7 +4,7 @@ title: AgentWorkflow.Core
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-20
 tags:
   - service
   - core
@@ -23,6 +23,8 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Resolve repository connection targets, then query repository, memory, Jira, and Notion abstractions.
 - Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
+- Own the Project aggregate, project-policy validation, and in-memory Project store.
+- Project current workspace records as a compatibility surface over the Project store.
 - Keep fallback behavior runnable without `OPENAI_API_KEY`.
 
 ## Main APIs / Entry Points
@@ -32,6 +34,8 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`
 - `IRepositoryConnectionService.ResolveConnection`
+- `IProjectStore.GetProjectsAsync`
+- `IProjectPolicyValidator.Validate`
 - `AddAgentWorkflowCore`
 
 ## Dependencies
@@ -41,7 +45,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 
 ## Data Models
 
-See [Workflow Domain Models](../data/workflow-domain-models.md).
+See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workflow Domain Models](../data/workflow-domain-models.md).
 
 ## Business Rules
 
@@ -70,3 +74,4 @@ See [Workflow Domain Models](../data/workflow-domain-models.md).
 
 - Persistent run storage implementation is not detected from repository analysis.
 - The scheduler store is intentionally in memory until Phase 3 durable orchestration.
+- Project persistence is intentionally in memory until Phase 2 PostgreSQL persistence.
