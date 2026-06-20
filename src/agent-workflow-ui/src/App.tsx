@@ -51,13 +51,17 @@ export function App() {
   return (
     <main className="dashboard-shell">
       <DashboardSidebar
+        activeWorkspaceId={consoleState.activeWorkspaceId}
         apiKey={consoleState.apiKey}
         completedCount={completedTasks.length}
         currentRoute={route}
+        onCreateWorkspace={consoleState.createWorkspace}
         onNavigate={navigate}
+        onWorkspaceChange={consoleState.setActiveWorkspaceId}
         queuedCount={queuedTasks.length}
         repoPath={consoleState.repoPath}
         repoUrl={consoleState.repoUrl}
+        workspaces={consoleState.workspaces}
       />
 
       <section className="dashboard-main">
@@ -65,6 +69,7 @@ export function App() {
           <div>
             <span className="eyebrow">Lead Agent Control Room</span>
             <h2>{pageTitle}</h2>
+            <p className="header-workspace">{consoleState.activeWorkspace.name}</p>
           </div>
           <div className="status-pill">
             <CircleDot size={16} />

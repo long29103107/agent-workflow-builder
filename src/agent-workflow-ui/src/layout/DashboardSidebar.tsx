@@ -1,26 +1,37 @@
-import { Bot, GitBranch, Inbox, KanbanSquare, KeyRound, Settings } from "lucide-react";
+import { Bot, GitBranch, Inbox, KanbanSquare, KeyRound, Plus, Settings } from "lucide-react";
+import type { WorkspaceProject } from "../hooks/useInvestigationConsole";
 import type { WorkspaceRoute } from "../routes/workspaceRoutes";
 import { workspaceRoutes } from "../routes/workspaceRoutes";
 
 type DashboardSidebarProps = {
+  activeWorkspaceId: string;
   apiKey: string;
   completedCount: number;
   currentRoute: WorkspaceRoute;
+  onCreateWorkspace: () => void;
   onNavigate: (route: WorkspaceRoute) => void;
+  onWorkspaceChange: (workspaceId: string) => void;
   queuedCount: number;
   repoPath: string;
   repoUrl: string;
+  workspaces: WorkspaceProject[];
 };
 
 export function DashboardSidebar({
+  activeWorkspaceId,
   apiKey,
   completedCount,
   currentRoute,
+  onCreateWorkspace,
   onNavigate,
+  onWorkspaceChange,
   queuedCount,
   repoPath,
-  repoUrl
+  repoUrl,
+  workspaces
 }: DashboardSidebarProps) {
+  const activeWorkspace = workspaces.find((workspace) => workspace.id === activeWorkspaceId);
+
   return (
     <aside className="dashboard-sidebar">
       <div className="brand-lockup">
@@ -30,6 +41,30 @@ export function DashboardSidebar({
           <h1>Workflow Builder</h1>
         </div>
       </div>
+
+      <section className="sidebar-section workspace-switcher">
+        <div className="sidebar-section-header">
+          <span className="eyebrow">Workspaces</span>
+          <button className="sidebar-icon-button" aria-label="Create workspace" onClick={onCreateWorkspace}>
+            <Plus size={15} />
+          </button>
+        </div>
+        <label className="workspace-select-label">
+          <span>Project</span>
+          <select
+            className="workspace-select"
+            value={activeWorkspaceId}
+            onChange={(event) => onWorkspaceChange(event.target.value)}
+          >
+            {workspaces.map((workspace) => (
+              <option key={workspace.id} value={workspace.id}>
+                {workspace.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="workspace-target">{activeWorkspace?.repoUrl || activeWorkspace?.repoPath || "No repo target"}</p>
+      </section>
 
       <nav className="sidebar-nav" aria-label="Workspace sections">
         {workspaceRoutes.map((route) => (

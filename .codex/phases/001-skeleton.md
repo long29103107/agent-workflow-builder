@@ -279,3 +279,15 @@ Things to do:
 - Verify the Bun frontend build.
 
 Status: done
+sib
+### 001_025: Add Multiple UI Workspaces
+
+Things to do:
+
+- Add multiple local workspaces to the React dashboard.
+- Treat each workspace as a project with its own request, planner, local Kanban, repository target, and API key state.
+- Add workspace selection and creation in the sidebar.
+- Keep API-backed task source and scheduler behavior compatible with the current backend contract.
+- Verify the Bun frontend build.
+
+Status: done

@@ -19,6 +19,7 @@ import type {
 } from "../types/workflow";
 
 const fallbackMessage = "Using local mock settings.";
+const defaultWorkspaceId = "workspace-default";
 
 type PlannerStep = {
   title: string;
@@ -41,43 +42,60 @@ export type PlannerLog = {
   steps: PlannerStep[];
 };
 
+export type WorkspaceProject = {
+  id: string;
+  name: string;
+  apiKey: string;
+  generatedTasks: TaskItem[];
+  localScheduledTasks: ScheduledTask[];
+  requestHistory: RequestEntry[];
+  requestText: string;
+  plannerLogs: PlannerLog[];
+  repoPath: string;
+  repoProvider: string;
+  repoUrl: string;
+  selectedTaskId: string | null;
+};
+
 export type { PlannerStep };
 
 export function useInvestigationConsole() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [run, setRun] = useState<WorkflowRun | null>(null);
   const [events, setEvents] = useState<WorkflowEvent[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [repoPath, setRepoPath] = useState("");
-  const [repoUrl, setRepoUrl] = useState("");
-  const [repoProvider, setRepoProvider] = useState("github");
-  const [apiKey, setApiKey] = useState("");
   const [jiraEndpoint, setJiraEndpoint] = useState("mock://jira");
   const [notionEndpoint, setNotionEndpoint] = useState("mock://notion");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [apiScheduledTasks, setApiScheduledTasks] = useState<ScheduledTask[]>([]);
-  const [localScheduledTasks, setLocalScheduledTasks] = useState<ScheduledTask[]>([]);
-  const [generatedTasks, setGeneratedTasks] = useState<TaskItem[]>([]);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
   const [isQueueingTask, setIsQueueingTask] = useState(false);
   const [isProcessingNext, setIsProcessingNext] = useState(false);
+  const [workspaces, setWorkspaces] = useState<WorkspaceProject[]>(() => [createDefaultWorkspace()]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(defaultWorkspaceId);
 
-  const selectedTask = useMemo(
-    () => tasks.find((task) => task.id === selectedTaskId) ?? null,
-    [selectedTaskId, tasks]
+  const activeWorkspace = useMemo(
+    () => workspaces.find((workspace) => workspace.id === activeWorkspaceId) ?? workspaces[0],
+    [activeWorkspaceId, workspaces]
   );
-  const [requestText, setRequestText] = useState("");
-  const [requestHistory, setRequestHistory] = useState<RequestEntry[]>([]);
-  const [plannerLogs, setPlannerLogs] = useState<PlannerLog[]>([]);
-  const plannerSteps = useMemo(() => createPlannerSteps(requestText, selectedTask), [requestText, selectedTask]);
-  const backlogTasks = useMemo(() => [...generatedTasks, ...tasks], [generatedTasks, tasks]);
+  const backlogTasks = useMemo(
+    () => [...activeWorkspace.generatedTasks, ...tasks],
+    [activeWorkspace.generatedTasks, tasks]
+  );
+  const selectedTask = useMemo(
+    () => backlogTasks.find((task) => task.id === activeWorkspace.selectedTaskId) ?? null,
+    [activeWorkspace.selectedTaskId, backlogTasks]
+  );
+  const plannerSteps = useMemo(
+    () => createPlannerSteps(activeWorkspace.requestText, selectedTask),
+    [activeWorkspace.requestText, selectedTask]
+  );
   const scheduledTasks = useMemo(
-    () => [...localScheduledTasks, ...apiScheduledTasks],
-    [apiScheduledTasks, localScheduledTasks]
+    () => [...activeWorkspace.localScheduledTasks, ...apiScheduledTasks],
+    [activeWorkspace.localScheduledTasks, apiScheduledTasks]
   );
 
   useEffect(() => {
@@ -130,9 +148,9 @@ export function useInvestigationConsole() {
       const settings = await updateSettings({
         jiraMcpEndpoint: jiraEndpoint,
         notionMcpEndpoint: notionEndpoint,
-        repositoryPath: repoPath,
-        repositoryUrl: repoUrl,
-        repositoryProvider: repoProvider
+        repositoryPath: activeWorkspace.repoPath,
+        repositoryUrl: activeWorkspace.repoUrl,
+        repositoryProvider: activeWorkspace.repoProvider
       });
       applySettings(settings);
       setSettingsMessage("Settings saved for this API session.");
@@ -152,7 +170,7 @@ export function useInvestigationConsole() {
     setEvents([]);
 
     try {
-      const nextRun = await startWorkflowInvestigation(selectedTask.id, repoPath, repoUrl);
+      const nextRun = await startWorkflowInvestigation(selectedTask.id, activeWorkspace.repoPath, activeWorkspace.repoUrl);
       setRun(nextRun);
       setEvents(await fetchWorkflowEvents(nextRun.id));
     } catch (err) {
@@ -170,27 +188,29 @@ export function useInvestigationConsole() {
 
     try {
       if (selectedTask.source === "agent-planner") {
-        setLocalScheduledTasks((current) => [
-          {
-            id: crypto.randomUUID(),
-            taskId: selectedTask.id,
-            taskTitle: selectedTask.title,
-            priority: "Medium",
-            status: "Queued",
-            queuedAt: new Date().toISOString(),
-            startedAt: null,
-            completedAt: null,
-            workflowRunId: null,
-            error: null
-          },
-          ...current
-        ]);
-        setGeneratedTasks((current) => current.filter((task) => task.id !== selectedTask.id));
-        setSelectedTaskId(null);
+        updateActiveWorkspace((workspace) => ({
+          localScheduledTasks: [
+            {
+              id: crypto.randomUUID(),
+              taskId: selectedTask.id,
+              taskTitle: selectedTask.title,
+              priority: "Medium",
+              status: "Queued",
+              queuedAt: new Date().toISOString(),
+              startedAt: null,
+              completedAt: null,
+              workflowRunId: null,
+              error: null
+            },
+            ...workspace.localScheduledTasks
+          ],
+          generatedTasks: workspace.generatedTasks.filter((task) => task.id !== selectedTask.id),
+          selectedTaskId: null
+        }));
         return;
       }
 
-      await enqueueScheduledTask(selectedTask.id, repoPath, repoUrl);
+      await enqueueScheduledTask(selectedTask.id, activeWorkspace.repoPath, activeWorkspace.repoUrl);
       await loadScheduledTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not queue task.");
@@ -204,7 +224,7 @@ export function useInvestigationConsole() {
     setError(null);
 
     try {
-      const nextLocalTask = localScheduledTasks.find((task) => task.status === "Queued");
+      const nextLocalTask = activeWorkspace.localScheduledTasks.find((task) => task.status === "Queued");
       if (nextLocalTask) {
         moveLocalTaskToProcessing(nextLocalTask.id);
         return;
@@ -230,7 +250,7 @@ export function useInvestigationConsole() {
     setError(null);
 
     try {
-      const localTask = localScheduledTasks.find((task) => task.id === scheduledTaskId && task.status === "Queued");
+      const localTask = activeWorkspace.localScheduledTasks.find((task) => task.id === scheduledTaskId && task.status === "Queued");
       if (localTask) {
         moveLocalTaskToProcessing(localTask.id);
         return;
@@ -252,67 +272,94 @@ export function useInvestigationConsole() {
   }
 
   function moveLocalTaskToProcessing(scheduledTaskId: string) {
-    setLocalScheduledTasks((current) =>
-      current.map((task) =>
+    updateActiveWorkspace((workspace) => ({
+      localScheduledTasks: workspace.localScheduledTasks.map((task) =>
         task.id === scheduledTaskId
           ? { ...task, status: "Processing", startedAt: new Date().toISOString() }
           : task
       )
-    );
+    }));
   }
 
   function applySettings(settings: ToolEndpointSettings) {
-    setRepoPath(settings.repositoryPath);
-    setRepoUrl(settings.repositoryUrl);
-    setRepoProvider(settings.repositoryProvider);
+    updateActiveWorkspace(() => ({
+      repoPath: settings.repositoryPath,
+      repoUrl: settings.repositoryUrl,
+      repoProvider: settings.repositoryProvider
+    }));
     setJiraEndpoint(settings.jiraMcpEndpoint);
     setNotionEndpoint(settings.notionMcpEndpoint);
   }
 
   function submitRequest() {
-    const content = requestText.trim();
+    const content = activeWorkspace.requestText.trim();
     if (!content) return false;
 
     const requestId = crypto.randomUUID();
     const createdAt = new Date().toISOString();
     const steps = createPlannerSteps(content, null);
-    setRequestHistory((current) => [
-      {
-        id: requestId,
-        content,
-        createdAt
-      },
-      ...current
-    ]);
-    setPlannerLogs((current) => [
-      {
-        id: crypto.randomUUID(),
-        requestId,
-        request: content,
-        createdAt,
-        status: "PendingApproval",
-        steps
-      },
-      ...current
-    ]);
-    setRequestText("");
+    updateActiveWorkspace((workspace) => ({
+      requestHistory: [
+        {
+          id: requestId,
+          content,
+          createdAt
+        },
+        ...workspace.requestHistory
+      ],
+      plannerLogs: [
+        {
+          id: crypto.randomUUID(),
+          requestId,
+          request: content,
+          createdAt,
+          status: "PendingApproval",
+          steps
+        },
+        ...workspace.plannerLogs
+      ],
+      requestText: ""
+    }));
     return true;
   }
 
   function approvePlannerLog(plannerLogId: string) {
-    const plannerLog = plannerLogs.find((log) => log.id === plannerLogId);
+    const plannerLog = activeWorkspace.plannerLogs.find((log) => log.id === plannerLogId);
     if (!plannerLog || plannerLog.status === "Approved") return;
 
-    setPlannerLogs((current) =>
-      current.map((log) => (log.id === plannerLogId ? { ...log, status: "Approved" } : log))
+    updateActiveWorkspace((workspace) => ({
+      plannerLogs: workspace.plannerLogs.map((log) =>
+        log.id === plannerLogId ? { ...log, status: "Approved" } : log
+      ),
+      generatedTasks: [...createTasksFromPlannerLog(plannerLog), ...workspace.generatedTasks]
+    }));
+  }
+
+  function createWorkspace() {
+    const workspaceNumber = workspaces.length + 1;
+    const workspace = createWorkspaceProject(`Project ${workspaceNumber}`);
+    setWorkspaces((current) => [...current, workspace]);
+    setActiveWorkspaceId(workspace.id);
+  }
+
+  function updateActiveWorkspace(updater: (workspace: WorkspaceProject) => Partial<WorkspaceProject>) {
+    setWorkspaces((current) =>
+      current.map((workspace) =>
+        workspace.id === activeWorkspaceId ? { ...workspace, ...updater(workspace) } : workspace
+      )
     );
-    setGeneratedTasks((current) => [...createTasksFromPlannerLog(plannerLog), ...current]);
+  }
+
+  function setWorkspaceValue<K extends keyof WorkspaceProject>(key: K, value: WorkspaceProject[K]) {
+    updateActiveWorkspace(() => ({ [key]: value } as Pick<WorkspaceProject, K>));
   }
 
   return {
+    activeWorkspace,
+    activeWorkspaceId,
     error,
     events,
-    apiKey,
+    apiKey: activeWorkspace.apiKey,
     isInvestigating,
     isLoadingSchedule,
     isLoadingTasks,
@@ -323,34 +370,61 @@ export function useInvestigationConsole() {
     loadTasks,
     loadScheduledTasks,
     notionEndpoint,
-    repoProvider,
-    repoPath,
-    repoUrl,
-    requestText,
-    requestHistory,
+    repoProvider: activeWorkspace.repoProvider,
+    repoPath: activeWorkspace.repoPath,
+    repoUrl: activeWorkspace.repoUrl,
+    requestText: activeWorkspace.requestText,
+    requestHistory: activeWorkspace.requestHistory,
     run,
     scheduledTasks,
     saveSettings,
     selectedTask,
     approvePlannerLog,
     backlogTasks,
+    createWorkspace,
     processNextTask,
     queueSelectedTask,
     plannerSteps,
-    plannerLogs,
-    setApiKey,
+    plannerLogs: activeWorkspace.plannerLogs,
+    setActiveWorkspaceId,
+    setApiKey: (value: string) => setWorkspaceValue("apiKey", value),
     setJiraEndpoint,
     setNotionEndpoint,
-    setRepoPath,
-    setRepoProvider,
-    setRepoUrl,
-    setRequestText,
-    setSelectedTaskId,
+    setRepoPath: (value: string) => setWorkspaceValue("repoPath", value),
+    setRepoProvider: (value: string) => setWorkspaceValue("repoProvider", value),
+    setRepoUrl: (value: string) => setWorkspaceValue("repoUrl", value),
+    setRequestText: (value: string) => setWorkspaceValue("requestText", value),
+    setSelectedTaskId: (value: string | null) => setWorkspaceValue("selectedTaskId", value),
     settingsMessage,
     startInvestigation,
     startQueuedTask,
     submitRequest,
-    tasks
+    tasks,
+    workspaces
+  };
+}
+
+function createWorkspaceProject(name: string): WorkspaceProject {
+  return {
+    id: crypto.randomUUID(),
+    name,
+    apiKey: "",
+    generatedTasks: [],
+    localScheduledTasks: [],
+    requestHistory: [],
+    requestText: "",
+    plannerLogs: [],
+    repoPath: "",
+    repoProvider: "github",
+    repoUrl: "",
+    selectedTaskId: null
+  };
+}
+
+function createDefaultWorkspace(): WorkspaceProject {
+  return {
+    ...createWorkspaceProject("Project Alpha"),
+    id: defaultWorkspaceId
   };
 }
 
