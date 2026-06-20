@@ -278,4 +278,4 @@ Things to do:
 - Keep the Kanban board and pipeline components split by responsibility.
 - Verify the Bun frontend build.
 
-Status: in-progress
+Status: done
