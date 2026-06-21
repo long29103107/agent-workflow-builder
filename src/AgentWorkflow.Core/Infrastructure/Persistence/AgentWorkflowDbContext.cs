@@ -61,6 +61,7 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
             entity.HasKey(item => item.Id);
             entity.Property(item => item.TaskId).HasMaxLength(128);
             entity.Property(item => item.Status).HasMaxLength(64);
+            entity.Property(item => item.Stage).HasMaxLength(64);
             entity.Property(item => item.ResultJson).HasColumnType("jsonb");
             entity.HasIndex(item => item.TaskId);
         });
@@ -119,9 +120,12 @@ public sealed class WorkflowRunEntity
     public Guid Id { get; set; }
     public string TaskId { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string Stage { get; set; } = string.Empty;
+    public int Attempt { get; set; }
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public string? ResultJson { get; set; }
+    public string? FailureDetails { get; set; }
 }
 
 public sealed class WorkflowEventEntity

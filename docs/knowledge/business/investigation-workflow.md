@@ -23,7 +23,11 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Subagents are selected by name matching when requested; if no requested agent matches, all subagents run.
 - Subagent suggested steps are ordered by `ExecutionStep.Order`.
 - Risks and open questions are merged from subagent output and reasoning output, then de-duplicated.
-- A workflow run starts as `Running` and becomes `Completed` or `Failed`.
+- A workflow run starts at `Created`, then advances through `LoadingTaskContext`, `ResolvingRepository`, `LoadingMemory`, `Investigating`, and `Aggregating` before `Completed`.
+- Any non-terminal stage may transition to `Failed`; completed and failed runs are terminal.
+- The Lead Agent is the authority for work-stage progression. The workflow engine persists those transitions and owns terminal completion or failure.
+- Invalid, skipped, repeated, or out-of-order stage transitions are rejected before persistence.
+- Every run persists its current stage, one-based attempt number, result, and failure details.
 - Scheduled tasks run in Critical, High, Medium, then Low order.
 - Tasks with equal priority run in FIFO enqueue order.
 - A task cannot have more than one active queued or processing item.

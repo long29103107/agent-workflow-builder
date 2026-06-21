@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AgentWorkflow.Core.Application;
 using AgentWorkflow.Core.Domain;
 
@@ -6,10 +7,14 @@ namespace AgentWorkflow.Cli.Application;
 
 public sealed class CliRunner(IWorkflowEngine workflowEngine)
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
+    private static readonly JsonSerializerOptions SerializerOptions = CreateSerializerOptions();
+
+    private static JsonSerializerOptions CreateSerializerOptions()
     {
-        WriteIndented = true
-    };
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
 
     public async Task<int> RunAsync(CliOptions options, CancellationToken cancellationToken)
     {

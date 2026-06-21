@@ -22,6 +22,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Coordinate the Lead Agent and subagents.
 - Resolve repository connection targets, then query repository, memory, Jira, and Notion abstractions.
 - Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
+- Enforce the durable workflow stage machine and persist stage, attempt, result, and failure details.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
 - Own the Project aggregate, project-policy validation, and in-memory Project store.
 - Own platform EngineeringTasks, typed task lifecycle state, linked Jira/Notion WorkItems, and their in-memory store.
@@ -33,6 +34,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 ## Main APIs / Entry Points
 
 - `IWorkflowEngine.StartInvestigationAsync`
+- `IWorkflowRunStore.TransitionRun`
 - `ITaskScheduler.EnqueueAsync`
 - `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`
@@ -79,5 +81,5 @@ See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workf
 
 ## Open Questions
 
-- The scheduler store is intentionally in memory until Phase 3 durable orchestration.
+- The scheduler queue remains in memory until the background workflow worker task is implemented.
 - CLI, MCP, and tests use the in-memory persistence fallback unless a PostgreSQL connection is passed to Core registration.

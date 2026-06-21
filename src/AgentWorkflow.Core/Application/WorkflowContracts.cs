@@ -154,7 +154,10 @@ public interface ISubagent
 
 public interface ILeadAgent
 {
-    Task<InvestigationResult> InvestigateAsync(InvestigationRequest request, Action<string, string> emitEvent, CancellationToken cancellationToken);
+    Task<InvestigationResult> InvestigateAsync(
+        InvestigationRequest request,
+        Action<WorkflowStage, string, string> advanceStage,
+        CancellationToken cancellationToken);
 }
 
 public interface IWorkflowEngine
@@ -168,6 +171,7 @@ public interface IWorkflowRunStore
     WorkflowRun? GetRun(Guid runId);
     IReadOnlyList<WorkflowEvent> GetEvents(Guid runId);
     void AddEvent(Guid runId, string agent, string type, string message);
+    WorkflowRun TransitionRun(Guid runId, WorkflowStage nextStage);
     WorkflowRun CompleteRun(Guid runId, InvestigationResult result);
     WorkflowRun FailRun(Guid runId, string reason);
 }

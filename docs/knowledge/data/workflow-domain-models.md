@@ -4,7 +4,7 @@ title: Workflow Domain Models
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-21
 tags:
   - data-model
   - workflow
@@ -22,7 +22,8 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `EngineeringTask`: platform-owned engineering request scoped to a Project, with typed lifecycle state, priority, linked WorkItem IDs, and timestamps.
 - `EngineeringTaskStatus`: `New`, investigation and approval stages, implementation and verification stages, pull-request stages, then `Completed` or `Failed`.
 - `WorkItem`: source-owned Jira or Notion input linked to one EngineeringTask while preserving its source key, provider status, priority, and tags.
-- `WorkflowRun`: run ID, task ID, status, timestamps, and optional result.
+- `WorkflowRun`: run ID, task ID, status, durable stage, one-based attempt, timestamps, optional result, and optional failure details.
+- `WorkflowStage`: legal lifecycle states from `Created` through context, repository, memory, investigation, and aggregation work to terminal `Completed` or `Failed`.
 - `WorkflowEvent`: timeline event with run ID, agent, type, and message.
 - `InvestigationResult`: summary, execution plan, agent messages, repository context, memory items, and graph entities.
 - `ExecutionPlan`: title, ordered steps, risks, and open questions.
@@ -51,11 +52,12 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 
 ## Database Models
 
-`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, and `workflow_events`. The initial EF Core migration creates PostgreSQL JSONB payloads, text arrays, foreign keys, cascade cleanup, and lookup indexes. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
+`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, and `workflow_events`. Workflow runs persist stage, attempt, JSONB result, and failure details. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
 
 ## Related Files
 
 - `src/AgentWorkflow.Core/Domain/WorkflowModels.cs`
+- `src/AgentWorkflow.Core/Domain/WorkflowStateMachine.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Tasks/InMemoryEngineeringTaskStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Tasks/EngineeringTaskSource.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Persistence/AgentWorkflowDbContext.cs`

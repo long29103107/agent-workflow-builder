@@ -3,6 +3,7 @@ using System;
 using AgentWorkflow.Core.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AgentWorkflow.Core.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AgentWorkflowDbContext))]
-    partial class AgentWorkflowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621132104_AddDurableWorkflowStateMachine")]
+    partial class AddDurableWorkflowStateMachine
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -32,6 +32,10 @@ public sealed class PersistenceModelTests
         Assert.Equal("engineering_tasks", engineeringTask.GetTableName());
         Assert.Equal("work_items", workItem.GetTableName());
         Assert.Equal("workflow_runs", workflowRun.GetTableName());
+        Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.Stage)));
+        Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.Attempt)));
+        Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.FailureDetails)));
+        Assert.Equal("jsonb", workflowRun.FindProperty(nameof(WorkflowRunEntity.ResultJson))!.GetColumnType());
         Assert.Equal("workflow_events", workflowEvent.GetTableName());
         Assert.Contains(engineeringTask.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(ProjectEntity) &&

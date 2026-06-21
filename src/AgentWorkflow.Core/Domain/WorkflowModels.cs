@@ -277,13 +277,28 @@ public sealed record PlannerApprovalResult(
     PlannerLog PlannerLog,
     IReadOnlyList<TaskItem> Tasks);
 
+public enum WorkflowStage
+{
+    Created,
+    LoadingTaskContext,
+    ResolvingRepository,
+    LoadingMemory,
+    Investigating,
+    Aggregating,
+    Completed,
+    Failed
+}
+
 public sealed record WorkflowRun(
     Guid Id,
     string TaskId,
     string Status,
     DateTimeOffset StartedAt,
     DateTimeOffset? CompletedAt,
-    InvestigationResult? Result);
+    InvestigationResult? Result,
+    WorkflowStage Stage = WorkflowStage.Created,
+    int Attempt = 1,
+    string? FailureDetails = null);
 
 public sealed record WorkflowEvent(
     Guid Id,

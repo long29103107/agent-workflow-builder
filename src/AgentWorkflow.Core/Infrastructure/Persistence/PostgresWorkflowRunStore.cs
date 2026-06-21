@@ -16,7 +16,10 @@ public sealed class PostgresWorkflowRunStore(
             "Running",
             DateTimeOffset.UtcNow,
             CompletedAt: null,
-            Result: null);
+            Result: null,
+            Stage: WorkflowStage.Created,
+            Attempt: 1,
+            FailureDetails: null);
         using var context = contextFactory.CreateDbContext();
         context.WorkflowRuns.Add(ToEntity(run));
         context.SaveChanges();
@@ -67,10 +70,14 @@ public sealed class PostgresWorkflowRunStore(
     {
         using var context = contextFactory.CreateDbContext();
         var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), WorkflowStage.Completed);
         entity.Status = "Completed";
+        entity.Stage = WorkflowStage.Completed.ToString();
         entity.CompletedAt = DateTimeOffset.UtcNow;
         entity.ResultJson = JsonSerializer.Serialize(result, PersistenceJson.Options);
+        entity.FailureDetails = null;
         context.SaveChanges();
+        AddEvent(runId, "Workflow Engine", "StageChanged", "Workflow advanced to Completed.");
         AddEvent(runId, "Workflow Engine", "RunCompleted", "Investigation completed and execution plan generated.");
         return ToDomain(entity);
     }
@@ -79,10 +86,25 @@ public sealed class PostgresWorkflowRunStore(
     {
         using var context = contextFactory.CreateDbContext();
         var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), WorkflowStage.Failed);
         entity.Status = "Failed";
+        entity.Stage = WorkflowStage.Failed.ToString();
         entity.CompletedAt = DateTimeOffset.UtcNow;
+        entity.FailureDetails = reason;
         context.SaveChanges();
+        AddEvent(runId, "Workflow Engine", "StageChanged", "Workflow advanced to Failed.");
         AddEvent(runId, "Workflow Engine", "RunFailed", reason);
+        return ToDomain(entity);
+    }
+
+    public WorkflowRun TransitionRun(Guid runId, WorkflowStage nextStage)
+    {
+        using var context = contextFactory.CreateDbContext();
+        var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), nextStage);
+        entity.Stage = nextStage.ToString();
+        context.SaveChanges();
+        AddEvent(runId, "LeadAgent", "StageChanged", $"Workflow advanced to {nextStage}.");
         return ToDomain(entity);
     }
 
@@ -92,8 +114,11 @@ public sealed class PostgresWorkflowRunStore(
             Id = run.Id,
             TaskId = run.TaskId,
             Status = run.Status,
+            Stage = run.Stage.ToString(),
+            Attempt = run.Attempt,
             StartedAt = run.StartedAt,
             CompletedAt = run.CompletedAt,
+            FailureDetails = run.FailureDetails,
             ResultJson = run.Result is null
                 ? null
                 : JsonSerializer.Serialize(run.Result, PersistenceJson.Options)
@@ -110,5 +135,13 @@ public sealed class PostgresWorkflowRunStore(
                 ? null
                 : JsonSerializer.Deserialize<InvestigationResult>(
                     entity.ResultJson,
-                    PersistenceJson.Options));
+                    PersistenceJson.Options),
+            ParseStage(entity.Stage),
+            entity.Attempt,
+            entity.FailureDetails);
+
+    private static WorkflowStage ParseStage(string stage) =>
+        Enum.TryParse<WorkflowStage>(stage, ignoreCase: true, out var parsed)
+            ? parsed
+            : throw new InvalidOperationException($"Unknown persisted workflow stage '{stage}'.");
 }

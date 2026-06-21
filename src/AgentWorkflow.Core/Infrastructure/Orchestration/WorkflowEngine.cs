@@ -22,7 +22,16 @@ public sealed class WorkflowEngine : IWorkflowEngine
         {
             var result = await _leadAgent.InvestigateAsync(
                 request,
-                (agent, message) => _store.AddEvent(run.Id, agent, "Activity", message),
+                (stage, agent, message) =>
+                {
+                    var current = _store.GetRun(run.Id)
+                        ?? throw new InvalidOperationException($"Workflow run '{run.Id}' was not found.");
+                    if (current.Stage != stage)
+                    {
+                        _store.TransitionRun(run.Id, stage);
+                    }
+                    _store.AddEvent(run.Id, agent, "Activity", message);
+                },
                 cancellationToken);
 
             return _store.CompleteRun(run.Id, result);

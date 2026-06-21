@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AgentWorkflow.Core.Application;
 using AgentWorkflow.Core.Domain;
 using AgentWorkflow.Mcp.Contracts;
@@ -7,10 +8,14 @@ namespace AgentWorkflow.Mcp.Protocol;
 
 public sealed class McpStdioServer(IWorkflowEngine workflowEngine)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
+
+    private static JsonSerializerOptions CreateJsonOptions()
     {
-        WriteIndented = false
-    };
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = false };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
 
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {

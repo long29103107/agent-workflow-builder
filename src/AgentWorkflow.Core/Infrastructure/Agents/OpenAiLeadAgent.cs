@@ -36,10 +36,10 @@ public sealed class OpenAiLeadAgent : ILeadAgent
 
     public async Task<InvestigationResult> InvestigateAsync(
         InvestigationRequest request,
-        Action<string, string> emitEvent,
+        Action<WorkflowStage, string, string> advanceStage,
         CancellationToken cancellationToken)
     {
-        emitEvent("LeadAgent", "Loading task context.");
+        advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
         var task = request.WorkspaceId is null
             ? await _tasks.GetTaskAsync(request.TaskId, cancellationToken)
             : await _workspaceTasks.GetTaskAsync(request.WorkspaceId, request.TaskId, cancellationToken);
@@ -50,13 +50,12 @@ public sealed class OpenAiLeadAgent : ILeadAgent
 
         var notionContext = await _notion.GetTaskContextAsync(task, cancellationToken);
 
-        emitEvent("LeadAgent", "Resolving repository connection.");
+        advanceStage(WorkflowStage.ResolvingRepository, "LeadAgent", "Resolving repository connection.");
         var connection = _repositoryConnection.ResolveConnection(request.RepositoryPath, request.RepositoryUrl);
 
-        emitEvent("LeadAgent", $"Reading repository context from {connection.Provider} target.");
+        advanceStage(WorkflowStage.LoadingMemory, "LeadAgent", $"Reading repository context from {connection.Provider} target and querying memory.");
         var repository = await _repositoryReader.GetContextAsync(connection, cancellationToken);
 
-        emitEvent("LeadAgent", "Querying vector and graph memory.");
         var memories = await _memory.SearchVectorMemoryAsync($"{task.Title} {task.Description}", cancellationToken);
         var graph = await _memory.ReadGraphRelationshipsAsync(task.Key, cancellationToken);
         await _memory.LinkTaskRepositoryEntityAsync(task.Key, repository.Name, "workflow-context", cancellationToken);
@@ -65,14 +64,16 @@ public sealed class OpenAiLeadAgent : ILeadAgent
         var activeAgents = SelectAgents(request.RequestedAgents).ToList();
         var results = new List<SubagentResult>();
 
+        advanceStage(WorkflowStage.Investigating, "LeadAgent", "Delegating investigation to selected agents.");
+
         foreach (var agent in activeAgents)
         {
-            emitEvent(agent.Name, "Investigation started.");
+            advanceStage(WorkflowStage.Investigating, agent.Name, "Investigation started.");
             results.Add(await agent.InvestigateAsync(context, cancellationToken));
-            emitEvent(agent.Name, "Investigation completed.");
+            advanceStage(WorkflowStage.Investigating, agent.Name, "Investigation completed.");
         }
 
-        emitEvent("LeadAgent", "Aggregating subagent outputs with OpenAI SDK reasoning.");
+        advanceStage(WorkflowStage.Aggregating, "LeadAgent", "Aggregating subagent outputs with OpenAI SDK reasoning.");
         var steps = results.SelectMany(result => result.SuggestedSteps)
             .OrderBy(step => step.Order)
             .ToList();

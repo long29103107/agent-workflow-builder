@@ -119,10 +119,23 @@ export type InvestigationResult = {
   graphEntities: Array<{ id: string; type: string; name: string; relatedEntityIds: string[] }>;
 };
 
+export type WorkflowStage =
+  | "Created"
+  | "LoadingTaskContext"
+  | "ResolvingRepository"
+  | "LoadingMemory"
+  | "Investigating"
+  | "Aggregating"
+  | "Completed"
+  | "Failed";
+
 export type WorkflowRun = {
   id: string;
   taskId: string;
   status: string;
+  stage: WorkflowStage;
+  attempt: number;
+  failureDetails?: string;
   startedAt: string;
   completedAt?: string;
   result?: InvestigationResult;
