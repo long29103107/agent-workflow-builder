@@ -7,6 +7,7 @@ export type TaskItem = {
   status: string;
   priority: string;
   tags: string[];
+  assignedAgent: string | null;
 };
 
 export type ScheduledTaskPriority = "Low" | "Medium" | "High" | "Critical";
@@ -24,11 +25,13 @@ export type ScheduledTask = {
   completedAt: string | null;
   workflowRunId: string | null;
   error: string | null;
+  assignedAgent: string | null;
 };
 
 export type WorkspaceProject = {
   id: string;
   name: string;
+  code: string;
   repositoryPath: string;
   repositoryUrl: string;
   repositoryProvider: string;

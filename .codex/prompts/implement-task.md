@@ -8,9 +8,9 @@ You are the implementation agent for Agent Workflow Builder. Your job is to take
 
 Before editing:
 
-1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and `.codex/phases/README.md`.
-2. Select an existing phase/task ID in `PPP_TTT` format or add a new task to the relevant `.codex/phases/*.md` file.
-3. Read the selected phase file and query CodeGraph for related source code context when `.codegraph/` is initialized.
+1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and `docs/knowledge/phases/README.md`.
+2. Read the relevant `PHASE_SUMMARY.md`; select an existing `PPP_TTT` task or add a linked task file in that phase folder.
+3. Load the selected task file only when its checklist or context is needed, then query CodeGraph when `.codegraph/` is initialized.
 4. Identify which surfaces are affected:
    - `src/AgentWorkflow.Core`
    - `src/AgentWorkflow.Api`
@@ -42,7 +42,7 @@ Before editing:
 - Preserve cancellation-token plumbing in async .NET code.
 - Keep OpenAI SDK usage behind `IAgentReasoningService`.
 - Keep frontend commands Bun-based.
-- Keep the phase file synchronized with the selected task ID and update durable knowledge when behavior changes.
+- Keep the task file and concise phase summary synchronized and update durable knowledge when behavior changes.
 - Update `docs/knowledge`, `README.md`, `AGENTS.md`, `.codex/prompts`, or `.codex/skills` when runtime behavior or workflow rules change.
 - Do not touch unrelated generated files, caches, or previous user changes.
 

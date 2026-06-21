@@ -31,12 +31,13 @@ export async function fetchWorkspaces(): Promise<WorkspaceProject[]> {
   return readJson<WorkspaceProject[]>(response, "Workspace API");
 }
 
-export async function createWorkspace(name: string): Promise<WorkspaceProject> {
+export async function createWorkspace(name: string, code: string): Promise<WorkspaceProject> {
   const response = await fetch(apiBaseUrl + "/workspaces", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name,
+      code,
       repositoryPath: "",
       repositoryUrl: "",
       repositoryProvider: "github"
@@ -67,6 +68,27 @@ export async function fetchPlannerLogs(workspaceId: string): Promise<PlannerLog[
   return readJson<PlannerLog[]>(response, "Planner logs");
 }
 
+export async function updatePlannerLog(
+  workspaceId: string,
+  plannerLogId: string,
+  steps: PlannerLog["steps"]
+): Promise<PlannerLog> {
+  const response = await fetch(
+    `${apiBaseUrl}/workspaces/${workspaceId}/planner/logs/${plannerLogId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ steps })
+    }
+  );
+  return readJson<PlannerLog>(response, "Planner update");
+}
+
+export async function fetchWorkspaceAgents(workspaceId: string): Promise<string[]> {
+  const response = await fetch(`${apiBaseUrl}/workspaces/${workspaceId}/agents`);
+  return readJson<string[]>(response, "Workspace agents");
+}
+
 export async function approvePlannerLog(
   workspaceId: string,
   plannerLogId: string
@@ -81,6 +103,22 @@ export async function approvePlannerLog(
 export async function fetchWorkspaceTasks(workspaceId: string): Promise<TaskItem[]> {
   const response = await fetch(`${apiBaseUrl}/workspaces/${workspaceId}/tasks`);
   return readJson<TaskItem[]>(response, "Workspace tasks");
+}
+
+export async function assignWorkspaceTaskAgent(
+  workspaceId: string,
+  taskId: string,
+  agentName: string
+): Promise<TaskItem> {
+  const response = await fetch(
+    `${apiBaseUrl}/workspaces/${workspaceId}/tasks/${taskId}/agent`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentName })
+    }
+  );
+  return readJson<TaskItem>(response, "Task agent assignment");
 }
 
 export async function fetchWorkspaceScheduledTasks(workspaceId: string): Promise<ScheduledTask[]> {
@@ -113,6 +151,17 @@ export async function processNextWorkspaceTask(workspaceId: string): Promise<Sch
     method: "POST"
   });
   return readJson<ScheduledTask>(response, "Workspace scheduler process");
+}
+
+export async function processWorkspaceTask(
+  workspaceId: string,
+  scheduledTaskId: string
+): Promise<ScheduledTask> {
+  const response = await fetch(
+    `${apiBaseUrl}/workspaces/${workspaceId}/scheduler/tasks/${scheduledTaskId}/process`,
+    { method: "POST" }
+  );
+  return readJson<ScheduledTask>(response, "Workspace scheduled task process");
 }
 
 export async function fetchWorkspaceSettings(

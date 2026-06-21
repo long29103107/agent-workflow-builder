@@ -32,6 +32,12 @@ public sealed class SchedulerEndpointsTests
         AssertOpenApiTag(openApi, "/api/scheduler/tasks", "get", "Scheduler");
         AssertOpenApiTag(openApi, "/api/workflows/investigate", "post", "Workflows");
         AssertOpenApiTag(openApi, "/api/workspaces", "get", "Workspaces");
+        AssertOpenApiTag(openApi, "/api/projects", "get", "Projects");
+        AssertOpenApiTag(
+            openApi,
+            "/api/projects/{projectId}/tasks",
+            "get",
+            "Engineering Tasks");
     }
 
     [Fact]

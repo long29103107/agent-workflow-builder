@@ -8,6 +8,7 @@ public sealed class ProjectPolicyValidator : IProjectPolicyValidator
     public IReadOnlyList<ProjectValidationError> Validate(CreateProjectRequest request) =>
         Validate(
             request.Name,
+            request.Code,
             request.Repository,
             request.GitHub,
             request.Agents,
@@ -20,6 +21,7 @@ public sealed class ProjectPolicyValidator : IProjectPolicyValidator
     public IReadOnlyList<ProjectValidationError> Validate(UpdateProjectRequest request) =>
         Validate(
             request.Name,
+            request.Code,
             request.Repository,
             request.GitHub,
             request.Agents,
@@ -31,6 +33,7 @@ public sealed class ProjectPolicyValidator : IProjectPolicyValidator
 
     private static IReadOnlyList<ProjectValidationError> Validate(
         string name,
+        string code,
         ProjectRepositorySettings repository,
         ProjectGitHubSettings github,
         ProjectAgentSettings agents,
@@ -49,6 +52,13 @@ public sealed class ProjectPolicyValidator : IProjectPolicyValidator
         else if (name.Trim().Length > 120)
         {
             errors.Add(new("name", "Project name cannot exceed 120 characters."));
+        }
+
+        if (!ProjectCode.IsValid(ProjectCode.Normalize(code, name)))
+        {
+            errors.Add(new(
+                "code",
+                $"Project code must start with a letter and contain 2-{ProjectCode.MaxLength} letters or digits."));
         }
 
         if (string.IsNullOrWhiteSpace(repository.Provider))

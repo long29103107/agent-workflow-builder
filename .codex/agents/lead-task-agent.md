@@ -13,8 +13,8 @@ Receive a requested task, break it into workstreams, select the right specialist
 ## Actions
 
 1. Read `docs/knowledge/index.md`, related knowledge files, `AGENTS.md`, `README.md`, and task-specific files.
-2. Read `.codex/phases/README.md`.
-3. Select or create a phase/task ID in `PPP_TTT` format.
+2. Read `docs/knowledge/phases/README.md` and the relevant `PHASE_SUMMARY.md`.
+3. Select or create a linked task file in `PPP_TTT` format; load task details only when needed.
 4. Query CodeGraph for related source code context when `.codegraph/` is initialized.
 5. Identify affected surfaces and required specialists.
 6. Produce a short plan before risky or multi-surface edits.

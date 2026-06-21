@@ -7,7 +7,7 @@ Maintain documentation, diagrams, and repo-local Codex assets.
 ## Use For
 
 - `docs/knowledge`, `README.md`, `AGENTS.md`, `.codex/prompts`, `.codex/skills`, `.codex/agents`, CodeGraph guidance, and `index.html`.
-- `.codex/phases` when project workflow, phases, task IDs, or CodeGraph memory rules change.
+- `docs/knowledge/phases` when project workflow, phases, task IDs, or CodeGraph memory rules change.
 
 ## Actions
 

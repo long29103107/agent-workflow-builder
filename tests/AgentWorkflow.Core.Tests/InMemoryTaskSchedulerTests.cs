@@ -74,6 +74,26 @@ public sealed class InMemoryTaskSchedulerTests
         Assert.All(results, result => Assert.Equal(ScheduledTaskStatus.Completed, result!.Status));
     }
 
+    [Fact]
+    public async Task ProcessAsync_ProcessesTheSelectedWorkspaceItem()
+    {
+        var workflow = new RecordingWorkflowEngine();
+        var scheduler = CreateScheduler(workflow);
+        var workspaceId = "workspace-a";
+        var low = await scheduler.EnqueueAsync(
+            Request("task-low") with { WorkspaceId = workspaceId },
+            CancellationToken.None);
+        var high = await scheduler.EnqueueAsync(
+            Request("task-high") with { WorkspaceId = workspaceId },
+            CancellationToken.None);
+
+        var processed = await scheduler.ProcessAsync(low.Id, workspaceId, CancellationToken.None);
+
+        Assert.Equal(low.Id, processed!.Id);
+        Assert.Equal(["task-low"], workflow.ProcessedTaskIds);
+        Assert.Equal(ScheduledTaskStatus.Queued, scheduler.GetScheduledTask(high.Id)!.Status);
+    }
+
     private static InMemoryTaskScheduler CreateScheduler(RecordingWorkflowEngine workflow) =>
         new(new FakeTaskSource(), new FakeWorkspaceTaskSource(), workflow);
 

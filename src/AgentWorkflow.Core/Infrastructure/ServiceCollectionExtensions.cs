@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWorkspaceSettingsStore>(provider => provider.GetRequiredService<InMemoryWorkspaceStore>());
         services.AddSingleton<IRequestIntakeStore, InMemoryRequestIntakeStore>();
         services.AddSingleton<IPlannerLogStore, InMemoryPlannerLogStore>();
+        services.AddSingleton<ITaskAssignmentStore, InMemoryTaskAssignmentStore>();
         services.AddSingleton<IWorkspaceTaskSource, WorkspaceTaskSource>();
         services.AddSingleton<IAgentReasoningService, OpenAiAgentReasoningService>();
         services.AddSingleton<ISubagent, RepositoryInvestigatorAgent>();

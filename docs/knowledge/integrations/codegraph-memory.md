@@ -19,7 +19,7 @@ Use CodeGraph as the repository-local source-code memory and code-index surface 
 
 ## Current Implementation
 
-- Task IDs and status remain in `.codex/phases/`.
+- Task IDs and status remain in `docs/knowledge/phases/`; scan phase summaries before loading individual task files.
 - Durable project knowledge remains in `docs/knowledge/`.
 - CodeGraph owns source-derived searchable code context through a local `.codegraph/` SQLite index.
 - Markdown phase and knowledge files are still read directly with `rg` or file reads.
@@ -47,7 +47,7 @@ If `codegraph` is not installed or `.codegraph/` has not been initialized, use t
 ## Related Files
 
 - `.codex/skills/codegraph-memory.md`
-- `.codex/phases/README.md`
+- `docs/knowledge/phases/README.md`
 - `AGENTS.md`
 
 ## Related Knowledge

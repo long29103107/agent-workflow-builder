@@ -6,9 +6,10 @@ public static class ProjectPolicyDefaults
 
     public static CreateProjectRequest Create(WorkspaceDefaults defaults)
     {
+        var name = string.IsNullOrWhiteSpace(defaults.Name) ? "Project Alpha" : defaults.Name.Trim();
         var (owner, repository) = ParseGitHubTarget(defaults.RepositoryUrl);
         return new CreateProjectRequest(
-            string.IsNullOrWhiteSpace(defaults.Name) ? "Project Alpha" : defaults.Name.Trim(),
+            name,
             new ProjectRepositorySettings(
                 string.IsNullOrWhiteSpace(defaults.RepositoryProvider) ? "github" : defaults.RepositoryProvider.Trim(),
                 defaults.RepositoryPath?.Trim() ?? string.Empty,
@@ -47,7 +48,8 @@ public static class ProjectPolicyDefaults
                 RequireInvestigationPlanApproval: true,
                 RequireImplementationApproval: true,
                 RequirePullRequestApproval: true,
-                RequireMergeApproval: true));
+                RequireMergeApproval: true),
+            ProjectCode.Normalize(defaults.Code, name));
     }
 
     private static (string Owner, string Repository) ParseGitHubTarget(string? value)

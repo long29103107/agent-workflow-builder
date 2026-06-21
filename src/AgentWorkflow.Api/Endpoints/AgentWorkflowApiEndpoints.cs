@@ -13,6 +13,8 @@ public static class AgentWorkflowApiEndpoints
         api.MapMemoryApi();
         api.MapRepositoryApi();
         api.MapSettingsApi();
+        api.MapProjectApi();
+        api.MapProjectTaskApi();
         api.MapWorkspaceApi();
 
         return api;

@@ -1,0 +1,22 @@
+﻿---
+type: phase-task
+task_id: 009_005
+phase: 009
+status: planned
+---
+
+# 009_005: Add Recovery And Safe Retry Policies
+
+[Phase summary](PHASE_SUMMARY.md)
+
+## Checklist
+
+- [ ] Add recovery paths for clone, execution, verification, push, PR, CI, and provider failures.
+- [ ] Retry only classified safe operations.
+- [ ] Preserve failed artifacts and evidence for diagnosis.
+- [ ] Add backup and restore procedures for authoritative state.
+
+## Progress
+
+- Status: `planned`
+- Completed items: `0/4`

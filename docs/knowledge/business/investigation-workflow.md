@@ -27,7 +27,10 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Scheduled tasks run in Critical, High, Medium, then Low order.
 - Tasks with equal priority run in FIFO enqueue order.
 - A task cannot have more than one active queued or processing item.
+- A task's assigned agent is copied into its scheduled item and becomes the investigation's requested-agent filter.
+- Planner-generated task keys use the owning Project code and a monotonically increasing project-local number.
 - Processing claims an item before starting the investigation workflow so concurrent calls do not process the same item.
+- Explicit processing by scheduled-task ID claims only that queued item within its workspace; process-next retains priority and FIFO selection.
 
 ## Validation
 

@@ -68,6 +68,7 @@ public sealed class InMemoryProjectStore : IProjectStore
 
         lock (_sync)
         {
+            EnsureCodeAvailable(project.Code);
             _projects[project.Id] = project;
         }
 
@@ -89,9 +90,14 @@ public sealed class InMemoryProjectStore : IProjectStore
                 return Task.FromResult<Project?>(null);
             }
 
+            var code = string.IsNullOrWhiteSpace(request.Code)
+                ? project.Code
+                : ProjectCode.Normalize(request.Code, request.Name);
+            EnsureCodeAvailable(code, projectId);
             var updated = project with
             {
                 Name = request.Name.Trim(),
+                Code = code,
                 Repository = request.Repository,
                 GitHub = request.GitHub,
                 Agents = request.Agents,
@@ -104,6 +110,17 @@ public sealed class InMemoryProjectStore : IProjectStore
             };
             _projects[projectId] = updated;
             return Task.FromResult<Project?>(updated);
+        }
+    }
+
+    public Task<bool> DeleteProjectAsync(
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_sync)
+        {
+            return Task.FromResult(_projects.Remove(projectId));
         }
     }
 
@@ -122,7 +139,18 @@ public sealed class InMemoryProjectStore : IProjectStore
             request.ProtectedPaths,
             request.ApprovalPolicy,
             now,
-            now);
+            now,
+            ProjectCode.Normalize(request.Code, request.Name));
+    }
+
+    private void EnsureCodeAvailable(string code, string? excludedProjectId = null)
+    {
+        if (_projects.Values.Any(project =>
+            !string.Equals(project.Id, excludedProjectId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(project.Code, code, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"Project code '{code}' is already in use.");
+        }
     }
 
     private static void EnsureValid(IReadOnlyList<ProjectValidationError> errors)

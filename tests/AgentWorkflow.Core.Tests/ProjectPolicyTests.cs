@@ -5,6 +5,15 @@ namespace AgentWorkflow.Core.Tests;
 
 public sealed class ProjectPolicyTests
 {
+    [Theory]
+    [InlineData("Agent Workflow Builder", "AWB")]
+    [InlineData("Beta", "BETA")]
+    [InlineData("project-2", "P2")]
+    public void ProjectCode_DerivesJiraStyleCode(string name, string expected)
+    {
+        Assert.Equal(expected, ProjectCode.Normalize(null, name));
+    }
+
     [Fact]
     public void Validate_DefaultPolicy_IsValid()
     {

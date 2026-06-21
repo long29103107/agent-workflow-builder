@@ -23,7 +23,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - Configure CORS for the Vite development UI.
 - Publish Swagger/OpenAPI JSON, Scalar API reference UI, and Swagger UI.
 - Organize Minimal API mappings into feature route groups and expose matching Swagger/Scalar tags.
-- Map `/api` endpoints for workspaces, request intake, planner approval, tasks, scheduler queue processing, workflow runs, memory, repository context, repository connection, health, and settings.
+- Map `/api` endpoints for Projects, project-scoped EngineeringTasks and WorkItems, workspaces, request intake, planner approval, compatibility tasks, scheduler queue processing, workflow runs, memory, repository context, repository connection, health, and settings.
 
 ## Main APIs / Entry Points
 
@@ -46,17 +46,32 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `POST /api/repos/connection`
 - `GET /api/settings`
 - `POST /api/settings`
+- `GET /api/projects`
+- `POST /api/projects`
+- `GET /api/projects/{projectId}`
+- `PUT /api/projects/{projectId}`
+- `DELETE /api/projects/{projectId}`
+- `GET /api/projects/{projectId}/tasks`
+- `POST /api/projects/{projectId}/tasks`
+- `GET /api/projects/{projectId}/tasks/{taskId}`
+- `PATCH /api/projects/{projectId}/tasks/{taskId}/status`
+- `GET /api/projects/{projectId}/tasks/{taskId}/work-items`
+- `POST /api/projects/{projectId}/tasks/{taskId}/work-items`
 - `GET /api/workspaces`
 - `POST /api/workspaces`
 - `GET /api/workspaces/{workspaceId}`
 - `PUT /api/workspaces/{workspaceId}`
 - `GET /api/workspaces/{workspaceId}/requests`
 - `POST /api/workspaces/{workspaceId}/requests`
+- `GET /api/workspaces/{workspaceId}/agents`
 - `GET /api/workspaces/{workspaceId}/planner/logs`
+- `PUT /api/workspaces/{workspaceId}/planner/logs/{plannerLogId}`
 - `POST /api/workspaces/{workspaceId}/planner/logs/{plannerLogId}/approve`
 - `GET /api/workspaces/{workspaceId}/tasks`
+- `PUT /api/workspaces/{workspaceId}/tasks/{taskId}/agent`
 - `GET /api/workspaces/{workspaceId}/scheduler/tasks`
 - `POST /api/workspaces/{workspaceId}/scheduler/tasks`
+- `POST /api/workspaces/{workspaceId}/scheduler/tasks/{scheduledTaskId}/process`
 - `POST /api/workspaces/{workspaceId}/scheduler/process-next`
 - `GET /api/workspaces/{workspaceId}/settings`
 - `POST /api/workspaces/{workspaceId}/settings`
@@ -83,9 +98,14 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Scheduler processing returns `404` when no queued task is available.
 - A default workspace is seeded from `WorkspaceDefaults`.
 - Request submission creates a Project-owned EngineeringTask, a compatible workspace request, and a pending planner log.
+- Planner edits are accepted only while a log is pending and require at least one complete step whose owner is an enabled project agent.
 - Planner approval is idempotent and creates workspace-scoped planner tasks.
+- Task assignment validates the selected name against the workspace project's enabled agents and is retained by the in-memory workspace assignment store.
 - Scheduler duplicate checks and process-next selection are scoped by workspace for workspace routes.
+- Exact scheduled-task processing is workspace-scoped and accepts only queued items, allowing Kanban drag-and-drop to start the selected card.
 - Workspace state is in memory and resets when the API process restarts.
+- Project APIs validate Core policies and protect the seeded default project from deletion.
+- Project task APIs enforce project scope, return linked WorkItems, and update typed lifecycle state.
 
 ## Configuration
 
@@ -104,6 +124,8 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - `src/AgentWorkflow.Api/Program.cs`
 - `src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs`
 - `src/AgentWorkflow.Api/Endpoints/*ApiEndpoints.cs`
+- `src/AgentWorkflow.Api/Endpoints/ProjectApiEndpoints.cs`
+- `src/AgentWorkflow.Api/Endpoints/ProjectTaskApiEndpoints.cs`
 - `src/AgentWorkflow.Api/Extensions/ServiceCollectionExtensions.cs`
 - `src/AgentWorkflow.Api/Extensions/WebApplicationExtensions.cs`
 - `src/AgentWorkflow.Api/Dockerfile`

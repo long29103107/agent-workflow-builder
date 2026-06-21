@@ -4,7 +4,7 @@ title: Agent Workflow UI
 domain: frontend
 owner: project
 status: draft
-last_updated: 2026-06-20
+last_updated: 2026-06-21
 tags:
   - service
   - react
@@ -23,15 +23,20 @@ Provide the React agent workspace dashboard for capturing user requests, showing
 - Split the dashboard into client-side routes: `/request`, `/planner`, `/kanban`, and `/configuration`.
 - Keep page and section components split by responsibility.
 - Allow multiple API-backed workspaces, where each workspace represents one project.
+- Capture a Jira-style project code when creating a workspace and show it in the project selector.
 - Capture a direct user request in the Request page.
 - Show previous submitted requests below the request input.
 - Submit requests into Agent Planner logs with `Pending approval` status.
+- Edit pending planner steps, including their title, detail, and assigned agent, before approval.
 - Allow approved planner logs to generate Kanban backlog tasks.
 - Show an Agent Planner breakdown in its own routed section.
 - Load tasks from the API as the request pool.
 - Render the basic Kanban flow: Backlog, Todo, In Progress, Code Review, Testing, and Done.
+- Keep Kanban lanes at a readable minimum width inside a contained horizontal scroller; long task, error, and agent text must not expand cards into adjacent lanes.
+- Load enabled project agents and assign one to each Kanban task.
 - Show a GitHub-style task pipeline for the currently queued or processing Kanban task.
 - Queue selected tasks, refresh scheduler state, and process the next priority item.
+- Support drag transitions from Backlog to Todo and from Todo to In Progress, backed by workspace scheduler APIs.
 - Load and update repository/API session settings.
 - Keep an API key field in UI session state only.
 - Start workflow investigations against a local repository path or mock GitHub repository URL.
@@ -60,9 +65,12 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 ## Business Rules
 
 - Planner logs are generated from submitted free-form request text and wait for user approval before creating Kanban tasks.
+- Pending planner logs can be edited, expanded, or reduced before approval; approved logs are read-only.
+- Planner step owners must be selected from the active project's enabled agents, and the owner becomes the generated task's initial assignment.
 - Workspace projects, request history, planner logs, generated tasks, scheduler queues, and repository settings are loaded from workspace-scoped API endpoints.
 - Request history is scoped to the active workspace.
 - Planner approval and generated Kanban tasks are scoped to the active workspace.
+- Kanban agent assignment is scoped to the active workspace and is carried into scheduler items and the investigation's requested-agent selection.
 - Repository target and API key fields are scoped to the active workspace in the UI. Repository settings are saved to the workspace API; API keys remain local UI-only state.
 - Queueing or running investigation requires a selected task.
 - Repository settings save is scoped to the API session because the current settings store is in memory.
@@ -71,9 +79,9 @@ TypeScript types mirror Core workflow records in `src/agent-workflow-ui/src/type
 - If settings cannot load, the UI shows a local mock settings fallback message.
 - Priority and ordering decisions remain in Core; the UI only submits and displays scheduler state.
 - Current Core scheduler states map to Backlog from task source, Todo from queued tasks, In Progress from processing tasks, and Done from completed tasks. Code Review and Testing are placeholder lanes until the backend lifecycle expands.
-- Todo cards can be started from the Kanban board, including by dropping a Todo card onto In Progress. Queue and process actions use workspace-scoped scheduler endpoints.
+- Backlog cards can be dragged onto Todo to enqueue that exact task. Todo cards can be dragged onto In Progress to process that exact scheduled item. Unsupported placeholder lanes do not accept drops.
 - The task pipeline section reflects the active Queued, Processing, or Completed scheduler item. Code Review and Testing remain visual pipeline stages until backend statuses exist for those lifecycle steps.
-- Workspace switching reloads isolated requests, planner logs, tasks, scheduler state, and repository settings from the API.
+- Workspace switching reloads isolated requests, planner logs, enabled agents, tasks, scheduler state, and repository settings from the API.
 
 ## Configuration
 

@@ -41,6 +41,7 @@ public sealed class PostgresProjectStore(
         var project = CreateProject(Guid.NewGuid().ToString("N"), request);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        await EnsureCodeAvailableAsync(context, project.Code, null, cancellationToken);
         context.Projects.Add(ToEntity(project));
         await context.SaveChangesAsync(cancellationToken);
         return project;
@@ -62,9 +63,14 @@ public sealed class PostgresProjectStore(
         }
 
         var current = ToDomain(entity);
+        var code = string.IsNullOrWhiteSpace(request.Code)
+            ? current.Code
+            : ProjectCode.Normalize(request.Code, request.Name);
+        await EnsureCodeAvailableAsync(context, code, projectId, cancellationToken);
         var updated = current with
         {
             Name = request.Name.Trim(),
+            Code = code,
             Repository = request.Repository,
             GitHub = request.GitHub,
             Agents = request.Agents,
@@ -79,6 +85,24 @@ public sealed class PostgresProjectStore(
         entity.UpdatedAt = updated.UpdatedAt;
         await context.SaveChangesAsync(cancellationToken);
         return updated;
+    }
+
+    public async Task<bool> DeleteProjectAsync(
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var entity = await context.Projects.SingleOrDefaultAsync(
+            project => project.Id == projectId,
+            cancellationToken);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        context.Projects.Remove(entity);
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private async Task EnsureSeededAsync(CancellationToken cancellationToken)
@@ -128,7 +152,27 @@ public sealed class PostgresProjectStore(
             request.ProtectedPaths,
             request.ApprovalPolicy,
             now,
-            now);
+            now,
+            ProjectCode.Normalize(request.Code, request.Name));
+    }
+
+    private static async Task EnsureCodeAvailableAsync(
+        AgentWorkflowDbContext context,
+        string code,
+        string? excludedProjectId,
+        CancellationToken cancellationToken)
+    {
+        var payloads = await context.Projects
+            .AsNoTracking()
+            .Where(project => project.Id != excludedProjectId)
+            .Select(project => project.PayloadJson)
+            .ToListAsync(cancellationToken);
+        if (payloads
+            .Select(payload => JsonSerializer.Deserialize<Project>(payload, PersistenceJson.Options))
+            .Any(project => string.Equals(project?.Code, code, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"Project code '{code}' is already in use.");
+        }
     }
 
     private static ProjectEntity ToEntity(Project project) =>

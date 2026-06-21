@@ -91,8 +91,10 @@ export function App() {
         {route === "planner" && (
           <>
             <PlannerSection
+              agents={consoleState.agents}
               logs={consoleState.plannerLogs}
               onApprove={consoleState.approvePlannerLog}
+              onUpdate={consoleState.updatePlannerLog}
               steps={consoleState.plannerSteps}
             />
             {consoleState.run?.result && <Results result={consoleState.run.result} />}
@@ -103,13 +105,16 @@ export function App() {
           <>
             <PipelineStatusSection currentTask={currentPipelineTask} />
             <KanbanSection
+              agents={consoleState.agents}
               completedTasks={completedTasks}
               isProcessing={consoleState.isProcessingNext}
               isQueueing={consoleState.isQueueingTask}
               onProcessNext={consoleState.processNextTask}
+              onQueueTask={consoleState.queueTask}
               onQueueSelected={consoleState.queueSelectedTask}
               onSelectTask={consoleState.setSelectedTaskId}
               onStartTask={consoleState.startQueuedTask}
+              onAssignAgent={consoleState.assignTaskAgent}
               processingTasks={processingTasks}
               queuedTasks={queuedTasks}
               selectedTaskId={consoleState.selectedTask?.id ?? null}

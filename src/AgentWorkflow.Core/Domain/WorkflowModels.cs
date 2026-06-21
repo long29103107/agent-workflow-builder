@@ -8,7 +8,8 @@ public sealed record TaskItem(
     string Description,
     string Status,
     string Priority,
-    IReadOnlyList<string> Tags);
+    IReadOnlyList<string> Tags,
+    string? AssignedAgent = null);
 
 public enum EngineeringTaskStatus
 {
@@ -61,6 +62,18 @@ public sealed record CreateEngineeringTaskRequest(
     ScheduledTaskPriority Priority,
     IReadOnlyList<CreateWorkItemRequest> WorkItems);
 
+public sealed record CreateProjectTaskRequest(
+    string Title,
+    string Description,
+    ScheduledTaskPriority Priority,
+    IReadOnlyList<CreateWorkItemRequest> WorkItems);
+
+public sealed record UpdateEngineeringTaskStatusRequest(EngineeringTaskStatus Status);
+
+public sealed record EngineeringTaskDetails(
+    EngineeringTask Task,
+    IReadOnlyList<WorkItem> WorkItems);
+
 public sealed record CreateWorkItemRequest(
     WorkItemSource Source,
     string SourceKey,
@@ -91,7 +104,8 @@ public sealed record ScheduleTaskRequest(
     ScheduledTaskPriority? Priority,
     string? RepositoryPath,
     string? RepositoryUrl,
-    string? WorkspaceId = null);
+    string? WorkspaceId = null,
+    string? AssignedAgent = null);
 
 public sealed record ScheduledTask(
     Guid Id,
@@ -104,7 +118,8 @@ public sealed record ScheduledTask(
     DateTimeOffset? CompletedAt,
     Guid? WorkflowRunId,
     string? Error,
-    string? WorkspaceId = null);
+    string? WorkspaceId = null,
+    string? AssignedAgent = null);
 
 public sealed record WorkspaceProject(
     string Id,
@@ -113,7 +128,8 @@ public sealed record WorkspaceProject(
     string RepositoryUrl,
     string RepositoryProvider,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string Code = "AWB");
 
 public sealed record Project(
     string Id,
@@ -127,7 +143,8 @@ public sealed record Project(
     ProjectProtectedPathPolicy ProtectedPaths,
     ProjectApprovalPolicy ApprovalPolicy,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string Code = "AWB");
 
 public sealed record ProjectRepositorySettings(
     string Provider,
@@ -179,7 +196,8 @@ public sealed record CreateProjectRequest(
     ProjectCommandSettings Commands,
     ProjectBranchPolicy BranchPolicy,
     ProjectProtectedPathPolicy ProtectedPaths,
-    ProjectApprovalPolicy ApprovalPolicy);
+    ProjectApprovalPolicy ApprovalPolicy,
+    string Code = "");
 
 public sealed record UpdateProjectRequest(
     string Name,
@@ -190,7 +208,8 @@ public sealed record UpdateProjectRequest(
     ProjectCommandSettings Commands,
     ProjectBranchPolicy BranchPolicy,
     ProjectProtectedPathPolicy ProtectedPaths,
-    ProjectApprovalPolicy ApprovalPolicy);
+    ProjectApprovalPolicy ApprovalPolicy,
+    string Code = "");
 
 public sealed record ProjectValidationError(
     string Field,
@@ -200,19 +219,22 @@ public sealed record WorkspaceDefaults(
     string Name,
     string RepositoryPath,
     string RepositoryUrl,
-    string RepositoryProvider);
+    string RepositoryProvider,
+    string? Code = null);
 
 public sealed record CreateWorkspaceRequest(
     string Name,
     string? RepositoryPath,
     string? RepositoryUrl,
-    string? RepositoryProvider);
+    string? RepositoryProvider,
+    string? Code = null);
 
 public sealed record UpdateWorkspaceRequest(
     string Name,
     string? RepositoryPath,
     string? RepositoryUrl,
-    string? RepositoryProvider);
+    string? RepositoryProvider,
+    string? Code = null);
 
 public sealed record WorkspaceUserRequest(
     string Id,
@@ -232,6 +254,10 @@ public sealed record PlannerStep(
     string Title,
     string Detail,
     string Owner);
+
+public sealed record UpdatePlannerLogRequest(IReadOnlyList<PlannerStep> Steps);
+
+public sealed record AssignTaskAgentRequest(string AgentName);
 
 public sealed record PlannerLog(
     string Id,

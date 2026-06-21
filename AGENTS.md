@@ -26,16 +26,16 @@ This repository is a runnable skeleton for an Agent Workflow Orchestration Platf
 - `docker-compose.yml` starts API, UI, Neo4j, Qdrant, and Postgres for local development.
 - `docs/knowledge` contains durable project knowledge in Open Knowledge Format style.
 - `.codex/agents` contains repo-local Codex agent roles split by responsibility and action.
-- `.codex/phases` contains phase files with task IDs in `PPP_TTT` format.
+- `docs/knowledge/phases` contains one folder per phase, concise `PHASE_SUMMARY.md` indexes, and task files with IDs in `PPP_TTT` format.
 - `.codex/prompts` contains reusable Codex prompts for feature work, reviews, and MVP runs.
 - `.codex/skills` contains repo-local implementation guidance for agent-platform work.
 - `.codegraph/` is the local CodeGraph SQLite index for source-derived code context. It is ignored and rebuilt with `codegraph init` or `codegraph index`.
 
 ## Implementation Notes
 
-- Before implementing a new task, read `docs/knowledge/index.md`, the related knowledge files, `.codex/phases/README.md`, the relevant phase file, and query CodeGraph for related source code context when `.codegraph/` is initialized.
+- Before implementing a new task, read `docs/knowledge/index.md`, the related knowledge files, `docs/knowledge/phases/README.md`, and the relevant `PHASE_SUMMARY.md`; load the individual task file only when its checklist or context is needed, then query CodeGraph for related source code context when `.codegraph/` is initialized.
 - Every implementation task must use a task ID in `PPP_TTT` format, where `PPP` is phase number and `TTT` is task number. Example: `001_002`.
-- If no task ID exists for the requested work, add the next task to the relevant `.codex/phases/*.md` file before editing source.
+- If no task ID exists for the requested work, add the next task file to the relevant `docs/knowledge/phases/{phase}/` folder and link it from `PHASE_SUMMARY.md` before editing source.
 - After implementation, keep the phase task status current and rely on CodeGraph plus `docs/knowledge` for searchable project context instead of writing Markdown memory logs.
 - Keep `Program.cs` thin: dependency registration and endpoint mapping only.
 - Add new contracts in `src/AgentWorkflow.Core/Application/WorkflowContracts.cs` and models in `src/AgentWorkflow.Core/Domain/WorkflowModels.cs`.
@@ -66,11 +66,11 @@ This repository is a runnable skeleton for an Agent Workflow Orchestration Platf
 
 ## Phase And Memory Workflow
 
-- Phase files live in `.codex/phases/`.
+- Phase folders live in `docs/knowledge/phases/`; scan `PHASE_SUMMARY.md` first and load task files only when needed.
 - CodeGraph replaces Markdown task memory files for source-derived repo context.
 - Run `codegraph init` once per checkout to create `.codegraph/`, then use `codegraph status`, `codegraph query`, `codegraph explore`, or MCP CodeGraph tools before broad file scans.
-- Task IDs remain in `.codex/phases/`; task outcomes that change durable behavior belong in `docs/knowledge`. Use targeted `rg`/file reads for Markdown phase and knowledge files because CodeGraph primarily indexes code and supported structured files.
-- `AGENTS.md` is the routing surface; durable project knowledge belongs in `docs/knowledge`, phase planning belongs in `.codex/phases`, and source-derived memory belongs in CodeGraph.
+- Task IDs, checklists, and status remain in `docs/knowledge/phases/`; task outcomes that change durable behavior belong in the related knowledge files. Use targeted `rg`/file reads for Markdown phase and knowledge files because CodeGraph primarily indexes code and supported structured files.
+- `AGENTS.md` is the routing surface; durable project knowledge and phase planning belong in `docs/knowledge`, while source-derived memory belongs in CodeGraph.
 
 ## Knowledge-first workflow
 

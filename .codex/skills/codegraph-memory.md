@@ -4,7 +4,7 @@ Use this repo-local skill when initializing, querying, or maintaining CodeGraph 
 
 ## Purpose
 
-CodeGraph replaces Markdown task memory files under `.codex/memories/` for source-derived code context. Phase files still own task IDs and status, while durable project knowledge remains in `docs/knowledge/`.
+CodeGraph replaces Markdown task memory files under `.codex/memories/` for source-derived code context. Phase summaries and linked task files still own task IDs and status, while durable project knowledge remains in `docs/knowledge/`.
 
 ## Commands
 
@@ -28,8 +28,8 @@ codegraph node src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs
 4. If `.codegraph/` is missing, run `codegraph init`.
 5. Query CodeGraph before broad source scans when the task depends on source code context.
 6. Keep `.codegraph/` out of git; it is a rebuildable local SQLite index.
-7. Read Markdown phase and knowledge files directly with `rg`/file reads.
-8. Update `.codex/phases/` for task status and `docs/knowledge/` for durable behavior changes.
+7. Scan `PHASE_SUMMARY.md` first and load individual task files only when needed.
+8. Update the linked task file and `PHASE_SUMMARY.md`; update related knowledge files for durable behavior changes.
 
 ## Fallback
 

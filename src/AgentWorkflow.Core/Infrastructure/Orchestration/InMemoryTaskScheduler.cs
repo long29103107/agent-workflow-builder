@@ -52,7 +52,8 @@ public sealed class InMemoryTaskScheduler(
                 null,
                 null,
                 null,
-                request.WorkspaceId);
+                request.WorkspaceId,
+                request.AssignedAgent ?? task.AssignedAgent);
 
             _entries[item.Id] = new ScheduledEntry(
                 item,
@@ -111,6 +112,29 @@ public sealed class InMemoryTaskScheduler(
         return await ProcessNextCoreAsync(workspaceId, filterByWorkspace: true, cancellationToken);
     }
 
+    public async Task<ScheduledTask?> ProcessAsync(
+        Guid scheduledTaskId,
+        string workspaceId,
+        CancellationToken cancellationToken)
+    {
+        ScheduledEntry? claimed;
+
+        lock (_sync)
+        {
+            claimed = _entries.GetValueOrDefault(scheduledTaskId);
+            if (claimed is null ||
+                claimed.Item.Status != ScheduledTaskStatus.Queued ||
+                !string.Equals(claimed.Item.WorkspaceId, workspaceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            Claim(claimed);
+        }
+
+        return await ProcessClaimedAsync(claimed, cancellationToken);
+    }
+
     private async Task<ScheduledTask?> ProcessNextCoreAsync(
         string? workspaceId,
         bool filterByWorkspace,
@@ -135,14 +159,16 @@ public sealed class InMemoryTaskScheduler(
                 return null;
             }
 
-            claimed.Item = claimed.Item with
-            {
-                Status = ScheduledTaskStatus.Processing,
-                StartedAt = DateTimeOffset.UtcNow,
-                Error = null
-            };
+            Claim(claimed);
         }
 
+        return await ProcessClaimedAsync(claimed, cancellationToken);
+    }
+
+    private async Task<ScheduledTask> ProcessClaimedAsync(
+        ScheduledEntry claimed,
+        CancellationToken cancellationToken)
+    {
         try
         {
             var run = await workflowEngine.StartInvestigationAsync(
@@ -150,7 +176,9 @@ public sealed class InMemoryTaskScheduler(
                     claimed.Item.TaskId,
                     claimed.RepositoryPath,
                     claimed.RepositoryUrl,
-                    RequestedAgents: [],
+                    RequestedAgents: string.IsNullOrWhiteSpace(claimed.Item.AssignedAgent)
+                        ? []
+                        : [claimed.Item.AssignedAgent],
                     WorkspaceId: claimed.Item.WorkspaceId),
                 cancellationToken);
 
@@ -199,6 +227,16 @@ public sealed class InMemoryTaskScheduler(
                 return claimed.Item;
             }
         }
+    }
+
+    private static void Claim(ScheduledEntry entry)
+    {
+        entry.Item = entry.Item with
+        {
+            Status = ScheduledTaskStatus.Processing,
+            StartedAt = DateTimeOffset.UtcNow,
+            Error = null
+        };
     }
 
     private static ScheduledTaskPriority ParsePriority(string priority) =>

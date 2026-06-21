@@ -4,7 +4,7 @@ title: Agent Workflow Builder Knowledge Index
 domain: agent-workflow-builder
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-21
 tags:
   - knowledge
   - index
@@ -17,6 +17,10 @@ This folder converts project documentation and source-derived knowledge into Ope
 ## Architecture
 
 - [System Overview](architecture/system-overview.md)
+
+## Planning
+
+- [Phases And Tasks](phases/README.md)
 
 ## Services
 

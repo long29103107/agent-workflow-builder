@@ -55,9 +55,11 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
 
 The React UI can also queue a selected task in the Core-owned priority scheduler. Core processes queued tasks in Critical, High, Medium, then Low order and preserves FIFO order inside the same priority. Processing is triggered explicitly through the UI or API in this mock-first slice.
 
+Each Project has a unique Jira-style code. Planner approval creates project-local sequential task keys such as `AWB-1`, `AWB-2`, and `AWB-3`; a different project starts its own sequence from `PROJECTCODE-1`.
+
 ## Repo Memory
 
-This repository uses [CodeGraph](https://github.com/colbymchenry/codegraph) for local searchable source code context instead of Markdown task memory files under `.codex/memories/`. The CodeGraph database lives in `.codegraph/`, is ignored by git, and can be rebuilt from source. Task IDs still live in `.codex/phases/`, and durable project knowledge still lives in `docs/knowledge/`.
+This repository uses [CodeGraph](https://github.com/colbymchenry/codegraph) for local searchable source code context instead of Markdown task memory files under `.codex/memories/`. The CodeGraph database lives in `.codegraph/`, is ignored by git, and can be rebuilt from source. Phase summaries and task files live in `docs/knowledge/phases/`, alongside durable project knowledge.
 
 ```powershell
 irm https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.ps1 | iex
@@ -189,6 +191,21 @@ Services:
 - `POST /api/repos/connection`
 - `GET /api/settings`
 - `POST /api/settings`
+- `GET /api/projects`
+- `POST /api/projects`
+- `GET /api/projects/{projectId}`
+- `PUT /api/projects/{projectId}`
+- `DELETE /api/projects/{projectId}`
+- `GET /api/projects/{projectId}/tasks`
+- `POST /api/projects/{projectId}/tasks`
+- `GET /api/projects/{projectId}/tasks/{taskId}`
+- `PATCH /api/projects/{projectId}/tasks/{taskId}/status`
+- `GET /api/projects/{projectId}/tasks/{taskId}/work-items`
+- `POST /api/projects/{projectId}/tasks/{taskId}/work-items`
+- `GET /api/workspaces/{workspaceId}/agents`
+- `PUT /api/workspaces/{workspaceId}/planner/logs/{plannerLogId}`
+- `PUT /api/workspaces/{workspaceId}/tasks/{taskId}/agent`
+- `POST /api/workspaces/{workspaceId}/scheduler/tasks/{scheduledTaskId}/process`
 
 Example investigation request:
 

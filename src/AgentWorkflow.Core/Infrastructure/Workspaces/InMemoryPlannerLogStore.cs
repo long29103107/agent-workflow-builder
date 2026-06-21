@@ -3,11 +3,12 @@ using AgentWorkflow.Core.Domain;
 
 namespace AgentWorkflow.Core.Infrastructure;
 
-public sealed class InMemoryPlannerLogStore : IPlannerLogStore
+public sealed class InMemoryPlannerLogStore(IProjectStore projectStore) : IPlannerLogStore
 {
     private readonly Lock _sync = new();
     private readonly Dictionary<string, List<PlannerLog>> _logs = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<TaskItem>> _tasks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> _nextTaskNumbers = new(StringComparer.OrdinalIgnoreCase);
 
     public Task<IReadOnlyList<PlannerLog>> GetPlannerLogsAsync(
         string workspaceId,
@@ -69,24 +70,72 @@ public sealed class InMemoryPlannerLogStore : IPlannerLogStore
         return Task.FromResult(log);
     }
 
-    public Task<PlannerApprovalResult?> ApprovePlannerLogAsync(
+    public Task<PlannerLog?> UpdatePlannerLogAsync(
         string workspaceId,
         string plannerLogId,
+        UpdatePlannerLogRequest request,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ValidateSteps(request.Steps);
+
         lock (_sync)
         {
             if (!_logs.TryGetValue(workspaceId, out var logs))
             {
-                return Task.FromResult<PlannerApprovalResult?>(null);
+                return Task.FromResult<PlannerLog?>(null);
             }
 
             var index = logs.FindIndex(log =>
                 string.Equals(log.Id, plannerLogId, StringComparison.OrdinalIgnoreCase));
             if (index < 0)
             {
-                return Task.FromResult<PlannerApprovalResult?>(null);
+                return Task.FromResult<PlannerLog?>(null);
+            }
+
+            var current = logs[index];
+            if (current.Status != PlannerLogStatus.PendingApproval)
+            {
+                throw new InvalidOperationException("Only pending planner logs can be edited.");
+            }
+
+            var updated = current with
+            {
+                Steps = request.Steps.Select(step => new PlannerStep(
+                    step.Title.Trim(),
+                    step.Detail.Trim(),
+                    step.Owner.Trim())).ToList(),
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            logs[index] = updated;
+            return Task.FromResult<PlannerLog?>(updated);
+        }
+    }
+
+    public async Task<PlannerApprovalResult?> ApprovePlannerLogAsync(
+        string workspaceId,
+        string plannerLogId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var project = await projectStore.GetProjectAsync(workspaceId, cancellationToken);
+        if (project is null)
+        {
+            return null;
+        }
+
+        lock (_sync)
+        {
+            if (!_logs.TryGetValue(workspaceId, out var logs))
+            {
+                return null;
+            }
+
+            var index = logs.FindIndex(log =>
+                string.Equals(log.Id, plannerLogId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+            {
+                return null;
             }
 
             var current = logs[index];
@@ -108,11 +157,13 @@ public sealed class InMemoryPlannerLogStore : IPlannerLogStore
                     UpdatedAt = DateTimeOffset.UtcNow
                 };
                 logs[index] = current;
-                generated = CreateTasks(current).ToList();
+                var nextNumber = _nextTaskNumbers.GetValueOrDefault(workspaceId, 1);
+                generated = CreateTasks(current, project.Code, nextNumber).ToList();
+                _nextTaskNumbers[workspaceId] = nextNumber + generated.Count;
                 tasks.InsertRange(0, generated);
             }
 
-            return Task.FromResult<PlannerApprovalResult?>(new PlannerApprovalResult(current, generated));
+            return new PlannerApprovalResult(current, generated);
         }
     }
 
@@ -153,14 +204,33 @@ public sealed class InMemoryPlannerLogStore : IPlannerLogStore
         new("Prepare processing", "Queue approved tasks and process the next workspace priority item.", "Scheduler")
     ];
 
-    private static IEnumerable<TaskItem> CreateTasks(PlannerLog log) =>
+    private static IEnumerable<TaskItem> CreateTasks(PlannerLog log, string projectCode, int firstNumber) =>
         log.Steps.Select((step, index) => new TaskItem(
             $"planner-{log.Id}-{index + 1}",
             "agent-planner",
-            $"PLAN-{index + 1}",
+            $"{projectCode}-{firstNumber + index}",
             step.Title,
             step.Detail,
             "Backlog",
             index == 0 ? "High" : "Medium",
-            [step.Owner, "planner"]));
+            [step.Owner, "planner"],
+            step.Owner));
+
+    private static void ValidateSteps(IReadOnlyList<PlannerStep> steps)
+    {
+        if (steps is null || steps.Count == 0)
+        {
+            throw new ArgumentException("At least one planner step is required.", nameof(steps));
+        }
+
+        if (steps.Any(step =>
+            string.IsNullOrWhiteSpace(step.Title) ||
+            string.IsNullOrWhiteSpace(step.Detail) ||
+            string.IsNullOrWhiteSpace(step.Owner)))
+        {
+            throw new ArgumentException(
+                "Every planner step requires a title, detail, and owner.",
+                nameof(steps));
+        }
+    }
 }

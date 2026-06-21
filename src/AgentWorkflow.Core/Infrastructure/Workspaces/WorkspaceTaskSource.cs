@@ -5,7 +5,8 @@ namespace AgentWorkflow.Core.Infrastructure;
 
 public sealed class WorkspaceTaskSource(
     ITaskSource taskSource,
-    IPlannerLogStore plannerLogStore) : IWorkspaceTaskSource
+    IPlannerLogStore plannerLogStore,
+    ITaskAssignmentStore assignmentStore) : IWorkspaceTaskSource
 {
     public async Task<IReadOnlyList<TaskItem>> GetTasksAsync(
         string workspaceId,
@@ -13,7 +14,11 @@ public sealed class WorkspaceTaskSource(
     {
         var generated = await plannerLogStore.GetGeneratedTasksAsync(workspaceId, cancellationToken);
         var sourceTasks = await taskSource.GetTasksAsync(cancellationToken);
-        return [.. generated, .. sourceTasks];
+        var assignments = await assignmentStore.GetAssignmentsAsync(workspaceId, cancellationToken);
+        return [
+            .. generated.Select(task => ApplyAssignment(task, assignments)),
+            .. sourceTasks.Select(task => ApplyAssignment(task, assignments))
+        ];
     }
 
     public async Task<TaskItem?> GetTaskAsync(
@@ -21,7 +26,22 @@ public sealed class WorkspaceTaskSource(
         string taskId,
         CancellationToken cancellationToken)
     {
-        return await plannerLogStore.GetGeneratedTaskAsync(workspaceId, taskId, cancellationToken)
+        var task = await plannerLogStore.GetGeneratedTaskAsync(workspaceId, taskId, cancellationToken)
             ?? await taskSource.GetTaskAsync(taskId, cancellationToken);
+        if (task is null)
+        {
+            return null;
+        }
+
+        var assignments = await assignmentStore.GetAssignmentsAsync(workspaceId, cancellationToken);
+        return ApplyAssignment(task, assignments);
     }
+
+    private static TaskItem ApplyAssignment(
+        TaskItem task,
+        IReadOnlyDictionary<string, string> assignments) =>
+        task with
+        {
+            AssignedAgent = assignments.GetValueOrDefault(task.Id) ?? task.AssignedAgent
+        };
 }

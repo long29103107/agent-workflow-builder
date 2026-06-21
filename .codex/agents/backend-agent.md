@@ -8,7 +8,7 @@ Use this agent when a task changes backend contracts, workflow orchestration, de
 
 ## Inputs
 
-- Current request and expected task id from `.codex/phases`.
+- Current request and expected task id from `docs/knowledge/phases`.
 - CodeGraph context when `.codegraph/` is initialized.
 - Project knowledge from `docs/knowledge/index.md` and related service, business, data, or integration files.
 - Relevant Core/API files under `src/AgentWorkflow.Core` and `src/AgentWorkflow.Api`.

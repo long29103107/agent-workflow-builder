@@ -18,7 +18,7 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 
 ## Models
 
-- `TaskItem`: Jira-like task metadata with source, key, title, description, status, priority, and tags.
+- `TaskItem`: Jira-like task metadata with source, key, title, description, status, priority, tags, and an optional assigned agent.
 - `EngineeringTask`: platform-owned engineering request scoped to a Project, with typed lifecycle state, priority, linked WorkItem IDs, and timestamps.
 - `EngineeringTaskStatus`: `New`, investigation and approval stages, implementation and verification stages, pull-request stages, then `Completed` or `Failed`.
 - `WorkItem`: source-owned Jira or Notion input linked to one EngineeringTask while preserving its source key, provider status, priority, and tags.
@@ -31,13 +31,14 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `RepositoryContext`: repository path, name, repository connection, important files, detected technologies, and summary.
 - `RepositoryConnection`: provider, URL, local path, owner, repository name, default branch, status, and summary.
 - `ToolEndpointSettings`: Jira endpoint, Notion endpoint, repository path, repository URL, and repository provider.
-- `ScheduleTaskRequest`: task ID, optional priority override, and repository target for a queued execution.
-- `ScheduledTask`: queue identity, task metadata, priority, status, timestamps, workflow run ID, and error.
+- `ScheduleTaskRequest`: task ID, optional priority override, repository target, and optional assigned agent for a queued execution.
+- `ScheduledTask`: queue identity, task metadata, priority, assigned agent, status, timestamps, workflow run ID, and error.
 - `ScheduledTaskPriority`: `Low`, `Medium`, `High`, or `Critical`.
 - `ScheduledTaskStatus`: `Queued`, `Processing`, `Completed`, or `Failed`.
 - `WorkspaceProject`: project workspace identity, name, repository target, provider, and timestamps.
 - `WorkspaceUserRequest`: user request content and creation time scoped to a workspace.
 - `PlannerLog` and `PlannerStep`: approval status and agent planning breakdown for a workspace request.
+- `UpdatePlannerLogRequest` and `AssignTaskAgentRequest`: pending-plan edits and workspace Kanban assignment commands.
 - `RequestSubmissionResult` and `PlannerApprovalResult`: stable API responses connecting request intake, planner approval, and generated tasks.
 
 ## Persistence
@@ -45,6 +46,8 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 API Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue state, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied.
 
 `EngineeringTaskSource` projects platform tasks and their primary WorkItem back to the existing `TaskItem` contract. The current Jira IDs, keys, statuses, priorities, and tags remain compatible with API, CLI, MCP, scheduler, and UI consumers.
+
+Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle updates, and linked WorkItem reads/creation without exposing persistence entities.
 
 ## Database Models
 

@@ -30,6 +30,10 @@ public static class WorkspaceApiEndpoints
             {
                 return Results.BadRequest(new { error = ex.Message });
             }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
         });
 
         workspaces.MapGet("/{workspaceId}", async (
@@ -56,6 +60,21 @@ public static class WorkspaceApiEndpoints
             {
                 return Results.BadRequest(new { error = ex.Message });
             }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
+        });
+
+        workspaces.MapGet("/{workspaceId}/agents", async (
+            string workspaceId,
+            IProjectStore projectStore,
+            CancellationToken cancellationToken) =>
+        {
+            var project = await projectStore.GetProjectAsync(workspaceId, cancellationToken);
+            return project is null
+                ? Results.NotFound()
+                : Results.Ok(project.Agents.EnabledAgentNames);
         });
 
         workspaces.MapGet("/{workspaceId}/requests", async (
@@ -119,6 +138,38 @@ public static class WorkspaceApiEndpoints
             return Results.Ok(await plannerStore.GetPlannerLogsAsync(workspaceId, cancellationToken));
         });
 
+        workspaces.MapPut("/{workspaceId}/planner/logs/{plannerLogId}", async (
+            string workspaceId,
+            string plannerLogId,
+            UpdatePlannerLogRequest request,
+            IPlannerLogStore plannerStore,
+            IWorkspaceStore workspaceStore,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await WorkspaceExistsAsync(workspaceId, workspaceStore, cancellationToken))
+            {
+                return Results.NotFound();
+            }
+
+            try
+            {
+                var plannerLog = await plannerStore.UpdatePlannerLogAsync(
+                    workspaceId,
+                    plannerLogId,
+                    request,
+                    cancellationToken);
+                return plannerLog is null ? Results.NotFound() : Results.Ok(plannerLog);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
+        });
+
         workspaces.MapPost("/{workspaceId}/planner/logs/{plannerLogId}/approve", async (
             string workspaceId,
             string plannerLogId,
@@ -150,6 +201,42 @@ public static class WorkspaceApiEndpoints
             }
 
             return Results.Ok(await taskSource.GetTasksAsync(workspaceId, cancellationToken));
+        });
+
+        workspaces.MapPut("/{workspaceId}/tasks/{taskId}/agent", async (
+            string workspaceId,
+            string taskId,
+            AssignTaskAgentRequest request,
+            IProjectStore projectStore,
+            IWorkspaceTaskSource taskSource,
+            ITaskAssignmentStore assignmentStore,
+            CancellationToken cancellationToken) =>
+        {
+            var project = await projectStore.GetProjectAsync(workspaceId, cancellationToken);
+            if (project is null)
+            {
+                return Results.NotFound();
+            }
+
+            var agentName = project.Agents.EnabledAgentNames.FirstOrDefault(agent =>
+                string.Equals(agent, request.AgentName, StringComparison.OrdinalIgnoreCase));
+            if (agentName is null)
+            {
+                return Results.BadRequest(new { error = "The selected agent is not enabled for this project." });
+            }
+
+            var task = await taskSource.GetTaskAsync(workspaceId, taskId, cancellationToken);
+            if (task is null)
+            {
+                return Results.NotFound();
+            }
+
+            await assignmentStore.AssignAgentAsync(
+                workspaceId,
+                task.Id,
+                agentName,
+                cancellationToken);
+            return Results.Ok(task with { AssignedAgent = agentName });
         });
 
         workspaces.MapGet("/{workspaceId}/scheduler/tasks", async (
@@ -221,6 +308,27 @@ public static class WorkspaceApiEndpoints
             var scheduledTask = await scheduler.ProcessNextAsync(workspaceId, cancellationToken);
             return scheduledTask is null
                 ? Results.NotFound(new { error = "No queued tasks are available for this workspace." })
+                : Results.Ok(scheduledTask);
+        });
+
+        workspaces.MapPost("/{workspaceId}/scheduler/tasks/{scheduledTaskId:guid}/process", async (
+            string workspaceId,
+            Guid scheduledTaskId,
+            ITaskScheduler scheduler,
+            IWorkspaceStore workspaceStore,
+            CancellationToken cancellationToken) =>
+        {
+            if (!await WorkspaceExistsAsync(workspaceId, workspaceStore, cancellationToken))
+            {
+                return Results.NotFound();
+            }
+
+            var scheduledTask = await scheduler.ProcessAsync(
+                scheduledTaskId,
+                workspaceId,
+                cancellationToken);
+            return scheduledTask is null
+                ? Results.NotFound(new { error = "The queued task was not found in this workspace." })
                 : Results.Ok(scheduledTask);
         });
 

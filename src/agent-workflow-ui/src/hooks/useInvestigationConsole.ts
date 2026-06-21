@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   approvePlannerLog as approvePlannerLogRequest,
+  assignWorkspaceTaskAgent,
   createWorkspace as createWorkspaceRequest,
   enqueueWorkspaceTask,
   fetchPlannerLogs,
+  fetchWorkspaceAgents,
   fetchWorkspaceRequests,
   fetchWorkspaceScheduledTasks,
   fetchWorkspaceSettings,
@@ -12,8 +14,10 @@ import {
   fetchWorkflowEvents,
   fetchWorkflowRun,
   processNextWorkspaceTask,
+  processWorkspaceTask,
   startWorkflowInvestigation,
   submitWorkspaceRequest,
+  updatePlannerLog as updatePlannerLogRequest,
   updateWorkspaceSettings
 } from "../api/client";
 import type {
@@ -36,6 +40,7 @@ export function useInvestigationConsole() {
   const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
   const [requestHistory, setRequestHistory] = useState<WorkspaceUserRequest[]>([]);
   const [plannerLogs, setPlannerLogs] = useState<PlannerLog[]>([]);
+  const [agents, setAgents] = useState<string[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [requestDrafts, setRequestDrafts] = useState<Record<string, string>>({});
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
@@ -107,17 +112,19 @@ export function useInvestigationConsole() {
     setError(null);
 
     try {
-      const [workspaceTasks, workspaceSchedule, requests, logs, settings] = await Promise.all([
+      const [workspaceTasks, workspaceSchedule, requests, logs, settings, workspaceAgents] = await Promise.all([
         fetchWorkspaceTasks(workspaceId),
         fetchWorkspaceScheduledTasks(workspaceId),
         fetchWorkspaceRequests(workspaceId),
         fetchPlannerLogs(workspaceId),
-        fetchWorkspaceSettings(workspaceId)
+        fetchWorkspaceSettings(workspaceId),
+        fetchWorkspaceAgents(workspaceId)
       ]);
       setTasks(workspaceTasks);
       setScheduledTasks(workspaceSchedule);
       setRequestHistory(requests);
       setPlannerLogs(logs);
+      setAgents(workspaceAgents);
       applySettings(settings);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load workspace data.");
@@ -154,7 +161,21 @@ export function useInvestigationConsole() {
   async function createWorkspace() {
     setError(null);
     try {
-      const workspace = await createWorkspaceRequest(`Project ${workspaces.length + 1}`);
+      const defaultName = `Project ${workspaces.length + 1}`;
+      const name = window.prompt("Project name", defaultName)?.trim();
+      if (!name) return;
+
+      const suggestedCode = name
+        .split(/[^a-zA-Z0-9]+/)
+        .filter(Boolean)
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 10)
+        .toUpperCase();
+      const code = window.prompt("Project code (for example AWB)", suggestedCode || "PRJ")?.trim();
+      if (!code) return;
+
+      const workspace = await createWorkspaceRequest(name, code);
       setWorkspaces((current) => [...current, workspace]);
       setActiveWorkspaceId(workspace.id);
     } catch (err) {
@@ -194,15 +215,59 @@ export function useInvestigationConsole() {
     }
   }
 
+  async function updatePlannerLog(plannerLogId: string, steps: PlannerLog["steps"]) {
+    if (!activeWorkspaceId) return false;
+
+    setError(null);
+    try {
+      const plannerLog = await updatePlannerLogRequest(
+        activeWorkspaceId,
+        plannerLogId,
+        steps
+      );
+      setPlannerLogs((current) =>
+        current.map((log) => (log.id === plannerLog.id ? plannerLog : log))
+      );
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update planner log.");
+      return false;
+    }
+  }
+
+  async function assignTaskAgent(taskId: string, agentName: string) {
+    if (!activeWorkspaceId) return;
+
+    setError(null);
+    try {
+      const assigned = await assignWorkspaceTaskAgent(
+        activeWorkspaceId,
+        taskId,
+        agentName
+      );
+      setTasks((current) =>
+        current.map((task) => (task.id === assigned.id ? assigned : task))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not assign task agent.");
+    }
+  }
+
   async function queueSelectedTask() {
     if (!activeWorkspaceId || !selectedTask) return;
+
+    await queueTask(selectedTask.id);
+  }
+
+  async function queueTask(taskId: string) {
+    if (!activeWorkspaceId) return;
 
     setIsQueueingTask(true);
     setError(null);
     try {
       await enqueueWorkspaceTask(
         activeWorkspaceId,
-        selectedTask.id,
+        taskId,
         repoPath,
         repoUrl
       );
@@ -231,8 +296,20 @@ export function useInvestigationConsole() {
     }
   }
 
-  async function startQueuedTask(_scheduledTaskId: string) {
-    await processNextTask();
+  async function startQueuedTask(scheduledTaskId: string) {
+    if (!activeWorkspaceId) return;
+
+    setIsProcessingNext(true);
+    setError(null);
+    try {
+      const processed = await processWorkspaceTask(activeWorkspaceId, scheduledTaskId);
+      await loadScheduledTasks();
+      await loadRun(processed.workflowRunId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not process scheduled task.");
+    } finally {
+      setIsProcessingNext(false);
+    }
   }
 
   async function loadRun(workflowRunId: string | null) {
@@ -322,6 +399,8 @@ export function useInvestigationConsole() {
     activeWorkspace,
     activeWorkspaceId,
     apiKey,
+    agents,
+    assignTaskAgent,
     approvePlannerLog,
     backlogTasks,
     createWorkspace,
@@ -340,6 +419,7 @@ export function useInvestigationConsole() {
     plannerLogs,
     plannerSteps,
     processNextTask,
+    queueTask,
     queueSelectedTask,
     repoPath,
     repoProvider,
@@ -364,6 +444,7 @@ export function useInvestigationConsole() {
     startQueuedTask,
     submitRequest,
     tasks,
+    updatePlannerLog,
     workspaces
   };
 }

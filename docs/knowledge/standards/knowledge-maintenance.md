@@ -27,7 +27,8 @@ Keep `docs/knowledge/` useful as a source for AI agents and humans.
 - Update related knowledge files when behavior changes.
 - Mention changed knowledge files in final implementation summaries.
 - Keep one-off migration prompts, scratch requests, and placeholder-only files out of the long-lived knowledge index after their work is complete.
-- Keep `.codex` focused on Codex operating assets such as agents, prompts, skills, and phases; durable project knowledge belongs in `docs/knowledge/`.
+- Keep `.codex` focused on Codex operating assets such as agents, prompts, skills, and config; durable project knowledge and concise phase/task planning belong in `docs/knowledge/`.
+- Keep each `PHASE_SUMMARY.md` short and link-oriented. Load individual phase task files only when their checklist or implementation context is needed.
 - Use CodeGraph for repo-local searchable source code context instead of Markdown task memory files. Read Markdown phase and knowledge files directly.
 
 ## Related Files

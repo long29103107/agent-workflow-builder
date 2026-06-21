@@ -58,7 +58,7 @@ export function DashboardSidebar({
           >
             {workspaces.map((workspace) => (
               <option key={workspace.id} value={workspace.id}>
-                {workspace.name}
+                {workspace.code} · {workspace.name}
               </option>
             ))}
           </select>

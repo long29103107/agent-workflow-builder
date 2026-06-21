@@ -14,6 +14,7 @@ public interface ITaskScheduler
     IReadOnlyList<ScheduledTask> GetScheduledTasks();
     IReadOnlyList<ScheduledTask> GetScheduledTasks(string workspaceId);
     ScheduledTask? GetScheduledTask(Guid scheduledTaskId);
+    Task<ScheduledTask?> ProcessAsync(Guid scheduledTaskId, string workspaceId, CancellationToken cancellationToken);
     Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken);
     Task<ScheduledTask?> ProcessNextAsync(string workspaceId, CancellationToken cancellationToken);
 }
@@ -59,6 +60,7 @@ public interface IProjectStore
     Task<Project?> GetProjectAsync(string projectId, CancellationToken cancellationToken);
     Task<Project> CreateProjectAsync(CreateProjectRequest request, CancellationToken cancellationToken);
     Task<Project?> UpdateProjectAsync(string projectId, UpdateProjectRequest request, CancellationToken cancellationToken);
+    Task<bool> DeleteProjectAsync(string projectId, CancellationToken cancellationToken);
 }
 
 public interface IProjectPolicyValidator
@@ -78,9 +80,22 @@ public interface IPlannerLogStore
     Task<IReadOnlyList<PlannerLog>> GetPlannerLogsAsync(string workspaceId, CancellationToken cancellationToken);
     Task<PlannerLog?> GetPlannerLogAsync(string workspaceId, string plannerLogId, CancellationToken cancellationToken);
     Task<PlannerLog> CreatePendingPlannerLogAsync(string workspaceId, WorkspaceUserRequest request, CancellationToken cancellationToken);
+    Task<PlannerLog?> UpdatePlannerLogAsync(string workspaceId, string plannerLogId, UpdatePlannerLogRequest request, CancellationToken cancellationToken);
     Task<PlannerApprovalResult?> ApprovePlannerLogAsync(string workspaceId, string plannerLogId, CancellationToken cancellationToken);
     Task<IReadOnlyList<TaskItem>> GetGeneratedTasksAsync(string workspaceId, CancellationToken cancellationToken);
     Task<TaskItem?> GetGeneratedTaskAsync(string workspaceId, string taskId, CancellationToken cancellationToken);
+}
+
+public interface ITaskAssignmentStore
+{
+    Task<IReadOnlyDictionary<string, string>> GetAssignmentsAsync(
+        string workspaceId,
+        CancellationToken cancellationToken);
+    Task<string> AssignAgentAsync(
+        string workspaceId,
+        string taskId,
+        string agentName,
+        CancellationToken cancellationToken);
 }
 
 public interface IWorkspaceTaskSource

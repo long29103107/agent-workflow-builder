@@ -1,0 +1,22 @@
+﻿---
+type: phase-task
+task_id: 009_006
+phase: 009
+status: planned
+---
+
+# 009_006: Add Parallelism And Policy Hardening
+
+[Phase summary](PHASE_SUMMARY.md)
+
+## Checklist
+
+- [ ] Parallelize only independent read-only or explicitly approved subagent work.
+- [ ] Preserve central orchestration and deterministic aggregation.
+- [ ] Add tests proving agents cannot bypass approval gates, protected paths, workspace roots, or tool policy.
+- [ ] Harden the full plan-to-merge workflow.
+
+## Progress
+
+- Status: `planned`
+- Completed items: `0/4`

@@ -48,7 +48,8 @@ public sealed class InMemoryWorkspaceStore : IWorkspaceStore, IWorkspaceSettings
             request.Name,
             ResolvePath(request.RepositoryPath, request.RepositoryUrl),
             request.RepositoryUrl?.Trim() ?? string.Empty,
-            NormalizeProvider(request.RepositoryProvider)));
+            NormalizeProvider(request.RepositoryProvider),
+            request.Code));
         var project = await _projects.CreateProjectAsync(defaults, cancellationToken);
         return ToWorkspace(project);
     }
@@ -68,7 +69,8 @@ public sealed class InMemoryWorkspaceStore : IWorkspaceStore, IWorkspaceSettings
             request.Name,
             ResolvePath(request.RepositoryPath, request.RepositoryUrl),
             request.RepositoryUrl?.Trim() ?? string.Empty,
-            NormalizeProvider(request.RepositoryProvider)));
+            NormalizeProvider(request.RepositoryProvider),
+            request.Code ?? project.Code));
         var updated = await _projects.UpdateProjectAsync(
             workspaceId,
             ToUpdateRequest(
@@ -125,7 +127,8 @@ public sealed class InMemoryWorkspaceStore : IWorkspaceStore, IWorkspaceSettings
             project.Name,
             ResolvePath(settings.RepositoryPath, settings.RepositoryUrl),
             settings.RepositoryUrl?.Trim() ?? string.Empty,
-            NormalizeProvider(settings.RepositoryProvider)));
+            NormalizeProvider(settings.RepositoryProvider),
+            project.Code));
         var updatedProject = await _projects.UpdateProjectAsync(
             workspaceId,
             ToUpdateRequest(
@@ -197,7 +200,8 @@ public sealed class InMemoryWorkspaceStore : IWorkspaceStore, IWorkspaceSettings
             project.Commands,
             project.BranchPolicy,
             project.ProtectedPaths,
-            project.ApprovalPolicy);
+            project.ApprovalPolicy,
+            project.Code);
 
     private static WorkspaceProject ToWorkspace(Project project) =>
         new(
@@ -207,7 +211,8 @@ public sealed class InMemoryWorkspaceStore : IWorkspaceStore, IWorkspaceSettings
             project.Repository.Url,
             project.Repository.Provider,
             project.CreatedAt,
-            project.UpdatedAt);
+            project.UpdatedAt,
+            project.Code);
 
     private static string ResolvePath(string? repositoryPath, string? repositoryUrl) =>
         string.IsNullOrWhiteSpace(repositoryPath) && string.IsNullOrWhiteSpace(repositoryUrl)
