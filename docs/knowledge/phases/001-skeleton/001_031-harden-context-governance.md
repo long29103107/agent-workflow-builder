@@ -35,6 +35,7 @@ depends_on: 001_030
 - All 9 configured Codex prompt files exist.
 - `dotnet build src/AgentWorkflow.Api/AgentWorkflow.Api.csproj` passed with 0 warnings and 0 errors.
 - `git diff --check` passed; only line-ending conversion warnings were reported.
+- CI follow-up: upgraded checkout/setup-python to Node 24-based v6 actions and set `cache-dependency-path: requirements-dev.txt` so pip cache discovery matches the repository dependency file.
 
 ## Outcome
 
