@@ -1,3 +1,8 @@
+---
+type: phase-index
+active_phase: 003-durable-orchestration
+---
+
 # Phases And Tasks
 
 Scan a phase's `PHASE_SUMMARY.md` first. Load an individual task file only when its checklist or implementation context is needed.
@@ -6,7 +11,7 @@ Tasks use the `PPP_TTT` format.
 
 | Phase | Title | Status | Tasks |
 |---|---|---|---:|
-| [001-skeleton](./001-skeleton/PHASE_SUMMARY.md) | Skeleton And Operating System | `done` | 29/29 |
+| [001-skeleton](./001-skeleton/PHASE_SUMMARY.md) | Skeleton And Operating System | `done` | 31/31 |
 | [002-platform-foundation](./002-platform-foundation/PHASE_SUMMARY.md) | Platform Foundation | `done` | 7/7 |
 | [003-durable-orchestration](./003-durable-orchestration/PHASE_SUMMARY.md) | Durable Orchestration, Approval, And Evidence | `in progress` | 1/7 |
 | [004-sandbox-github-workspace](./004-sandbox-github-workspace/PHASE_SUMMARY.md) | Sandbox And GitHub Workspace | `planned` | 0/6 |
@@ -23,3 +28,6 @@ Tasks use the `PPP_TTT` format.
 3. Update task checklist and status during implementation.
 4. Keep phase summary links and progress synchronized.
 5. Load task details only when required.
+6. Run `./scripts/validate-phase-knowledge.ps1` after task or summary changes.
+
+`next_task` is derived by the validator from the active phase, task status, and dependencies. Set `next_task_override` in this frontmatter only when an explicit temporary ordering decision is required.

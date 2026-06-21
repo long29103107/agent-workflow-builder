@@ -39,6 +39,7 @@ pnpm-debug.log*
 .codegraph-*/
 
 # Environment and local settings
+.venv/
 .env
 .env.*
 !.env.example

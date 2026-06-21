@@ -46,7 +46,7 @@ If `codegraph` is not installed or `.codegraph/` has not been initialized, use t
 
 ## Related Files
 
-- `.codex/skills/codegraph-memory.md`
+- `.codex/skills/codegraph-memory/SKILL.md`
 - `docs/knowledge/phases/README.md`
 - `AGENTS.md`
 

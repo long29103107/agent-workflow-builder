@@ -1,8 +1,13 @@
-﻿---
+---
 type: phase-task
+schema_version: 1
 task_id: 003_007
 phase: 003
 status: done
+updated_at: unknown
+depends_on: none
+verification: not_recorded
+outcome: migrated_from_legacy_phase_status
 ---
 
 # 003_007: Add Mock-First Priority Task Scheduler

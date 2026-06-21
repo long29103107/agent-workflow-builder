@@ -47,7 +47,7 @@ Inferred from source code, Docker Compose, and backlog:
 - `src/AgentWorkflow.Core/Infrastructure/Repository/MockRepositoryConnectionService.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Memory/MockMemoryService.cs`
 - `docker-compose.yml`
-- `.codex/skills/codegraph-memory.md`
+- `.codex/skills/codegraph-memory/SKILL.md`
 
 ## Related Knowledge
 

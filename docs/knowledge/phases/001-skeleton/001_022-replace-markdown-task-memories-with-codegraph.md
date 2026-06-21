@@ -1,8 +1,13 @@
-﻿---
+---
 type: phase-task
+schema_version: 1
 task_id: 001_022
 phase: 001
 status: done
+updated_at: unknown
+depends_on: none
+verification: not_recorded
+outcome: migrated_from_legacy_phase_status
 ---
 
 # 001_022: Replace Markdown Task Memories With CodeGraph

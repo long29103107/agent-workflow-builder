@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "repository": "openai/skills",
+  "ref": "972cb867affac58fda9afa76bb1a19b399a278cf",
+  "skills": [
+    "aspnet-core",
+    "cli-creator",
+    "security-best-practices",
+    "security-threat-model"
+  ]
+}

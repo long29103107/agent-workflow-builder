@@ -1,8 +1,13 @@
-﻿---
+---
 type: phase-task
+schema_version: 1
 task_id: 003_001
 phase: 003
 status: planned
+updated_at: unknown
+depends_on: none
+verification: not_recorded
+outcome: migrated_from_legacy_phase_status
 ---
 
 # 003_001: Add Durable Workflow State Machine

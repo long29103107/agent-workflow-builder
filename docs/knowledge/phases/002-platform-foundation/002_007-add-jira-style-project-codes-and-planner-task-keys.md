@@ -1,8 +1,13 @@
-﻿---
+---
 type: phase-task
+schema_version: 1
 task_id: 002_007
 phase: 002
 status: done
+updated_at: unknown
+depends_on: none
+verification: not_recorded
+outcome: migrated_from_legacy_phase_status
 ---
 
 # 002_007: Add Jira-Style Project Codes And Planner Task Keys

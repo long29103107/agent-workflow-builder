@@ -1,0 +1,6 @@
+interface:
+  display_name: "Agent Workflow Platform"
+  short_description: "Apply platform architecture boundaries"
+  default_prompt: "Use $agent-workflow-platform to apply the repository architecture rules to this change."
+policy:
+  allow_implicit_invocation: true

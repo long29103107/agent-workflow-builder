@@ -1,8 +1,13 @@
-﻿---
+---
 type: phase-task
+schema_version: 1
 task_id: 008_002
 phase: 008
 status: planned
+updated_at: unknown
+depends_on: none
+verification: not_recorded
+outcome: migrated_from_legacy_phase_status
 ---
 
 # 008_002: Add Project Dashboard And Settings

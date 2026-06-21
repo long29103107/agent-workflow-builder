@@ -1,0 +1,6 @@
+interface:
+  display_name: "CodeGraph Memory"
+  short_description: "Query source-derived repository context"
+  default_prompt: "Use $codegraph-memory to retrieve focused source context for this repository task."
+policy:
+  allow_implicit_invocation: true

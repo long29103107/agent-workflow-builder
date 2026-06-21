@@ -10,7 +10,7 @@ status: done
 
 Goal: keep the MVP runnable while establishing the source-of-truth architecture and repo-local Codex workflow.
 
-Progress: `29/29` tasks done.
+Progress: `31/31` tasks done.
 
 | Task | Title | Status | Checklist |
 |---|---|---|---:|
@@ -43,3 +43,5 @@ Progress: `29/29` tasks done.
 | [001_027](./001_027-split-api-endpoints-and-swagger-groups.md) | Split API Endpoints And Swagger Groups | `done` | 4/4 |
 | [001_028](./001_028-move-phase-planning-into-docs.md) | Move Phase Planning Into Docs | `done` | 4/4 |
 | [001_029](./001_029-move-phase-planning-into-knowledge-task-folders.md) | Move Phase Planning Into Knowledge Task Folders | `done` | 6/6 |
+| [001_030](./001_030-optimize-codex-context-management.md) | Optimize Codex Context Management | `done` | 6/6 |
+| [001_031](./001_031-harden-context-governance.md) | Harden Context Governance | `done` | 6/6 |
