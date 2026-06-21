@@ -10,6 +10,66 @@ public sealed record TaskItem(
     string Priority,
     IReadOnlyList<string> Tags);
 
+public enum EngineeringTaskStatus
+{
+    New,
+    Investigating,
+    AwaitingPlanApproval,
+    ReadyForImplementation,
+    Implementing,
+    Verifying,
+    AwaitingImplementationApproval,
+    ReadyForPullRequest,
+    PullRequestOpen,
+    Completed,
+    Failed
+}
+
+public enum WorkItemSource
+{
+    Jira,
+    Notion
+}
+
+public sealed record EngineeringTask(
+    string Id,
+    string ProjectId,
+    string Title,
+    string Description,
+    EngineeringTaskStatus Status,
+    ScheduledTaskPriority Priority,
+    IReadOnlyList<string> WorkItemIds,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? CompletedAt);
+
+public sealed record WorkItem(
+    string Id,
+    string EngineeringTaskId,
+    WorkItemSource Source,
+    string SourceKey,
+    string Title,
+    string Description,
+    string Status,
+    string Priority,
+    IReadOnlyList<string> Tags);
+
+public sealed record CreateEngineeringTaskRequest(
+    string ProjectId,
+    string Title,
+    string Description,
+    ScheduledTaskPriority Priority,
+    IReadOnlyList<CreateWorkItemRequest> WorkItems);
+
+public sealed record CreateWorkItemRequest(
+    WorkItemSource Source,
+    string SourceKey,
+    string Title,
+    string Description,
+    string Status,
+    string Priority,
+    IReadOnlyList<string> Tags);
+
 public enum ScheduledTaskPriority
 {
     Low = 0,

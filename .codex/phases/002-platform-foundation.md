@@ -46,7 +46,7 @@ Things to do:
 - Keep Jira and Notion inputs as source WorkItems linked to a task.
 - Preserve current mock task-list compatibility.
 
-Status: planned
+Status: done
 
 ### 002_005: Add PostgreSQL Persistence
 
@@ -57,7 +57,7 @@ Things to do:
 - Keep Qdrant and Neo4j out of authoritative workflow state.
 - Avoid persisting secrets.
 
-Status: planned
+Status: done
 
 ### 002_006: Add Project And Task APIs
 

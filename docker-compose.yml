@@ -8,7 +8,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
       Neo4j__Uri: bolt://neo4j:7687
       Qdrant__Endpoint: http://qdrant:6333
-      Postgres__ConnectionString: Host=postgres;Port=5432;Database=agent_workflows;Username=agent;Password=agent
+      ConnectionStrings__AgentWorkflowDb: Host=postgres;Port=5432;Database=agent_workflows;Username=agent;Password=agent
+      Persistence__Provider: PostgreSql
       AGENT_WORKFLOW_REPOSITORY_PATH: /workspace
     ports:
       - "5086:8080"

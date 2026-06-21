@@ -50,7 +50,7 @@ A runnable skeleton for an Agent Workflow Orchestration Platform. The source of 
    - Memory Research Agent
    - Planning Agent
 8. The Lead Agent asks `IAgentReasoningService` to summarize via the OpenAI SDK when `OPENAI_API_KEY` is configured, or uses deterministic fallback output when it is not.
-9. The workflow engine persists run events in memory.
+9. The workflow engine persists API run events in PostgreSQL; CLI, MCP, and tests keep the in-memory fallback unless a connection string is supplied.
 10. API, CLI, MCP, and UI surfaces can display the same investigation summary and generated execution plan.
 
 The React UI can also queue a selected task in the Core-owned priority scheduler. Core processes queued tasks in Critical, High, Medium, then Low order and preserves FIFO order inside the same priority. Processing is triggered explicitly through the UI or API in this mock-first slice.
@@ -77,6 +77,14 @@ dotnet run --project src/AgentWorkflow.Api
 ```
 
 The API listens on `http://localhost:5275` by default.
+
+Apply the PostgreSQL schema before the first API run:
+
+```powershell
+dotnet ef database update --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api
+```
+
+The API selects PostgreSQL through `Persistence:Provider=PostgreSql` and reads `ConnectionStrings:AgentWorkflowDb`. Use environment variables or user secrets for non-local credentials.
 
 API documentation:
 
@@ -215,7 +223,7 @@ When `priority` is null, Core derives it from the task source.
 - Vector and graph memory are served by `MockMemoryService`.
 - Lead Agent summarization is served by `OpenAiAgentReasoningService`; it uses the official OpenAI .NET SDK when `OPENAI_API_KEY` is set and deterministic fallback output otherwise.
 - MCP endpoint and repository defaults are served by `InMemorySettingsStore`.
-- Workflow runs are stored in `InMemoryWorkflowRunStore`.
+- API Projects, EngineeringTasks, WorkItems, workflow runs, and workflow events are stored in PostgreSQL through EF Core. Core keeps in-memory stores as the CLI, MCP, and test fallback.
 - Scheduled tasks are stored and prioritized by `InMemoryTaskScheduler`.
 
 ## Verification

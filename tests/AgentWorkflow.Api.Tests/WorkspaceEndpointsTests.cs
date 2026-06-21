@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AgentWorkflow.Core.Domain;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace AgentWorkflow.Api.Tests;
 
@@ -14,7 +13,7 @@ public sealed class WorkspaceEndpointsTests
     [Fact]
     public async Task WorkspaceFlow_CreatesRequestApprovesPlanAndProcessesTask()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new AgentWorkflowApiFactory();
         using var client = factory.CreateClient();
 
         var workspaces = await client.GetFromJsonAsync<IReadOnlyList<WorkspaceProject>>(
@@ -72,7 +71,7 @@ public sealed class WorkspaceEndpointsTests
     [Fact]
     public async Task WorkspaceQueues_AreIsolated()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new AgentWorkflowApiFactory();
         using var client = factory.CreateClient();
 
         var first = (await client.GetFromJsonAsync<IReadOnlyList<WorkspaceProject>>(

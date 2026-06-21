@@ -19,6 +19,9 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 ## Models
 
 - `TaskItem`: Jira-like task metadata with source, key, title, description, status, priority, and tags.
+- `EngineeringTask`: platform-owned engineering request scoped to a Project, with typed lifecycle state, priority, linked WorkItem IDs, and timestamps.
+- `EngineeringTaskStatus`: `New`, investigation and approval stages, implementation and verification stages, pull-request stages, then `Completed` or `Failed`.
+- `WorkItem`: source-owned Jira or Notion input linked to one EngineeringTask while preserving its source key, provider status, priority, and tags.
 - `WorkflowRun`: run ID, task ID, status, timestamps, and optional result.
 - `WorkflowEvent`: timeline event with run ID, agent, type, and message.
 - `InvestigationResult`: summary, execution plan, agent messages, repository context, memory items, and graph entities.
@@ -39,17 +42,21 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 
 ## Persistence
 
-Current persistence is in memory through `InMemoryWorkflowRunStore`, `InMemorySettingsStore`, `InMemoryTaskScheduler`, and the workspace request/planner stores.
+API Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue state, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied.
+
+`EngineeringTaskSource` projects platform tasks and their primary WorkItem back to the existing `TaskItem` contract. The current Jira IDs, keys, statuses, priorities, and tags remain compatible with API, CLI, MCP, scheduler, and UI consumers.
 
 ## Database Models
 
-No EF Core models, migrations, SQL schema, or production database model files are detected from repository analysis.
-
-Docker Compose provisions Postgres, Neo4j, and Qdrant for future real implementations.
+`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, and `workflow_events`. The initial EF Core migration creates PostgreSQL JSONB payloads, text arrays, foreign keys, cascade cleanup, and lookup indexes. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
 
 ## Related Files
 
 - `src/AgentWorkflow.Core/Domain/WorkflowModels.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Tasks/InMemoryEngineeringTaskStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Tasks/EngineeringTaskSource.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Persistence/AgentWorkflowDbContext.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Persistence/Migrations/`
 - `src/AgentWorkflow.Core/Infrastructure/InMemoryWorkflowRunStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Settings/InMemorySettingsStore.cs`
 

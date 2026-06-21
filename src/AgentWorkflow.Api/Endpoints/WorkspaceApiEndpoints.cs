@@ -7,7 +7,7 @@ public static class WorkspaceApiEndpoints
 {
     public static RouteGroupBuilder MapWorkspaceApi(this RouteGroupBuilder api)
     {
-        var workspaces = api.MapGroup("/workspaces");
+        var workspaces = api.MapGroup("/workspaces").WithTags("Workspaces");
 
         workspaces.MapGet("/", async (
             IWorkspaceStore store,

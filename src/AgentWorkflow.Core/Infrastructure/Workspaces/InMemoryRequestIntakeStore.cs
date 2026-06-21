@@ -3,7 +3,9 @@ using AgentWorkflow.Core.Domain;
 
 namespace AgentWorkflow.Core.Infrastructure;
 
-public sealed class InMemoryRequestIntakeStore(IWorkspaceStore workspaceStore) : IRequestIntakeStore
+public sealed class InMemoryRequestIntakeStore(
+    IWorkspaceStore workspaceStore,
+    IEngineeringTaskStore engineeringTaskStore) : IRequestIntakeStore
 {
     private readonly Lock _sync = new();
     private readonly Dictionary<string, List<WorkspaceUserRequest>> _requests = new(StringComparer.OrdinalIgnoreCase);
@@ -32,10 +34,19 @@ public sealed class InMemoryRequestIntakeStore(IWorkspaceStore workspaceStore) :
             throw new ArgumentException("Request content is required.", nameof(request));
         }
 
+        var content = request.Content.Trim();
+        var engineeringTask = await engineeringTaskStore.CreateTaskAsync(
+            new CreateEngineeringTaskRequest(
+                workspaceId,
+                CreateTitle(content),
+                content,
+                ScheduledTaskPriority.Medium,
+                []),
+            cancellationToken);
         var item = new WorkspaceUserRequest(
-            Guid.NewGuid().ToString("N"),
+            engineeringTask.Id,
             workspaceId,
-            request.Content.Trim(),
+            content,
             DateTimeOffset.UtcNow);
 
         lock (_sync)
@@ -58,5 +69,13 @@ public sealed class InMemoryRequestIntakeStore(IWorkspaceStore workspaceStore) :
         {
             throw new KeyNotFoundException($"Workspace '{workspaceId}' was not found.");
         }
+    }
+
+    private static string CreateTitle(string content)
+    {
+        var firstLine = content.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?? content;
+        return firstLine.Length <= 120 ? firstLine : $"{firstLine[..117]}...";
     }
 }

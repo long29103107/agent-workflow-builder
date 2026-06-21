@@ -42,6 +42,16 @@ dotnet run --project src/AgentWorkflow.Api
 
 Default local API URL: `http://localhost:5275`.
 
+The default debug PostgreSQL connection uses `localhost:5432`, database `agent_workflows`, and the local Docker Compose `agent` credentials through `ConnectionStrings:AgentWorkflowDb`.
+
+Apply the schema before running the API against a new database:
+
+```powershell
+dotnet ef database update --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api
+```
+
+For non-local credentials, override `ConnectionStrings__AgentWorkflowDb` through the environment or user secrets instead of committing credentials.
+
 API documentation:
 
 - Scalar UI: `http://localhost:5275/scalar/v1`

@@ -24,6 +24,9 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
 - Own the Project aggregate, project-policy validation, and in-memory Project store.
+- Own platform EngineeringTasks, typed task lifecycle state, linked Jira/Notion WorkItems, and their in-memory store.
+- Persist Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents through EF Core and PostgreSQL when configured.
+- Preserve `TaskItem` compatibility through a projection over EngineeringTask and WorkItem records.
 - Project current workspace records as a compatibility surface over the Project store.
 - Keep fallback behavior runnable without `OPENAI_API_KEY`.
 
@@ -35,12 +38,16 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - `ILeadAgent.InvestigateAsync`
 - `IRepositoryConnectionService.ResolveConnection`
 - `IProjectStore.GetProjectsAsync`
+- `IEngineeringTaskStore.GetTasksAsync`
+- `IEngineeringTaskStore.UpdateStatusAsync`
+- `IWorkItemStore.GetWorkItemsAsync`
 - `IProjectPolicyValidator.Validate`
 - `AddAgentWorkflowCore`
 
 ## Dependencies
 
 - `Microsoft.Extensions.DependencyInjection`
+- EF Core 10 and Npgsql
 - OpenAI .NET SDK through `OpenAI.Chat`
 
 ## Data Models
@@ -72,6 +79,5 @@ See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workf
 
 ## Open Questions
 
-- Persistent run storage implementation is not detected from repository analysis.
 - The scheduler store is intentionally in memory until Phase 3 durable orchestration.
-- Project persistence is intentionally in memory until Phase 2 PostgreSQL persistence.
+- CLI, MCP, and tests use the in-memory persistence fallback unless a PostgreSQL connection is passed to Core registration.

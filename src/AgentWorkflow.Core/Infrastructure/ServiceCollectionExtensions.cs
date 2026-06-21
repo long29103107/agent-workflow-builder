@@ -1,5 +1,6 @@
 using AgentWorkflow.Core.Application;
 using AgentWorkflow.Core.Domain;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -7,7 +8,9 @@ namespace AgentWorkflow.Core.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAgentWorkflowCore(this IServiceCollection services)
+    public static IServiceCollection AddAgentWorkflowCore(
+        this IServiceCollection services,
+        string? postgresConnectionString = null)
     {
         services.TryAddSingleton(new WorkspaceDefaults(
             "Project Alpha",
@@ -20,7 +23,9 @@ public static class ServiceCollectionExtensions
             RepositoryPathDefaults.Resolve(),
             Environment.GetEnvironmentVariable("AGENT_WORKFLOW_REPOSITORY_URL") ?? string.Empty,
             "github"));
-        services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
+        services.AddSingleton<IProjectPolicyValidator, ProjectPolicyValidator>();
+        services.AddAgentWorkflowPersistence(postgresConnectionString);
+        services.AddSingleton<EngineeringTaskSource>();
         services.AddSingleton<MockJiraMcpTool>();
         services.AddSingleton<IJiraMcpTool>(provider => provider.GetRequiredService<MockJiraMcpTool>());
         services.AddSingleton<ITaskSource>(provider => provider.GetRequiredService<MockJiraMcpTool>());
@@ -29,8 +34,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRepositoryReader, LocalRepositoryReader>();
         services.AddSingleton<IMemoryService, MockMemoryService>();
         services.AddSingleton<ISettingsStore, InMemorySettingsStore>();
-        services.AddSingleton<IProjectPolicyValidator, ProjectPolicyValidator>();
-        services.AddSingleton<IProjectStore, InMemoryProjectStore>();
         services.AddSingleton<InMemoryWorkspaceStore>();
         services.AddSingleton<IWorkspaceStore>(provider => provider.GetRequiredService<InMemoryWorkspaceStore>());
         services.AddSingleton<IWorkspaceSettingsStore>(provider => provider.GetRequiredService<InMemoryWorkspaceStore>());
@@ -47,5 +50,32 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskScheduler, InMemoryTaskScheduler>();
 
         return services;
+    }
+
+    private static void AddAgentWorkflowPersistence(
+        this IServiceCollection services,
+        string? postgresConnectionString)
+    {
+        if (string.IsNullOrWhiteSpace(postgresConnectionString))
+        {
+            services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
+            services.AddSingleton<IProjectStore, InMemoryProjectStore>();
+            services.AddSingleton<InMemoryEngineeringTaskStore>();
+            services.AddSingleton<IEngineeringTaskStore>(provider =>
+                provider.GetRequiredService<InMemoryEngineeringTaskStore>());
+            services.AddSingleton<IWorkItemStore>(provider =>
+                provider.GetRequiredService<InMemoryEngineeringTaskStore>());
+            return;
+        }
+
+        services.AddPooledDbContextFactory<AgentWorkflowDbContext>(options =>
+            options.UseNpgsql(postgresConnectionString));
+        services.AddSingleton<IWorkflowRunStore, PostgresWorkflowRunStore>();
+        services.AddSingleton<IProjectStore, PostgresProjectStore>();
+        services.AddSingleton<PostgresEngineeringTaskStore>();
+        services.AddSingleton<IEngineeringTaskStore>(provider =>
+            provider.GetRequiredService<PostgresEngineeringTaskStore>());
+        services.AddSingleton<IWorkItemStore>(provider =>
+            provider.GetRequiredService<PostgresEngineeringTaskStore>());
     }
 }

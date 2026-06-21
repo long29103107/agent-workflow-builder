@@ -18,6 +18,33 @@ public interface ITaskScheduler
     Task<ScheduledTask?> ProcessNextAsync(string workspaceId, CancellationToken cancellationToken);
 }
 
+public interface IEngineeringTaskStore
+{
+    Task<IReadOnlyList<EngineeringTask>> GetTasksAsync(
+        string? projectId,
+        CancellationToken cancellationToken);
+    Task<EngineeringTask?> GetTaskAsync(string taskId, CancellationToken cancellationToken);
+    Task<EngineeringTask> CreateTaskAsync(
+        CreateEngineeringTaskRequest request,
+        CancellationToken cancellationToken);
+    Task<EngineeringTask?> UpdateStatusAsync(
+        string taskId,
+        EngineeringTaskStatus status,
+        CancellationToken cancellationToken);
+}
+
+public interface IWorkItemStore
+{
+    Task<IReadOnlyList<WorkItem>> GetWorkItemsAsync(
+        string engineeringTaskId,
+        CancellationToken cancellationToken);
+    Task<WorkItem?> GetWorkItemAsync(string workItemId, CancellationToken cancellationToken);
+    Task<WorkItem> AddWorkItemAsync(
+        string engineeringTaskId,
+        CreateWorkItemRequest request,
+        CancellationToken cancellationToken);
+}
+
 public interface IWorkspaceStore
 {
     Task<IReadOnlyList<WorkspaceProject>> GetWorkspacesAsync(CancellationToken cancellationToken);

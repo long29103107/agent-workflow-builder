@@ -36,7 +36,17 @@ public static class ServiceCollectionExtensions
                         : ["http://localhost:5173", "http://127.0.0.1:5173"]));
         });
 
-        services.AddAgentWorkflowCore();
+        var persistenceProvider = configuration["Persistence:Provider"];
+        var postgresConnectionString = string.Equals(
+            persistenceProvider,
+            "PostgreSql",
+            StringComparison.OrdinalIgnoreCase)
+            ? configuration.GetConnectionString("AgentWorkflowDb")
+                ?? throw new InvalidOperationException(
+                    "ConnectionStrings:AgentWorkflowDb is required when PostgreSQL persistence is enabled.")
+            : null;
+
+        services.AddAgentWorkflowCore(postgresConnectionString);
 
         return services;
     }

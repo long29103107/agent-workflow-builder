@@ -44,7 +44,7 @@ The workspace compatibility store projects `Project` records into `WorkspaceProj
 
 ## Persistence
 
-`InMemoryProjectStore` is authoritative for this phase. PostgreSQL persistence is planned in `002_005`.
+`PostgresProjectStore` is authoritative when PostgreSQL persistence is configured. It stores the validated Project aggregate as JSONB with indexed identity and timestamps. `InMemoryProjectStore` remains the explicit fallback when no PostgreSQL connection is supplied.
 
 ## Related Files
 
@@ -53,5 +53,6 @@ The workspace compatibility store projects `Project` records into `WorkspaceProj
 - `src/AgentWorkflow.Core/Domain/ProjectPolicyValidationException.cs`
 - `src/AgentWorkflow.Core/Application/WorkflowContracts.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Projects/InMemoryProjectStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Persistence/PostgresProjectStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Projects/ProjectPolicyValidator.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Workspaces/InMemoryWorkspaceStore.cs`

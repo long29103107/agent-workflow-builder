@@ -303,3 +303,14 @@ Things to do:
 - Verify Core/API tests, API build, and Bun frontend build.
 
 Status: done
+
+### 001_027: Split API Endpoints And Swagger Groups
+
+Things to do:
+
+- Split the Minimal API surface into focused route-group endpoint files.
+- Preserve all existing API routes and response behavior.
+- Tag each route group so Swagger and Scalar organize operations by feature.
+- Add integration coverage for OpenAPI group tags.
+
+Status: done

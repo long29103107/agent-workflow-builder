@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AgentWorkflow.Core.Domain;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace AgentWorkflow.Api.Tests;
 
@@ -14,7 +13,7 @@ public sealed class SchedulerEndpointsTests
     [Fact]
     public async Task SwaggerUi_IsAvailable()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new AgentWorkflowApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/swagger/index.html", CancellationToken.None);
@@ -28,12 +27,17 @@ public sealed class SchedulerEndpointsTests
         Assert.Equal(HttpStatusCode.OK, documentResponse.StatusCode);
         Assert.Contains("swagger-ui", content, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"openapi\"", document, StringComparison.Ordinal);
+
+        using var openApi = JsonDocument.Parse(document);
+        AssertOpenApiTag(openApi, "/api/scheduler/tasks", "get", "Scheduler");
+        AssertOpenApiTag(openApi, "/api/workflows/investigate", "post", "Workflows");
+        AssertOpenApiTag(openApi, "/api/workspaces", "get", "Workspaces");
     }
 
     [Fact]
     public async Task SchedulerEndpoints_QueueAndProcessHighestPriorityTask()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new AgentWorkflowApiFactory();
         using var client = factory.CreateClient();
 
         var lowResponse = await client.PostAsJsonAsync(
@@ -75,7 +79,7 @@ public sealed class SchedulerEndpointsTests
     [Fact]
     public async Task ProcessNext_ReturnsNotFoundWhenQueueIsEmpty()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new AgentWorkflowApiFactory();
         using var client = factory.CreateClient();
 
         var response = await client.PostAsync(
@@ -91,5 +95,20 @@ public sealed class SchedulerEndpointsTests
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
+    }
+
+    private static void AssertOpenApiTag(
+        JsonDocument openApi,
+        string path,
+        string method,
+        string expectedTag)
+    {
+        var tags = openApi.RootElement
+            .GetProperty("paths")
+            .GetProperty(path)
+            .GetProperty(method)
+            .GetProperty("tags");
+
+        Assert.Contains(tags.EnumerateArray(), tag => tag.GetString() == expectedTag);
     }
 }
