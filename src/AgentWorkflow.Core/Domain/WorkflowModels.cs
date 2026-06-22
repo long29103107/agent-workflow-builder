@@ -105,7 +105,8 @@ public sealed record ScheduleTaskRequest(
     string? RepositoryPath,
     string? RepositoryUrl,
     string? WorkspaceId = null,
-    string? AssignedAgent = null);
+    string? AssignedAgent = null,
+    IReadOnlyList<string>? RequestedAgents = null);
 
 public sealed record ScheduledTask(
     Guid Id,
@@ -119,7 +120,10 @@ public sealed record ScheduledTask(
     Guid? WorkflowRunId,
     string? Error,
     string? WorkspaceId = null,
-    string? AssignedAgent = null);
+    string? AssignedAgent = null,
+    DateTimeOffset? LastHeartbeatAt = null,
+    DateTimeOffset? LeaseExpiresAt = null,
+    IReadOnlyList<string>? RequestedAgents = null);
 
 public sealed record WorkspaceProject(
     string Id,

@@ -33,7 +33,7 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `RepositoryConnection`: provider, URL, local path, owner, repository name, default branch, status, and summary.
 - `ToolEndpointSettings`: Jira endpoint, Notion endpoint, repository path, repository URL, and repository provider.
 - `ScheduleTaskRequest`: task ID, optional priority override, repository target, and optional assigned agent for a queued execution.
-- `ScheduledTask`: queue identity, task metadata, priority, assigned agent, status, timestamps, workflow run ID, and error.
+- `ScheduledTask`: queue identity, task metadata, priority, assigned/requested agents, status, timestamps, persisted workflow run ID, heartbeat, lease expiry, and error.
 - `ScheduledTaskPriority`: `Low`, `Medium`, `High`, or `Critical`.
 - `ScheduledTaskStatus`: `Queued`, `Processing`, `Completed`, or `Failed`.
 - `WorkspaceProject`: project workspace identity, name, repository target, provider, and timestamps.
@@ -44,7 +44,7 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 
 ## Persistence
 
-API Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue state, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied.
+API Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue entries, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied. API enqueue persists the linked WorkflowRun before returning even though the mock-first queue entry itself remains process-local.
 
 `EngineeringTaskSource` projects platform tasks and their primary WorkItem back to the existing `TaskItem` contract. The current Jira IDs, keys, statuses, priorities, and tags remain compatible with API, CLI, MCP, scheduler, and UI consumers.
 

@@ -4,7 +4,7 @@ title: Investigation Workflow Rules
 domain: workflow
 owner: project
 status: draft
-last_updated: 2026-06-19
+last_updated: 2026-06-22
 tags:
   - business-rule
   - workflow
@@ -35,6 +35,9 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Planner-generated task keys use the owning Project code and a monotonically increasing project-local number.
 - Processing claims an item before starting the investigation workflow so concurrent calls do not process the same item.
 - Explicit processing by scheduled-task ID claims only that queued item within its workspace; process-next retains priority and FIFO selection.
+- API investigation requests persist the workflow run at `Created`, enqueue work, and return before Lead Agent execution begins.
+- Processing claims carry a 30-second lease renewed by a five-second heartbeat.
+- Cancellation clears the lease and requeues the scheduled item so graceful host shutdown does not mark it failed.
 
 ## Validation
 

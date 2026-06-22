@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISubagent, PlanningAgent>();
         services.AddSingleton<ILeadAgent, OpenAiLeadAgent>();
         services.AddSingleton<IWorkflowEngine, WorkflowEngine>();
+        services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITaskScheduler, InMemoryTaskScheduler>();
 
         return services;

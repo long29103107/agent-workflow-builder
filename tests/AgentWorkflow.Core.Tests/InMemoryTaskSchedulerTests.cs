@@ -94,8 +94,44 @@ public sealed class InMemoryTaskSchedulerTests
         Assert.Equal(ScheduledTaskStatus.Queued, scheduler.GetScheduledTask(high.Id)!.Status);
     }
 
+    [Fact]
+    public async Task Processing_RecordsLeaseAndCancellationRequeuesTheItem()
+    {
+        var workflow = new RecordingWorkflowEngine(delayMilliseconds: 500);
+        var scheduler = CreateScheduler(workflow);
+        var queued = await scheduler.EnqueueAsync(Request("task-high"), CancellationToken.None);
+        using var cancellation = new CancellationTokenSource();
+
+        var processing = scheduler.ProcessNextAsync(cancellation.Token);
+        await WaitUntilAsync(() => workflow.ProcessedTaskIds.Count == 1);
+
+        var leased = scheduler.GetScheduledTask(queued.Id);
+        Assert.Equal(ScheduledTaskStatus.Processing, leased?.Status);
+        Assert.NotNull(leased?.LastHeartbeatAt);
+        Assert.NotNull(leased?.LeaseExpiresAt);
+
+        await cancellation.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => processing);
+
+        var requeued = scheduler.GetScheduledTask(queued.Id);
+        Assert.Equal(ScheduledTaskStatus.Queued, requeued?.Status);
+        Assert.Null(requeued?.StartedAt);
+        Assert.Null(requeued?.LastHeartbeatAt);
+        Assert.Null(requeued?.LeaseExpiresAt);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 100 && !condition(); attempt++)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.True(condition());
+    }
+
     private static InMemoryTaskScheduler CreateScheduler(RecordingWorkflowEngine workflow) =>
-        new(new FakeTaskSource(), new FakeWorkspaceTaskSource(), workflow);
+        new(new FakeTaskSource(), new FakeWorkspaceTaskSource(), workflow, TimeProvider.System);
 
     private static ScheduleTaskRequest Request(
         string taskId,
@@ -139,6 +175,24 @@ public sealed class InMemoryTaskSchedulerTests
         private readonly ConcurrentQueue<string> _processedTaskIds = new();
 
         public IReadOnlyList<string> ProcessedTaskIds => _processedTaskIds.ToList();
+
+        public WorkflowRun QueueInvestigation(InvestigationRequest request) =>
+            new(
+                Guid.NewGuid(),
+                request.TaskId,
+                "Running",
+                DateTimeOffset.UtcNow,
+                null,
+                Result: null);
+
+        public async Task<WorkflowRun> ExecuteInvestigationAsync(
+            Guid runId,
+            InvestigationRequest request,
+            CancellationToken cancellationToken)
+        {
+            var completed = await StartInvestigationAsync(request, cancellationToken);
+            return completed with { Id = runId };
+        }
 
         public async Task<WorkflowRun> StartInvestigationAsync(
             InvestigationRequest request,

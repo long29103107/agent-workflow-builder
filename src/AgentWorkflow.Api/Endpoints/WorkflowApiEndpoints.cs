@@ -11,7 +11,7 @@ public static class WorkflowApiEndpoints
 
         workflows.MapPost("/investigate", async (
             InvestigationRequest request,
-            IWorkflowEngine workflowEngine,
+            ITaskScheduler taskScheduler,
             CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(request.TaskId))
@@ -19,8 +19,30 @@ public static class WorkflowApiEndpoints
                 return Results.BadRequest(new { error = "taskId is required." });
             }
 
-            var run = await workflowEngine.StartInvestigationAsync(request, cancellationToken);
-            return Results.Created($"/api/workflows/{run.Id}", run);
+            try
+            {
+                var scheduledTask = await taskScheduler.EnqueueAsync(
+                    new ScheduleTaskRequest(
+                        request.TaskId,
+                        Priority: null,
+                        request.RepositoryPath,
+                        request.RepositoryUrl,
+                        request.WorkspaceId,
+                        AssignedAgent: null,
+                        request.RequestedAgents),
+                    cancellationToken);
+                return Results.Accepted(
+                    $"/api/scheduler/tasks/{scheduledTask.Id}",
+                    scheduledTask);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
         });
 
         workflows.MapGet("/{runId:guid}", (Guid runId, IWorkflowRunStore store) =>

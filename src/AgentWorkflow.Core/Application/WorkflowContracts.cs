@@ -17,6 +17,7 @@ public interface ITaskScheduler
     Task<ScheduledTask?> ProcessAsync(Guid scheduledTaskId, string workspaceId, CancellationToken cancellationToken);
     Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken);
     Task<ScheduledTask?> ProcessNextAsync(string workspaceId, CancellationToken cancellationToken);
+    Task WaitForWorkAsync(CancellationToken cancellationToken);
 }
 
 public interface IEngineeringTaskStore
@@ -162,6 +163,11 @@ public interface ILeadAgent
 
 public interface IWorkflowEngine
 {
+    WorkflowRun QueueInvestigation(InvestigationRequest request);
+    Task<WorkflowRun> ExecuteInvestigationAsync(
+        Guid runId,
+        InvestigationRequest request,
+        CancellationToken cancellationToken);
     Task<WorkflowRun> StartInvestigationAsync(InvestigationRequest request, CancellationToken cancellationToken);
 }
 

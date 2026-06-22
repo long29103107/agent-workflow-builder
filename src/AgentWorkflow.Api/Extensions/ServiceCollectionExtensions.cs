@@ -1,5 +1,6 @@
 using AgentWorkflow.Core.Infrastructure;
 using AgentWorkflow.Core.Domain;
+using AgentWorkflow.Api.Services;
 using System.Text.Json.Serialization;
 
 namespace AgentWorkflow.Api.Extensions;
@@ -47,6 +48,10 @@ public static class ServiceCollectionExtensions
             : null;
 
         services.AddAgentWorkflowCore(postgresConnectionString);
+        if (configuration.GetValue("WorkflowWorker:Enabled", true))
+        {
+            services.AddHostedService<WorkflowBackgroundWorker>();
+        }
 
         return services;
     }

@@ -58,6 +58,20 @@ public sealed class SchedulerEndpointsTests
         Assert.Equal(HttpStatusCode.Created, lowResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Created, criticalResponse.StatusCode);
 
+        var critical = await criticalResponse.Content.ReadFromJsonAsync<ScheduledTask>(
+            JsonOptions,
+            cancellationToken: CancellationToken.None);
+        Assert.NotNull(critical?.WorkflowRunId);
+
+        var persistedRunResponse = await client.GetAsync(
+            $"/api/workflows/{critical.WorkflowRunId}",
+            CancellationToken.None);
+        var persistedRun = await persistedRunResponse.Content.ReadFromJsonAsync<WorkflowRun>(
+            JsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.OK, persistedRunResponse.StatusCode);
+        Assert.Equal(WorkflowStage.Created, persistedRun?.Stage);
+
         var processResponse = await client.PostAsync(
             "/api/scheduler/process-next",
             content: null,
@@ -94,6 +108,44 @@ public sealed class SchedulerEndpointsTests
             cancellationToken: CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Investigate_QueuesWorkAndBackgroundWorkerCompletesIt()
+    {
+        await using var factory = new AgentWorkflowApiFactory(enableWorkflowWorker: true);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/workflows/investigate",
+            new InvestigationRequest("jira-awb-101", ".", null, []),
+            CancellationToken.None);
+        var queued = await response.Content.ReadFromJsonAsync<ScheduledTask>(
+            JsonOptions,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.NotNull(queued);
+
+        ScheduledTask? current = null;
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            current = await client.GetFromJsonAsync<ScheduledTask>(
+                $"/api/scheduler/tasks/{queued.Id}",
+                JsonOptions,
+                CancellationToken.None);
+            if (current?.Status == ScheduledTaskStatus.Completed)
+            {
+                break;
+            }
+
+            await Task.Delay(20);
+        }
+
+        Assert.Equal(ScheduledTaskStatus.Completed, current?.Status);
+        Assert.NotNull(current?.WorkflowRunId);
+        Assert.NotNull(current?.LastHeartbeatAt);
+        Assert.Null(current?.LeaseExpiresAt);
     }
 
     private static JsonSerializerOptions CreateJsonOptions()

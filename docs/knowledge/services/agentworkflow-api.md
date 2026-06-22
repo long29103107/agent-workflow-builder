@@ -4,7 +4,7 @@ title: AgentWorkflow.Api
 domain: api
 owner: project
 status: draft
-last_updated: 2026-06-20
+last_updated: 2026-06-22
 tags:
   - service
   - api
@@ -20,6 +20,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 ## Responsibilities
 
 - Register API services and Core services.
+- Host the background workflow worker that drains queued investigations outside HTTP requests.
 - Configure CORS for the Vite development UI.
 - Publish Swagger/OpenAPI JSON, Scalar API reference UI, and Swagger UI.
 - Organize Minimal API mappings into feature route groups and expose matching Swagger/Scalar tags.
@@ -95,6 +96,8 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Memory creation returns a `Created` response with a search URL.
 - Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
 - Scheduler enqueue rejects unknown tasks and active duplicates.
+- Investigation requests return `202 Accepted` after persisting a `Created` workflow run and enqueueing background work.
+- Processing uses a renewable lease and heartbeat; host cancellation requeues interrupted in-memory work.
 - Scheduler processing returns `404` when no queued task is available.
 - A default workspace is seeded from `WorkspaceDefaults`.
 - Request submission creates a Project-owned EngineeringTask, a compatible workspace request, and a pending planner log.
@@ -117,6 +120,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - CORS allows `http://localhost:5173` and `http://127.0.0.1:5173`.
 - `ConnectionStrings:AgentWorkflowDb` provides the local PostgreSQL connection for debugging and future EF Core migrations.
 - `Persistence:Provider=PostgreSql` selects PostgreSQL stores; tests override it with `InMemory`.
+- `WorkflowWorker:Enabled` enables the hosted queue worker and defaults to `true`.
 - `Cors:AllowedOrigins`, `WorkspaceDefaults`, and `ToolEndpoints` are read from API appsettings.
 
 ## Related Files
@@ -128,6 +132,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - `src/AgentWorkflow.Api/Endpoints/ProjectTaskApiEndpoints.cs`
 - `src/AgentWorkflow.Api/Extensions/ServiceCollectionExtensions.cs`
 - `src/AgentWorkflow.Api/Extensions/WebApplicationExtensions.cs`
+- `src/AgentWorkflow.Api/Services/WorkflowBackgroundWorker.cs`
 - `src/AgentWorkflow.Api/Dockerfile`
 
 ## Related Knowledge

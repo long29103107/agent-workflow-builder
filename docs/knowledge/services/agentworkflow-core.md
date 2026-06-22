@@ -4,7 +4,7 @@ title: AgentWorkflow.Core
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-20
+last_updated: 2026-06-22
 tags:
   - service
   - core
@@ -33,6 +33,8 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 
 ## Main APIs / Entry Points
 
+- `IWorkflowEngine.QueueInvestigation`
+- `IWorkflowEngine.ExecuteInvestigationAsync`
 - `IWorkflowEngine.StartInvestigationAsync`
 - `IWorkflowRunStore.TransitionRun`
 - `ITaskScheduler.EnqueueAsync`
@@ -81,5 +83,5 @@ See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workf
 
 ## Open Questions
 
-- The scheduler queue remains in memory until the background workflow worker task is implemented.
+- Scheduled queue entries remain in memory; workflow runs are persisted before API enqueue responses through the configured `IWorkflowRunStore`.
 - CLI, MCP, and tests use the in-memory persistence fallback unless a PostgreSQL connection is passed to Core registration.

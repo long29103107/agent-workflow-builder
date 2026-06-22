@@ -1,13 +1,11 @@
 ---
 type: phase-task
-schema_version: 1
+schema_version: 2
 task_id: 003_002
 phase: 003
-status: planned
-updated_at: unknown
+status: done
+updated_at: 2026-06-22
 depends_on: none
-verification: not_recorded
-outcome: migrated_from_legacy_phase_status
 ---
 
 # 003_002: Add Background Workflow Worker
@@ -16,12 +14,24 @@ outcome: migrated_from_legacy_phase_status
 
 ## Checklist
 
-- [ ] Move long-running workflow execution out of HTTP requests.
-- [ ] Persist and enqueue stage work before returning from the API.
-- [ ] Add lease, cancellation, heartbeat, and graceful-shutdown behavior.
-- [ ] Keep adapters thin.
+- [x] Move long-running workflow execution out of HTTP requests.
+- [x] Persist and enqueue stage work before returning from the API.
+- [x] Add lease, cancellation, heartbeat, and graceful-shutdown behavior.
+- [x] Keep adapters thin.
 
 ## Progress
 
-- Status: `planned`
-- Completed items: `0/4`
+- Status: `done`
+- Completed items: `4/4`
+
+## Outcome
+
+- `POST /api/workflows/investigate` persists a `Created` workflow run, enqueues its work, and returns `202 Accepted` without executing the Lead Agent in the request.
+- The API hosted worker drains priority/FIFO work through the Core scheduler and shared workflow engine.
+- Processing items expose heartbeat and lease timestamps; cancellation requeues work and host shutdown cancels processing gracefully.
+- Scheduled queue entries remain mock-first and in memory; the workflow run itself uses the configured durable run store.
+
+## Verification
+
+- `dotnet test AgentWorkflowBuilder.slnx --no-restore`
+- `powershell -ExecutionPolicy Bypass -File scripts/validate-phase-knowledge.ps1`

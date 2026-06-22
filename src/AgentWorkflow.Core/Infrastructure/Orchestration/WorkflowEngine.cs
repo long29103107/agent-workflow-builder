@@ -16,7 +16,20 @@ public sealed class WorkflowEngine : IWorkflowEngine
 
     public async Task<WorkflowRun> StartInvestigationAsync(InvestigationRequest request, CancellationToken cancellationToken)
     {
-        var run = _store.CreateRun(request.TaskId);
+        var run = QueueInvestigation(request);
+        return await ExecuteInvestigationAsync(run.Id, request, cancellationToken);
+    }
+
+    public WorkflowRun QueueInvestigation(InvestigationRequest request) =>
+        _store.CreateRun(request.TaskId);
+
+    public async Task<WorkflowRun> ExecuteInvestigationAsync(
+        Guid runId,
+        InvestigationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var run = _store.GetRun(runId)
+            ?? throw new InvalidOperationException($"Workflow run '{runId}' was not found.");
 
         try
         {
@@ -35,6 +48,10 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 cancellationToken);
 
             return _store.CompleteRun(run.Id, result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

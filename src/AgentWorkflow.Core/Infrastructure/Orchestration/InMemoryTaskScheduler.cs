@@ -6,10 +6,14 @@ namespace AgentWorkflow.Core.Infrastructure;
 public sealed class InMemoryTaskScheduler(
     ITaskSource taskSource,
     IWorkspaceTaskSource workspaceTaskSource,
-    IWorkflowEngine workflowEngine) : ITaskScheduler
+    IWorkflowEngine workflowEngine,
+    TimeProvider timeProvider) : ITaskScheduler
 {
+    private static readonly TimeSpan LeaseDuration = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(5);
     private readonly Lock _sync = new();
     private readonly Dictionary<Guid, ScheduledEntry> _entries = [];
+    private readonly SemaphoreSlim _workAvailable = new(0);
     private long _nextSequence;
 
     public async Task<ScheduledTask> EnqueueAsync(
@@ -41,25 +45,37 @@ public sealed class InMemoryTaskScheduler(
                 throw new InvalidOperationException($"Task '{task.Id}' is already queued or processing.");
             }
 
+            var assignedAgent = request.AssignedAgent ?? task.AssignedAgent;
+            var investigationRequest = new InvestigationRequest(
+                task.Id,
+                request.RepositoryPath,
+                request.RepositoryUrl,
+                request.RequestedAgents ??
+                    (string.IsNullOrWhiteSpace(assignedAgent) ? [] : [assignedAgent]),
+                request.WorkspaceId);
+            var run = workflowEngine.QueueInvestigation(investigationRequest);
+
             var item = new ScheduledTask(
                 Guid.NewGuid(),
                 task.Id,
                 task.Title,
                 request.Priority ?? ParsePriority(task.Priority),
                 ScheduledTaskStatus.Queued,
-                DateTimeOffset.UtcNow,
+                timeProvider.GetUtcNow(),
                 null,
                 null,
-                null,
+                run.Id,
                 null,
                 request.WorkspaceId,
-                request.AssignedAgent ?? task.AssignedAgent);
+                assignedAgent,
+                RequestedAgents: request.RequestedAgents);
 
             _entries[item.Id] = new ScheduledEntry(
                 item,
-                request.RepositoryPath,
-                request.RepositoryUrl,
+                investigationRequest,
                 _nextSequence++);
+
+            _workAvailable.Release();
 
             return item;
         }
@@ -100,6 +116,9 @@ public sealed class InMemoryTaskScheduler(
         }
     }
 
+    public Task WaitForWorkAsync(CancellationToken cancellationToken) =>
+        _workAvailable.WaitAsync(cancellationToken);
+
     public async Task<ScheduledTask?> ProcessNextAsync(CancellationToken cancellationToken)
     {
         return await ProcessNextCoreAsync(workspaceId: null, filterByWorkspace: false, cancellationToken);
@@ -121,6 +140,7 @@ public sealed class InMemoryTaskScheduler(
 
         lock (_sync)
         {
+            RecoverExpiredLeases();
             claimed = _entries.GetValueOrDefault(scheduledTaskId);
             if (claimed is null ||
                 claimed.Item.Status != ScheduledTaskStatus.Queued ||
@@ -144,6 +164,7 @@ public sealed class InMemoryTaskScheduler(
 
         lock (_sync)
         {
+            RecoverExpiredLeases();
             claimed = _entries.Values
                 .Where(entry => entry.Item.Status == ScheduledTaskStatus.Queued &&
                     (!filterByWorkspace || string.Equals(
@@ -169,17 +190,15 @@ public sealed class InMemoryTaskScheduler(
         ScheduledEntry claimed,
         CancellationToken cancellationToken)
     {
+        using var heartbeatCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var heartbeatTask = HeartbeatAsync(claimed, heartbeatCancellation.Token);
+
         try
         {
-            var run = await workflowEngine.StartInvestigationAsync(
-                new InvestigationRequest(
-                    claimed.Item.TaskId,
-                    claimed.RepositoryPath,
-                    claimed.RepositoryUrl,
-                    RequestedAgents: string.IsNullOrWhiteSpace(claimed.Item.AssignedAgent)
-                        ? []
-                        : [claimed.Item.AssignedAgent],
-                    WorkspaceId: claimed.Item.WorkspaceId),
+            var run = await workflowEngine.ExecuteInvestigationAsync(
+                claimed.Item.WorkflowRunId
+                    ?? throw new InvalidOperationException("Scheduled task has no workflow run."),
+                claimed.InvestigationRequest,
                 cancellationToken);
 
             lock (_sync)
@@ -189,11 +208,12 @@ public sealed class InMemoryTaskScheduler(
                     Status = string.Equals(run.Status, "Completed", StringComparison.OrdinalIgnoreCase)
                         ? ScheduledTaskStatus.Completed
                         : ScheduledTaskStatus.Failed,
-                    CompletedAt = DateTimeOffset.UtcNow,
+                    CompletedAt = timeProvider.GetUtcNow(),
                     WorkflowRunId = run.Id,
                     Error = string.Equals(run.Status, "Completed", StringComparison.OrdinalIgnoreCase)
                         ? null
-                        : $"Workflow run ended with status '{run.Status}'."
+                        : $"Workflow run ended with status '{run.Status}'.",
+                    LeaseExpiresAt = null
                 };
 
                 return claimed.Item;
@@ -207,8 +227,12 @@ public sealed class InMemoryTaskScheduler(
                 {
                     Status = ScheduledTaskStatus.Queued,
                     StartedAt = null,
-                    Error = null
+                    Error = null,
+                    LastHeartbeatAt = null,
+                    LeaseExpiresAt = null
                 };
+
+                _workAvailable.Release();
             }
 
             throw;
@@ -220,23 +244,80 @@ public sealed class InMemoryTaskScheduler(
                 claimed.Item = claimed.Item with
                 {
                     Status = ScheduledTaskStatus.Failed,
-                    CompletedAt = DateTimeOffset.UtcNow,
-                    Error = ex.Message
+                    CompletedAt = timeProvider.GetUtcNow(),
+                    Error = ex.Message,
+                    LeaseExpiresAt = null
                 };
 
                 return claimed.Item;
             }
         }
+        finally
+        {
+            await heartbeatCancellation.CancelAsync();
+            await heartbeatTask;
+        }
     }
 
-    private static void Claim(ScheduledEntry entry)
+    private void Claim(ScheduledEntry entry)
     {
+        var now = timeProvider.GetUtcNow();
         entry.Item = entry.Item with
         {
             Status = ScheduledTaskStatus.Processing,
-            StartedAt = DateTimeOffset.UtcNow,
-            Error = null
+            StartedAt = now,
+            Error = null,
+            LastHeartbeatAt = now,
+            LeaseExpiresAt = now.Add(LeaseDuration)
         };
+    }
+
+    private async Task HeartbeatAsync(ScheduledEntry entry, CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(HeartbeatInterval, timeProvider);
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                lock (_sync)
+                {
+                    if (entry.Item.Status != ScheduledTaskStatus.Processing)
+                    {
+                        return;
+                    }
+
+                    var now = timeProvider.GetUtcNow();
+                    entry.Item = entry.Item with
+                    {
+                        LastHeartbeatAt = now,
+                        LeaseExpiresAt = now.Add(LeaseDuration)
+                    };
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    private void RecoverExpiredLeases()
+    {
+        var now = timeProvider.GetUtcNow();
+        foreach (var entry in _entries.Values.Where(entry =>
+                     entry.Item.Status == ScheduledTaskStatus.Processing &&
+                     entry.Item.LeaseExpiresAt <= now))
+        {
+            entry.Item = entry.Item with
+            {
+                Status = ScheduledTaskStatus.Queued,
+                StartedAt = null,
+                LastHeartbeatAt = null,
+                LeaseExpiresAt = null,
+                Error = "The previous worker lease expired; the task was requeued."
+            };
+            _workAvailable.Release();
+        }
     }
 
     private static ScheduledTaskPriority ParsePriority(string priority) =>
@@ -255,13 +336,11 @@ public sealed class InMemoryTaskScheduler(
 
     private sealed class ScheduledEntry(
         ScheduledTask item,
-        string? repositoryPath,
-        string? repositoryUrl,
+        InvestigationRequest investigationRequest,
         long sequence)
     {
         public ScheduledTask Item { get; set; } = item;
-        public string? RepositoryPath { get; } = repositoryPath;
-        public string? RepositoryUrl { get; } = repositoryUrl;
+        public InvestigationRequest InvestigationRequest { get; } = investigationRequest;
         public long Sequence { get; } = sequence;
     }
 }
