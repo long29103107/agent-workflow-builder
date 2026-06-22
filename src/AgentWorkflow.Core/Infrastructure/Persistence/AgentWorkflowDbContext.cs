@@ -9,6 +9,7 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
     public DbSet<EngineeringTaskEntity> EngineeringTasks => Set<EngineeringTaskEntity>();
     public DbSet<WorkItemEntity> WorkItems => Set<WorkItemEntity>();
     public DbSet<WorkflowRunEntity> WorkflowRuns => Set<WorkflowRunEntity>();
+    public DbSet<WorkflowCommandEntity> WorkflowCommands => Set<WorkflowCommandEntity>();
     public DbSet<WorkflowEventEntity> WorkflowEvents => Set<WorkflowEventEntity>();
     public DbSet<AgentExecutionEntity> AgentExecutions => Set<AgentExecutionEntity>();
     public DbSet<EvidenceItemEntity> EvidenceItems => Set<EvidenceItemEntity>();
@@ -78,6 +79,19 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
             entity.Property(item => item.Agent).HasMaxLength(256);
             entity.Property(item => item.Type).HasMaxLength(128);
             entity.HasIndex(item => new { item.RunId, item.Timestamp });
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WorkflowCommandEntity>(entity =>
+        {
+            entity.ToTable("workflow_commands");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.IdempotencyKey).HasMaxLength(256);
+            entity.Property(item => item.Stage).HasMaxLength(64);
+            entity.HasIndex(item => new { item.RunId, item.IdempotencyKey }).IsUnique();
             entity.HasOne<WorkflowRunEntity>()
                 .WithMany()
                 .HasForeignKey(item => item.RunId)
@@ -228,6 +242,15 @@ public sealed class WorkflowEventEntity
     public string Agent { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+}
+
+public sealed class WorkflowCommandEntity
+{
+    public Guid Id { get; set; }
+    public Guid RunId { get; set; }
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string Stage { get; set; } = string.Empty;
+    public DateTimeOffset AppliedAt { get; set; }
 }
 
 public sealed class AgentExecutionEntity

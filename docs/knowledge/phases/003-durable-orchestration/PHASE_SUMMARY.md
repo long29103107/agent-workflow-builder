@@ -1,7 +1,7 @@
 ﻿---
 type: phase-summary
 phase: 003
-status: in progress
+status: done
 ---
 
 # Durable Orchestration, Approval, And Evidence
@@ -10,7 +10,7 @@ status: in progress
 
 Goal: make every workflow resumable, auditable, and unable to bypass approval policy.
 
-Progress: `6/7` tasks done.
+Progress: `7/7` tasks done.
 
 | Task | Title | Status | Checklist |
 |---|---|---|---:|
@@ -19,5 +19,5 @@ Progress: `6/7` tasks done.
 | [003_003](./003_003-add-structured-evidence-and-artifacts.md) | Add Structured Evidence And Artifacts | `done` | 4/4 |
 | [003_004](./003_004-add-approval-policy-engine.md) | Add Approval Policy Engine | `done` | 4/4 |
 | [003_005](./003_005-add-task-history-and-sse-activity.md) | Add Task History And SSE Activity | `done` | 7/7 |
-| [003_006](./003_006-add-idempotency-and-stage-recovery.md) | Add Idempotency And Stage Recovery | `planned` | 0/4 |
+| [003_006](./003_006-add-idempotency-and-stage-recovery.md) | Add Idempotency And Stage Recovery | `done` | 4/4 |
 | [003_007](./003_007-add-mock-first-priority-task-scheduler.md) | Add Mock-First Priority Task Scheduler | `done` | 6/6 |

@@ -13,11 +13,57 @@ public sealed class WorkflowStateMachineTests
         var run = store.CreateRun("task-1");
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            store.TransitionRun(run.Id, WorkflowStage.Investigating));
+            store.TransitionRun(
+                run.Id,
+                new WorkflowStageCommand(WorkflowStage.Investigating, "task-1:investigating")));
 
         Assert.Contains("Created", exception.Message);
         Assert.Contains("Investigating", exception.Message);
         Assert.Equal(WorkflowStage.Created, store.GetRun(run.Id)!.Stage);
+    }
+
+    [Fact]
+    public void TransitionRun_ReplaysSameCommandWithoutDuplicatingTransition()
+    {
+        var store = new InMemoryWorkflowRunStore();
+        var run = store.CreateRun("task-1");
+        var command = new WorkflowStageCommand(
+            WorkflowStage.LoadingTaskContext,
+            "task-1:loading-context");
+
+        var first = store.TransitionRun(run.Id, command);
+        var replayed = store.TransitionRun(run.Id, command);
+
+        Assert.Equal(first, replayed);
+        Assert.Single(store.GetEvents(run.Id), item => item.Type == "StageChanged");
+    }
+
+    [Fact]
+    public async Task WorkflowEngine_ResumesInterruptedRunFromPersistedStage()
+    {
+        var store = new InMemoryWorkflowRunStore();
+        using var interruption = new CancellationTokenSource();
+        var leadAgent = new InterruptOnceLeadAgent(interruption.Cancel);
+        var engine = new WorkflowEngine(
+            store,
+            leadAgent,
+            CreateEvidenceStore(),
+            CreateActivityStore());
+        var request = new InvestigationRequest("task-1", ".", null, null);
+        var queued = engine.QueueInvestigation(request);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            engine.ExecuteInvestigationAsync(queued.Id, request, interruption.Token));
+        Assert.Equal(WorkflowStage.LoadingMemory, store.GetRun(queued.Id)!.Stage);
+
+        var recovered = await engine.ExecuteInvestigationAsync(
+            queued.Id,
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(WorkflowStage.Completed, recovered.Stage);
+        Assert.Equal(2, recovered.Attempt);
+        Assert.Contains(store.GetEvents(queued.Id), item => item.Type == "RunRecovered");
     }
 
     [Fact]
@@ -151,6 +197,29 @@ public sealed class WorkflowStateMachineTests
                 await advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
                 throw new InvalidOperationException("Investigation failed.");
             }
+        }
+    }
+
+    private sealed class InterruptOnceLeadAgent(Action interrupt) : ILeadAgent
+    {
+        private int _calls;
+
+        public async Task<InvestigationResult> InvestigateAsync(
+            InvestigationRequest request,
+            Func<WorkflowStage, string, string, Task> advanceStage,
+            CancellationToken cancellationToken)
+        {
+            await advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
+            await advanceStage(WorkflowStage.ResolvingRepository, "LeadAgent", "Resolving repository.");
+            await advanceStage(WorkflowStage.LoadingMemory, "LeadAgent", "Loading memory.");
+            if (Interlocked.Increment(ref _calls) == 1)
+            {
+                interrupt();
+                throw new OperationCanceledException(cancellationToken);
+            }
+            await advanceStage(WorkflowStage.Investigating, "LeadAgent", "Investigating.");
+            await advanceStage(WorkflowStage.Aggregating, "LeadAgent", "Aggregating.");
+            return Result();
         }
     }
 }

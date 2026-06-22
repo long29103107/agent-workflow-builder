@@ -24,6 +24,8 @@ public sealed class PersistenceModelTests
             ?? throw new InvalidOperationException("WorkItem persistence mapping is missing.");
         var workflowRun = context.Model.FindEntityType(typeof(WorkflowRunEntity))
             ?? throw new InvalidOperationException("WorkflowRun persistence mapping is missing.");
+        var workflowCommand = context.Model.FindEntityType(typeof(WorkflowCommandEntity))
+            ?? throw new InvalidOperationException("WorkflowCommand persistence mapping is missing.");
         var workflowEvent = context.Model.FindEntityType(typeof(WorkflowEventEntity))
             ?? throw new InvalidOperationException("WorkflowEvent persistence mapping is missing.");
         var agentExecution = context.Model.FindEntityType(typeof(AgentExecutionEntity))
@@ -42,6 +44,10 @@ public sealed class PersistenceModelTests
         Assert.Equal("engineering_tasks", engineeringTask.GetTableName());
         Assert.Equal("work_items", workItem.GetTableName());
         Assert.Equal("workflow_runs", workflowRun.GetTableName());
+        Assert.Equal("workflow_commands", workflowCommand.GetTableName());
+        Assert.Contains(workflowCommand.GetIndexes(), index =>
+            index.IsUnique && index.Properties.Select(property => property.Name).SequenceEqual(
+                [nameof(WorkflowCommandEntity.RunId), nameof(WorkflowCommandEntity.IdempotencyKey)]));
         Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.Stage)));
         Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.Attempt)));
         Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.FailureDetails)));
@@ -58,6 +64,8 @@ public sealed class PersistenceModelTests
         Assert.Contains(workItem.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(EngineeringTaskEntity));
         Assert.Contains(workflowEvent.GetForeignKeys(), foreignKey =>
+            foreignKey.PrincipalEntityType.ClrType == typeof(WorkflowRunEntity));
+        Assert.Contains(workflowCommand.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(WorkflowRunEntity));
         Assert.Contains(evidenceItem.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(AgentExecutionEntity));

@@ -351,6 +351,23 @@ public sealed record WorkflowRun(
     int Attempt = 1,
     string? FailureDetails = null);
 
+public sealed record WorkflowStageCommand(
+    WorkflowStage Stage,
+    string IdempotencyKey);
+
+public enum WorkflowOperationKind
+{
+    TransientRead,
+    Commit,
+    Push,
+    CreatePullRequest,
+    Merge
+}
+
+public sealed record ExternalWriteCommand(
+    WorkflowOperationKind Operation,
+    string IdempotencyKey);
+
 public sealed record WorkflowEvent(
     Guid Id,
     Guid RunId,

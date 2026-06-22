@@ -17,3 +17,7 @@ dotnet ef migrations script 20260622014134_AddStructuredEvidenceAndArtifacts 202
 ```powershell
 dotnet ef migrations script 20260622022720_AddApprovalPolicyEngine 20260622032935_AddTaskActivityHistory --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622032935_AddTaskActivityHistory.sql"
 ```
+
+```powershell
+dotnet ef migrations script 20260622032935_AddTaskActivityHistory 20260622064822_AddWorkflowCommandIdempotency --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622064822_AddWorkflowCommandIdempotency.sql"
+```

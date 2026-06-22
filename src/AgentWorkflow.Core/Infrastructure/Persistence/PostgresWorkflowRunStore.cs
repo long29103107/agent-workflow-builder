@@ -66,46 +66,131 @@ public sealed class PostgresWorkflowRunStore(
         context.SaveChanges();
     }
 
-    public WorkflowRun CompleteRun(Guid runId, InvestigationResult result)
+    public WorkflowRun BeginRecoveryAttempt(Guid runId)
     {
         using var context = contextFactory.CreateDbContext();
         var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        var stage = ParseStage(entity.Stage);
+        if (stage is WorkflowStage.Completed or WorkflowStage.Failed)
+        {
+            throw new InvalidOperationException("Terminal workflow runs cannot be recovered.");
+        }
+        if (stage == WorkflowStage.Created)
+        {
+            return ToDomain(entity);
+        }
+
+        entity.Attempt++;
+        entity.FailureDetails = null;
+        context.SaveChanges();
+        AddEvent(runId, "Workflow Engine", "RunRecovered", $"Workflow resumed at {stage} for attempt {entity.Attempt}.");
+        return ToDomain(entity);
+    }
+
+    public WorkflowRun CompleteRun(Guid runId, InvestigationResult result, string idempotencyKey)
+    {
+        using var context = contextFactory.CreateDbContext();
+        var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        if (!TryAddCommand(context, runId, WorkflowStage.Completed, idempotencyKey))
+        {
+            return ToDomain(entity);
+        }
         WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), WorkflowStage.Completed);
         entity.Status = "Completed";
         entity.Stage = WorkflowStage.Completed.ToString();
         entity.CompletedAt = DateTimeOffset.UtcNow;
         entity.ResultJson = JsonSerializer.Serialize(result, PersistenceJson.Options);
         entity.FailureDetails = null;
-        context.SaveChanges();
+        try
+        {
+            context.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsCommandApplied(runId, idempotencyKey))
+        {
+            return GetRun(runId)!;
+        }
         AddEvent(runId, "Workflow Engine", "StageChanged", "Workflow advanced to Completed.");
         AddEvent(runId, "Workflow Engine", "RunCompleted", "Investigation completed and execution plan generated.");
         return ToDomain(entity);
     }
 
-    public WorkflowRun FailRun(Guid runId, string reason)
+    public WorkflowRun FailRun(Guid runId, string reason, string idempotencyKey)
     {
         using var context = contextFactory.CreateDbContext();
         var entity = context.WorkflowRuns.Single(run => run.Id == runId);
+        if (!TryAddCommand(context, runId, WorkflowStage.Failed, idempotencyKey))
+        {
+            return ToDomain(entity);
+        }
         WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), WorkflowStage.Failed);
         entity.Status = "Failed";
         entity.Stage = WorkflowStage.Failed.ToString();
         entity.CompletedAt = DateTimeOffset.UtcNow;
         entity.FailureDetails = reason;
-        context.SaveChanges();
+        try
+        {
+            context.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsCommandApplied(runId, idempotencyKey))
+        {
+            return GetRun(runId)!;
+        }
         AddEvent(runId, "Workflow Engine", "StageChanged", "Workflow advanced to Failed.");
         AddEvent(runId, "Workflow Engine", "RunFailed", reason);
         return ToDomain(entity);
     }
 
-    public WorkflowRun TransitionRun(Guid runId, WorkflowStage nextStage)
+    public WorkflowRun TransitionRun(Guid runId, WorkflowStageCommand command)
     {
         using var context = contextFactory.CreateDbContext();
         var entity = context.WorkflowRuns.Single(run => run.Id == runId);
-        WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), nextStage);
-        entity.Stage = nextStage.ToString();
-        context.SaveChanges();
-        AddEvent(runId, "LeadAgent", "StageChanged", $"Workflow advanced to {nextStage}.");
+        if (!TryAddCommand(context, runId, command.Stage, command.IdempotencyKey))
+        {
+            return ToDomain(entity);
+        }
+        WorkflowStateMachine.EnsureTransition(ParseStage(entity.Stage), command.Stage);
+        entity.Stage = command.Stage.ToString();
+        try
+        {
+            context.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsCommandApplied(runId, command.IdempotencyKey))
+        {
+            return GetRun(runId)!;
+        }
+        AddEvent(runId, "LeadAgent", "StageChanged", $"Workflow advanced to {command.Stage}.");
         return ToDomain(entity);
+    }
+
+    private static bool TryAddCommand(
+        AgentWorkflowDbContext context,
+        Guid runId,
+        WorkflowStage stage,
+        string idempotencyKey)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        if (context.WorkflowCommands.Any(item =>
+            item.RunId == runId && item.IdempotencyKey == idempotencyKey))
+        {
+            return false;
+        }
+
+        context.WorkflowCommands.Add(new WorkflowCommandEntity
+        {
+            Id = Guid.NewGuid(),
+            RunId = runId,
+            IdempotencyKey = idempotencyKey,
+            Stage = stage.ToString(),
+            AppliedAt = DateTimeOffset.UtcNow
+        });
+        return true;
+    }
+
+    private bool IsCommandApplied(Guid runId, string idempotencyKey)
+    {
+        using var context = contextFactory.CreateDbContext();
+        return context.WorkflowCommands.AsNoTracking().Any(item =>
+            item.RunId == runId && item.IdempotencyKey == idempotencyKey);
     }
 
     private static WorkflowRunEntity ToEntity(WorkflowRun run) =>

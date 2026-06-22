@@ -2,6 +2,23 @@ namespace AgentWorkflow.Core.Domain;
 
 public static class WorkflowStateMachine
 {
+    private static readonly IReadOnlyDictionary<WorkflowStage, int> StageOrder =
+        new Dictionary<WorkflowStage, int>
+        {
+            [WorkflowStage.Created] = 0,
+            [WorkflowStage.LoadingTaskContext] = 1,
+            [WorkflowStage.ResolvingRepository] = 2,
+            [WorkflowStage.LoadingMemory] = 3,
+            [WorkflowStage.Investigating] = 4,
+            [WorkflowStage.Aggregating] = 5,
+            [WorkflowStage.Completed] = 6,
+            [WorkflowStage.Failed] = 6
+        };
+
+    public static bool HasReached(WorkflowStage current, WorkflowStage candidate) =>
+        current is WorkflowStage.Completed or WorkflowStage.Failed ||
+        StageOrder[current] >= StageOrder[candidate];
+
     private static readonly IReadOnlyDictionary<WorkflowStage, IReadOnlySet<WorkflowStage>> LegalTransitions =
         new Dictionary<WorkflowStage, IReadOnlySet<WorkflowStage>>
         {

@@ -1,6 +1,6 @@
 ---
 type: phase-index
-active_phase: 003-durable-orchestration
+active_phase: 004-sandbox-github-workspace
 ---
 
 # Phases And Tasks
@@ -13,7 +13,7 @@ Tasks use the `PPP_TTT` format.
 |---|---|---|---:|
 | [001-skeleton](./001-skeleton/PHASE_SUMMARY.md) | Skeleton And Operating System | `done` | 31/31 |
 | [002-platform-foundation](./002-platform-foundation/PHASE_SUMMARY.md) | Platform Foundation | `done` | 7/7 |
-| [003-durable-orchestration](./003-durable-orchestration/PHASE_SUMMARY.md) | Durable Orchestration, Approval, And Evidence | `in progress` | 6/7 |
+| [003-durable-orchestration](./003-durable-orchestration/PHASE_SUMMARY.md) | Durable Orchestration, Approval, And Evidence | `done` | 7/7 |
 | [004-sandbox-github-workspace](./004-sandbox-github-workspace/PHASE_SUMMARY.md) | Sandbox And GitHub Workspace | `planned` | 0/6 |
 | [005-investigation-architecture](./005-investigation-architecture/PHASE_SUMMARY.md) | Investigation And Architecture Agents | `planned` | 0/6 |
 | [006-implementation-testing-review](./006-implementation-testing-review/PHASE_SUMMARY.md) | Implementation, Testing, And Review | `planned` | 0/6 |

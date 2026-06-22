@@ -39,6 +39,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
     {
         var run = _store.GetRun(runId)
             ?? throw new InvalidOperationException($"Workflow run '{runId}' was not found.");
+        run = _store.BeginRecoveryAttempt(runId);
         var execution = _evidenceStore.StartExecution(run.Id, "LeadAgent");
 
         try
@@ -61,9 +62,11 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 {
                     var current = _store.GetRun(run.Id)
                         ?? throw new InvalidOperationException($"Workflow run '{run.Id}' was not found.");
-                    if (current.Stage != stage)
+                    if (!WorkflowStateMachine.HasReached(current.Stage, stage))
                     {
-                        _store.TransitionRun(run.Id, stage);
+                        _store.TransitionRun(
+                            run.Id,
+                            new WorkflowStageCommand(stage, $"{run.Id}:stage:{stage}"));
                         await AppendActivityAsync(
                             run,
                             TaskActivityCategory.Workflow,
@@ -149,7 +152,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 "Lead Agent execution completed.",
                 cancellationToken);
 
-            var completed = _store.CompleteRun(run.Id, result);
+            var completed = _store.CompleteRun(run.Id, result, $"{run.Id}:complete");
             await AppendActivityAsync(
                 run,
                 TaskActivityCategory.Workflow,
@@ -190,7 +193,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 "AgentExecutionFailed",
                 "Lead Agent execution failed.",
                 CancellationToken.None);
-            var failed = _store.FailRun(run.Id, ex.Message);
+            var failed = _store.FailRun(run.Id, ex.Message, $"{run.Id}:attempt:{run.Attempt}:fail");
             await AppendActivityAsync(
                 run,
                 TaskActivityCategory.Workflow,

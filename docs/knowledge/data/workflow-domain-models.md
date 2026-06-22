@@ -23,6 +23,8 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `EngineeringTaskStatus`: `New`, investigation and approval stages, implementation and verification stages, pull-request stages, then `Completed` or `Failed`.
 - `WorkItem`: source-owned Jira or Notion input linked to one EngineeringTask while preserving its source key, provider status, priority, and tags.
 - `WorkflowRun`: run ID, task ID, status, durable stage, one-based attempt, timestamps, optional result, and optional failure details.
+- `WorkflowStageCommand`: requested stage plus the stable idempotency key used to deduplicate command replay.
+- `ExternalWriteCommand` and `WorkflowOperationKind`: classify retry-safe transient reads separately from commit, push, pull-request, and merge writes.
 - `WorkflowStage`: legal lifecycle states from `Created` through context, repository, memory, investigation, and aggregation work to terminal `Completed` or `Failed`.
 - `WorkflowEvent`: timeline event with run ID, agent, type, and message.
 - `TaskActivity`: append-only task history item with monotonic sequence, task/run/correlation identity, category, type, redacted summary, and timestamp.
@@ -58,7 +60,7 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 
 ## Database Models
 
-`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, `workflow_events`, `agent_executions`, `evidence_items`, `artifacts`, `approvals`, and `task_activities`. Workflow runs persist stage, attempt, JSONB result, and failure details. Evidence, artifacts, and task activity are append-only; only AgentExecution and approval lifecycle fields are updated. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
+`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, `workflow_commands`, `workflow_events`, `agent_executions`, `evidence_items`, `artifacts`, `approvals`, and `task_activities`. Workflow runs persist stage, attempt, JSONB result, and failure details. Workflow commands enforce a unique run/idempotency-key pair. Evidence, artifacts, and task activity are append-only; only AgentExecution and approval lifecycle fields are updated. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
 
 ## Related Files
 

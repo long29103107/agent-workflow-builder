@@ -28,6 +28,9 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - The Lead Agent is the authority for work-stage progression. The workflow engine persists those transitions and owns terminal completion or failure.
 - Invalid, skipped, repeated, or out-of-order stage transitions are rejected before persistence.
 - Every run persists its current stage, one-based attempt number, result, and failure details.
+- Stage, completion, and failure commands carry stable idempotency keys. Replaying an applied command returns the persisted run without emitting another transition.
+- An interrupted non-terminal run resumes from its persisted stage, increments its attempt, and ignores callbacks for stages it has already reached.
+- Only explicitly classified transient reads may use bounded automatic retry. Commit, push, pull-request creation, and merge require persisted idempotency keys and cannot use blind retry.
 - Scheduled tasks run in Critical, High, Medium, then Low order.
 - Tasks with equal priority run in FIFO enqueue order.
 - A task cannot have more than one active queued or processing item.
@@ -67,6 +70,7 @@ Not detected from repository analysis.
 
 - `src/AgentWorkflow.Core/Infrastructure/Agents/OpenAiLeadAgent.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Orchestration/WorkflowEngine.cs`
+- `src/AgentWorkflow.Core/Domain/WorkflowRetryPolicy.cs`
 - `src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs`
 
 ## Open Questions

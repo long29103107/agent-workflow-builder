@@ -209,9 +209,10 @@ public interface IWorkflowRunStore
     WorkflowRun? GetRun(Guid runId);
     IReadOnlyList<WorkflowEvent> GetEvents(Guid runId);
     void AddEvent(Guid runId, string agent, string type, string message);
-    WorkflowRun TransitionRun(Guid runId, WorkflowStage nextStage);
-    WorkflowRun CompleteRun(Guid runId, InvestigationResult result);
-    WorkflowRun FailRun(Guid runId, string reason);
+    WorkflowRun BeginRecoveryAttempt(Guid runId);
+    WorkflowRun TransitionRun(Guid runId, WorkflowStageCommand command);
+    WorkflowRun CompleteRun(Guid runId, InvestigationResult result, string idempotencyKey);
+    WorkflowRun FailRun(Guid runId, string reason, string idempotencyKey);
 }
 
 public interface IWorkflowEvidenceStore
