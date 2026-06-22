@@ -76,6 +76,30 @@ export type RequestSubmissionResult = {
 export type PlannerApprovalResult = {
   plannerLog: PlannerLog;
   tasks: TaskItem[];
+  approval: ApprovalRecord;
+};
+
+export type ApprovalGate = "InvestigationPlan" | "Implementation" | "PullRequest" | "Merge";
+export type ApprovalStatus = "Approved" | "Invalidated";
+
+export type ApprovalBinding = {
+  artifactHash: string | null;
+  targetBranch: string | null;
+  commitSha: string | null;
+};
+
+export type ApprovalRecord = {
+  id: string;
+  projectId: string;
+  taskId: string;
+  workflowRunId: string | null;
+  gate: ApprovalGate;
+  status: ApprovalStatus;
+  binding: ApprovalBinding;
+  approvedBy: string;
+  approvedAt: string;
+  invalidatedAt: string | null;
+  invalidationReason: string | null;
 };
 
 export type WorkflowEvent = {
@@ -126,6 +150,25 @@ export type WorkflowEvidenceBundle = {
   agentExecutions: AgentExecution[];
   evidenceItems: EvidenceItem[];
   artifacts: Artifact[];
+};
+
+export type TaskActivityCategory = "Workflow" | "Agent" | "Approval" | "Evidence" | "Artifact";
+
+export type TaskActivity = {
+  sequence: number;
+  id: string;
+  taskId: string;
+  workflowRunId: string | null;
+  correlationId: string;
+  category: TaskActivityCategory;
+  type: string;
+  summary: string;
+  timestamp: string;
+};
+
+export type TaskActivityHistory = {
+  items: TaskActivity[];
+  lastSequence: number;
 };
 
 export type AgentMessage = {

@@ -125,6 +125,61 @@ public sealed class ProjectTaskEndpointsTests
         Assert.Contains(details.WorkItems, item => item.Source == WorkItemSource.Notion);
     }
 
+    [Fact]
+    public async Task ApprovalPolicy_BlocksGuardedStatusUntilExactInputIsApproved()
+    {
+        await using var factory = new AgentWorkflowApiFactory();
+        using var client = factory.CreateClient();
+        var project = await GetDefaultProjectAsync(client);
+        var createResponse = await client.PostAsJsonAsync(
+            $"/api/projects/{project.Id}/tasks",
+            new CreateProjectTaskRequest(
+                "Guard approval transition",
+                "Verify Core approval enforcement.",
+                ScheduledTaskPriority.High,
+                []),
+            CancellationToken.None);
+        var created = await createResponse.Content.ReadFromJsonAsync<EngineeringTaskDetails>(
+            JsonOptions,
+            CancellationToken.None);
+        var binding = new ApprovalBinding(ApprovalInputHasher.Compute("plan-v1"), "main", null);
+
+        var blockedResponse = await client.PatchAsJsonAsync(
+            $"/api/projects/{project.Id}/tasks/{created!.Task.Id}/status",
+            new UpdateEngineeringTaskStatusRequest(
+                EngineeringTaskStatus.ReadyForImplementation,
+                binding),
+            JsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.Conflict, blockedResponse.StatusCode);
+
+        var approvalResponse = await client.PostAsJsonAsync(
+            $"/api/projects/{project.Id}/tasks/{created.Task.Id}/approvals",
+            new ApproveGateRequest(ApprovalGate.InvestigationPlan, binding, "api-reviewer"),
+            JsonOptions,
+            CancellationToken.None);
+        var approval = await approvalResponse.Content.ReadFromJsonAsync<ApprovalRecord>(
+            JsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.Created, approvalResponse.StatusCode);
+        Assert.Equal(ApprovalStatus.Approved, approval?.Status);
+
+        var allowedResponse = await client.PatchAsJsonAsync(
+            $"/api/projects/{project.Id}/tasks/{created.Task.Id}/status",
+            new UpdateEngineeringTaskStatusRequest(
+                EngineeringTaskStatus.ReadyForImplementation,
+                binding),
+            JsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.OK, allowedResponse.StatusCode);
+
+        var approvals = await client.GetFromJsonAsync<IReadOnlyList<ApprovalRecord>>(
+            $"/api/projects/{project.Id}/tasks/{created.Task.Id}/approvals",
+            JsonOptions,
+            CancellationToken.None);
+        Assert.Single(approvals!);
+    }
+
     private static async Task<Project> GetDefaultProjectAsync(HttpClient client)
     {
         var projects = await client.GetFromJsonAsync<IReadOnlyList<Project>>(

@@ -68,7 +68,9 @@ public sealed record CreateProjectTaskRequest(
     ScheduledTaskPriority Priority,
     IReadOnlyList<CreateWorkItemRequest> WorkItems);
 
-public sealed record UpdateEngineeringTaskStatusRequest(EngineeringTaskStatus Status);
+public sealed record UpdateEngineeringTaskStatusRequest(
+    EngineeringTaskStatus Status,
+    ApprovalBinding? ApprovalBinding = null);
 
 public sealed record EngineeringTaskDetails(
     EngineeringTask Task,
@@ -191,6 +193,50 @@ public sealed record ProjectApprovalPolicy(
     bool RequirePullRequestApproval,
     bool RequireMergeApproval);
 
+public enum ApprovalGate
+{
+    InvestigationPlan,
+    Implementation,
+    PullRequest,
+    Merge
+}
+
+public enum ApprovalStatus
+{
+    Approved,
+    Invalidated
+}
+
+public sealed record ApprovalBinding(
+    string? ArtifactHash,
+    string? TargetBranch,
+    string? CommitSha);
+
+public sealed record ApprovalRecord(
+    Guid Id,
+    string ProjectId,
+    string TaskId,
+    Guid? WorkflowRunId,
+    ApprovalGate Gate,
+    ApprovalStatus Status,
+    ApprovalBinding Binding,
+    string ApprovedBy,
+    DateTimeOffset ApprovedAt,
+    DateTimeOffset? InvalidatedAt,
+    string? InvalidationReason);
+
+public sealed record ApproveGateRequest(
+    ApprovalGate Gate,
+    ApprovalBinding Binding,
+    string ApprovedBy,
+    Guid? WorkflowRunId = null);
+
+public sealed record ApprovalAuthorizationRequest(
+    string ProjectId,
+    string TaskId,
+    ApprovalGate Gate,
+    ApprovalBinding Binding);
+
 public sealed record CreateProjectRequest(
     string Name,
     ProjectRepositorySettings Repository,
@@ -279,7 +325,8 @@ public sealed record RequestSubmissionResult(
 
 public sealed record PlannerApprovalResult(
     PlannerLog PlannerLog,
-    IReadOnlyList<TaskItem> Tasks);
+    IReadOnlyList<TaskItem> Tasks,
+    ApprovalRecord Approval);
 
 public enum WorkflowStage
 {
@@ -362,6 +409,30 @@ public sealed record WorkflowEvidenceBundle(
     IReadOnlyList<AgentExecution> AgentExecutions,
     IReadOnlyList<EvidenceItem> EvidenceItems,
     IReadOnlyList<Artifact> Artifacts);
+
+public enum TaskActivityCategory
+{
+    Workflow,
+    Agent,
+    Approval,
+    Evidence,
+    Artifact
+}
+
+public sealed record TaskActivity(
+    long Sequence,
+    Guid Id,
+    string TaskId,
+    Guid? WorkflowRunId,
+    Guid CorrelationId,
+    TaskActivityCategory Category,
+    string Type,
+    string Summary,
+    DateTimeOffset Timestamp);
+
+public sealed record TaskActivityHistory(
+    IReadOnlyList<TaskActivity> Items,
+    long LastSequence);
 
 public sealed record AgentMessage(
     string AgentName,

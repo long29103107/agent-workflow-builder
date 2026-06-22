@@ -9,3 +9,11 @@ dotnet ef migrations script 20260621050123_InitialPostgresPersistence 2026062113
 ```powershell
 dotnet ef migrations script 20260621132104_AddDurableWorkflowStateMachine 20260622014134_AddStructuredEvidenceAndArtifacts --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622014134_AddStructuredEvidenceAndArtifacts.sql"
 ```
+
+```powershell
+dotnet ef migrations script 20260622014134_AddStructuredEvidenceAndArtifacts 20260622022720_AddApprovalPolicyEngine --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622022720_AddApprovalPolicyEngine.sql"
+```
+
+```powershell
+dotnet ef migrations script 20260622022720_AddApprovalPolicyEngine 20260622032935_AddTaskActivityHistory --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622032935_AddTaskActivityHistory.sql"
+```

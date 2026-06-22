@@ -28,6 +28,7 @@ Provide the React agent workspace dashboard for capturing user requests, showing
 - Show previous submitted requests below the request input.
 - Submit requests into Agent Planner logs with `Pending approval` status.
 - Keep workflow scheduling, lease, and structured-evidence response types aligned with Core/API contracts.
+- Keep task-history pagination and SSE subscription contracts aligned while the visible timeline remains on the legacy workflow-event endpoint.
 - Edit pending planner steps, including their title, detail, and assigned agent, before approval.
 - Allow approved planner logs to generate Kanban backlog tasks.
 - Show an Agent Planner breakdown in its own routed section.

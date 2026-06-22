@@ -33,6 +33,8 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `GET /swagger/v1/swagger.json`
 - `GET /api/health`
 - `GET /api/tasks`
+- `GET /api/tasks/{taskId}/history`
+- `GET /api/tasks/{taskId}/activity`
 - `GET /api/scheduler/tasks`
 - `GET /api/scheduler/tasks/{scheduledTaskId}`
 - `POST /api/scheduler/tasks`
@@ -57,6 +59,8 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `POST /api/projects/{projectId}/tasks`
 - `GET /api/projects/{projectId}/tasks/{taskId}`
 - `PATCH /api/projects/{projectId}/tasks/{taskId}/status`
+- `GET /api/projects/{projectId}/tasks/{taskId}/approvals`
+- `POST /api/projects/{projectId}/tasks/{taskId}/approvals`
 - `GET /api/projects/{projectId}/tasks/{taskId}/work-items`
 - `POST /api/projects/{projectId}/tasks/{taskId}/work-items`
 - `GET /api/workspaces`
@@ -95,6 +99,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - `taskId` is required for investigation requests.
 - Unknown workflow run IDs return `404`.
 - Workflow evidence returns one ordered bundle of agent executions, evidence items, and artifacts, or `404` for an unknown run.
+- Task history uses an exclusive sequence cursor; task activity SSE resumes from `Last-Event-ID`, emits heartbeats, and bounds each replay batch.
 - Memory creation returns a `Created` response with a search URL.
 - Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
 - Scheduler enqueue rejects unknown tasks and active duplicates.
@@ -111,6 +116,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 - Workspace state is in memory and resets when the API process restarts.
 - Project APIs validate Core policies and protect the seeded default project from deletion.
 - Project task APIs enforce project scope, return linked WorkItems, and update typed lifecycle state.
+- Guarded task lifecycle updates return `409` unless their approval binding matches an active Core approval.
 
 ## Configuration
 

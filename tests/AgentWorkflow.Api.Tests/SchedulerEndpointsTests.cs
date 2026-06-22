@@ -156,6 +156,75 @@ public sealed class SchedulerEndpointsTests
         Assert.Equal(AgentExecutionStatus.Completed, Assert.Single(evidence!.AgentExecutions).Status);
         Assert.Contains(evidence.EvidenceItems, item => item.Kind == EvidenceKind.Rationale);
         Assert.Contains(evidence.Artifacts, item => item.Type == "ExecutionPlan");
+
+        var history = await client.GetFromJsonAsync<TaskActivityHistory>(
+            $"/api/tasks/{current.TaskId}/history",
+            JsonOptions,
+            CancellationToken.None);
+        Assert.NotNull(history);
+        Assert.NotEmpty(history.Items);
+        Assert.Contains(history.Items, item => item.Category == TaskActivityCategory.Workflow);
+        Assert.Contains(history.Items, item => item.Category == TaskActivityCategory.Agent);
+        Assert.Contains(history.Items, item => item.Category == TaskActivityCategory.Evidence);
+        Assert.Contains(history.Items, item => item.Category == TaskActivityCategory.Artifact);
+        Assert.Equal(
+            history.Items.OrderBy(item => item.Sequence).Select(item => item.Sequence),
+            history.Items.Select(item => item.Sequence));
+
+        var legacyEvents = await client.GetFromJsonAsync<IReadOnlyList<WorkflowEvent>>(
+            $"/api/workflows/{current.WorkflowRunId}/events",
+            JsonOptions,
+            CancellationToken.None);
+        Assert.NotEmpty(legacyEvents!);
+
+        var queryReplay = await ReadFirstSseSequenceAsync(
+            client,
+            current.TaskId,
+            queryCursor: history.Items[0].Sequence,
+            lastEventId: null);
+        Assert.True(queryReplay > history.Items[0].Sequence);
+
+        var headerCursor = history.Items[1].Sequence;
+        var reconnectReplay = await ReadFirstSseSequenceAsync(
+            client,
+            current.TaskId,
+            queryCursor: 0,
+            lastEventId: headerCursor);
+        Assert.True(reconnectReplay > headerCursor);
+    }
+
+    private static async Task<long> ReadFirstSseSequenceAsync(
+        HttpClient client,
+        string taskId,
+        long queryCursor,
+        long? lastEventId)
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/tasks/{taskId}/activity?afterSequence={queryCursor}&replayLimit=10");
+        if (lastEventId is { } cursor)
+        {
+            request.Headers.TryAddWithoutValidation("Last-Event-ID", cursor.ToString());
+        }
+
+        using var response = await client.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellation.Token);
+        Assert.Equal("text/event-stream", response.Content.Headers.ContentType?.MediaType);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellation.Token);
+        using var reader = new StreamReader(stream);
+        while (!cancellation.IsCancellationRequested)
+        {
+            var line = await reader.ReadLineAsync(cancellation.Token);
+            if (line?.StartsWith("id: ", StringComparison.Ordinal) == true)
+            {
+                return long.Parse(line[4..]);
+            }
+        }
+
+        throw new TimeoutException("No SSE activity event was received.");
     }
 
     private static JsonSerializerOptions CreateJsonOptions()

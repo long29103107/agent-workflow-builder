@@ -81,6 +81,7 @@ public static class ProjectTaskApiEndpoints
             UpdateEngineeringTaskStatusRequest request,
             IEngineeringTaskStore taskStore,
             IWorkItemStore workItemStore,
+            IApprovalPolicyEngine approvalPolicyEngine,
             CancellationToken cancellationToken) =>
         {
             if (await GetProjectTaskAsync(projectId, taskId, taskStore, cancellationToken) is null)
@@ -88,9 +89,85 @@ public static class ProjectTaskApiEndpoints
                 return Results.NotFound();
             }
 
-            var task = await taskStore.UpdateStatusAsync(taskId, request.Status, cancellationToken);
-            var workItems = await workItemStore.GetWorkItemsAsync(taskId, cancellationToken);
-            return Results.Ok(new EngineeringTaskDetails(task!, workItems));
+            try
+            {
+                if (RequiredGate(request.Status) is { } gate)
+                {
+                    if (request.ApprovalBinding is null)
+                    {
+                        throw new ApprovalPolicyException(
+                            $"{gate} approval binding is required for status '{request.Status}'.");
+                    }
+
+                    await approvalPolicyEngine.EnsureAuthorizedAsync(
+                        new ApprovalAuthorizationRequest(
+                            projectId,
+                            taskId,
+                            gate,
+                            request.ApprovalBinding),
+                        cancellationToken);
+                }
+
+                var task = await taskStore.UpdateStatusAsync(taskId, request.Status, cancellationToken);
+                var workItems = await workItemStore.GetWorkItemsAsync(taskId, cancellationToken);
+                return Results.Ok(new EngineeringTaskDetails(task!, workItems));
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (ApprovalPolicyException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
+        });
+
+        tasks.MapGet("/{taskId}/approvals", async (
+            string projectId,
+            string taskId,
+            IEngineeringTaskStore taskStore,
+            IApprovalPolicyEngine approvalPolicyEngine,
+            CancellationToken cancellationToken) =>
+        {
+            if (await GetProjectTaskAsync(projectId, taskId, taskStore, cancellationToken) is null)
+            {
+                return Results.NotFound();
+            }
+
+            return Results.Ok(await approvalPolicyEngine.GetApprovalsAsync(
+                projectId,
+                taskId,
+                cancellationToken));
+        });
+
+        tasks.MapPost("/{taskId}/approvals", async (
+            string projectId,
+            string taskId,
+            ApproveGateRequest request,
+            IEngineeringTaskStore taskStore,
+            IApprovalPolicyEngine approvalPolicyEngine,
+            CancellationToken cancellationToken) =>
+        {
+            if (await GetProjectTaskAsync(projectId, taskId, taskStore, cancellationToken) is null)
+            {
+                return Results.NotFound();
+            }
+
+            try
+            {
+                var approval = await approvalPolicyEngine.ApproveAsync(
+                    projectId,
+                    taskId,
+                    request,
+                    cancellationToken);
+                return Results.Created(
+                    $"/api/projects/{projectId}/tasks/{taskId}/approvals/{approval.Id}",
+                    approval);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
         });
 
         tasks.MapGet("/{taskId}/work-items", async (
@@ -160,4 +237,13 @@ public static class ProjectTaskApiEndpoints
             ? task
             : null;
     }
+
+    private static ApprovalGate? RequiredGate(EngineeringTaskStatus status) => status switch
+    {
+        EngineeringTaskStatus.ReadyForImplementation => ApprovalGate.InvestigationPlan,
+        EngineeringTaskStatus.ReadyForPullRequest => ApprovalGate.Implementation,
+        EngineeringTaskStatus.PullRequestOpen => ApprovalGate.PullRequest,
+        EngineeringTaskStatus.Completed => ApprovalGate.Merge,
+        _ => null
+    };
 }

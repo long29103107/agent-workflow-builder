@@ -3,6 +3,7 @@ using System;
 using AgentWorkflow.Core.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AgentWorkflow.Core.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AgentWorkflowDbContext))]
-    partial class AgentWorkflowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622022720_AddApprovalPolicyEngine")]
+    partial class AddApprovalPolicyEngine
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -274,57 +277,6 @@ namespace AgentWorkflow.Core.Infrastructure.Persistence.Migrations
                     b.ToTable("projects", (string)null);
                 });
 
-            modelBuilder.Entity("AgentWorkflow.Core.Infrastructure.TaskActivityEntity", b =>
-                {
-                    b.Property<long>("Sequence")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Sequence"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("CorrelationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Summary")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TaskId")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<Guid?>("WorkflowRunId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Sequence");
-
-                    b.HasIndex("Id")
-                        .IsUnique();
-
-                    b.HasIndex("WorkflowRunId");
-
-                    b.HasIndex("TaskId", "Sequence");
-
-                    b.ToTable("task_activities", (string)null);
-                });
-
             modelBuilder.Entity("AgentWorkflow.Core.Infrastructure.WorkItemEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -513,14 +465,6 @@ namespace AgentWorkflow.Core.Infrastructure.Persistence.Migrations
                         .HasForeignKey("RunId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AgentWorkflow.Core.Infrastructure.TaskActivityEntity", b =>
-                {
-                    b.HasOne("AgentWorkflow.Core.Infrastructure.WorkflowRunEntity", null)
-                        .WithMany()
-                        .HasForeignKey("WorkflowRunId")
-                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("AgentWorkflow.Core.Infrastructure.WorkItemEntity", b =>

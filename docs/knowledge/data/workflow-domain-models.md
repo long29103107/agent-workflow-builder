@@ -25,6 +25,8 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `WorkflowRun`: run ID, task ID, status, durable stage, one-based attempt, timestamps, optional result, and optional failure details.
 - `WorkflowStage`: legal lifecycle states from `Created` through context, repository, memory, investigation, and aggregation work to terminal `Completed` or `Failed`.
 - `WorkflowEvent`: timeline event with run ID, agent, type, and message.
+- `TaskActivity`: append-only task history item with monotonic sequence, task/run/correlation identity, category, type, redacted summary, and timestamp.
+- `TaskActivityHistory`: ordered history page plus the last delivered sequence cursor.
 - `AgentExecution`: one agent execution linked to a run with running, completed, failed, or cancelled lifecycle state.
 - `EvidenceItem`: append-only rationale summary, source reference, action, or tool-result evidence linked to an agent execution.
 - `Artifact`: append-only, typed and redacted artifact content linked to a workflow run and optional agent execution.
@@ -56,7 +58,7 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 
 ## Database Models
 
-`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, `workflow_events`, `agent_executions`, `evidence_items`, and `artifacts`. Workflow runs persist stage, attempt, JSONB result, and failure details. Evidence and artifacts are append-only; only AgentExecution terminal status and completion time are updated. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
+`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, `workflow_events`, `agent_executions`, `evidence_items`, `artifacts`, `approvals`, and `task_activities`. Workflow runs persist stage, attempt, JSONB result, and failure details. Evidence, artifacts, and task activity are append-only; only AgentExecution and approval lifecycle fields are updated. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
 
 ## Related Files
 
@@ -70,6 +72,8 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 - `src/AgentWorkflow.Core/Infrastructure/Evidence/InMemoryWorkflowEvidenceStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Persistence/PostgresWorkflowEvidenceStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Security/SecretRedactor.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Activity/InMemoryTaskActivityStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Persistence/PostgresTaskActivityStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Settings/InMemorySettingsStore.cs`
 
 ## Related Knowledge

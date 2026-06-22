@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ISecretRedactor, SecretRedactor>();
         services.AddAgentWorkflowPersistence(postgresConnectionString);
+        services.AddSingleton<IApprovalPolicyEngine, ApprovalPolicyEngine>();
         services.AddSingleton<EngineeringTaskSource>();
         services.AddSingleton<MockJiraMcpTool>();
         services.AddSingleton<IJiraMcpTool>(provider => provider.GetRequiredService<MockJiraMcpTool>());
@@ -63,6 +64,8 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
             services.AddSingleton<IWorkflowEvidenceStore, InMemoryWorkflowEvidenceStore>();
+            services.AddSingleton<IApprovalStore, InMemoryApprovalStore>();
+            services.AddSingleton<ITaskActivityStore, InMemoryTaskActivityStore>();
             services.AddSingleton<IProjectStore, InMemoryProjectStore>();
             services.AddSingleton<InMemoryEngineeringTaskStore>();
             services.AddSingleton<IEngineeringTaskStore>(provider =>
@@ -76,6 +79,8 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(postgresConnectionString));
         services.AddSingleton<IWorkflowRunStore, PostgresWorkflowRunStore>();
         services.AddSingleton<IWorkflowEvidenceStore, PostgresWorkflowEvidenceStore>();
+        services.AddSingleton<IApprovalStore, PostgresApprovalStore>();
+        services.AddSingleton<ITaskActivityStore, PostgresTaskActivityStore>();
         services.AddSingleton<IProjectStore, PostgresProjectStore>();
         services.AddSingleton<PostgresEngineeringTaskStore>();
         services.AddSingleton<IEngineeringTaskStore>(provider =>

@@ -47,6 +47,8 @@ The workspace compatibility store projects `Project` records into `WorkspaceProj
 
 Planner approval uses the owning Project code to issue task keys such as `AWB-1`, `AWB-2`, and `AWB-3`. Numbering increases independently within each project and repeated approval is idempotent.
 
+Approval records preserve the gate, exact artifact/branch/commit binding, approver, timestamps, and invalidation reason. Project policy is enforced by `IApprovalPolicyEngine`; changing an approved binding invalidates the stale approval rather than silently reusing it.
+
 The Project API exposes list, get, create, update, and delete operations. The seeded `workspace-default` Project is protected from API deletion because it anchors compatibility routes and default task data.
 
 ## Persistence
@@ -62,4 +64,5 @@ The Project API exposes list, get, create, update, and delete operations. The se
 - `src/AgentWorkflow.Core/Infrastructure/Projects/InMemoryProjectStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Persistence/PostgresProjectStore.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Projects/ProjectPolicyValidator.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Approvals/ApprovalPolicyEngine.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Workspaces/InMemoryWorkspaceStore.cs`

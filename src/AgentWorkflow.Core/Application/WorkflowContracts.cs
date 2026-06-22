@@ -157,7 +157,7 @@ public interface ILeadAgent
 {
     Task<InvestigationResult> InvestigateAsync(
         InvestigationRequest request,
-        Action<WorkflowStage, string, string> advanceStage,
+        Func<WorkflowStage, string, string, Task> advanceStage,
         CancellationToken cancellationToken);
 }
 
@@ -169,6 +169,38 @@ public interface IWorkflowEngine
         InvestigationRequest request,
         CancellationToken cancellationToken);
     Task<WorkflowRun> StartInvestigationAsync(InvestigationRequest request, CancellationToken cancellationToken);
+}
+
+public interface IApprovalPolicyEngine
+{
+    Task<ApprovalRecord> ApproveAsync(
+        string projectId,
+        string taskId,
+        ApproveGateRequest request,
+        CancellationToken cancellationToken);
+    Task<ApprovalRecord?> EnsureAuthorizedAsync(
+        ApprovalAuthorizationRequest request,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<ApprovalRecord>> GetApprovalsAsync(
+        string projectId,
+        string taskId,
+        CancellationToken cancellationToken);
+}
+
+public interface IApprovalStore
+{
+    Task<IReadOnlyList<ApprovalRecord>> GetApprovalsAsync(
+        string projectId,
+        string taskId,
+        CancellationToken cancellationToken);
+    Task<ApprovalRecord> AddApprovalAsync(
+        ApprovalRecord approval,
+        CancellationToken cancellationToken);
+    Task<ApprovalRecord> InvalidateApprovalAsync(
+        Guid approvalId,
+        string reason,
+        DateTimeOffset invalidatedAt,
+        CancellationToken cancellationToken);
 }
 
 public interface IWorkflowRunStore
@@ -208,6 +240,23 @@ public interface IWorkflowEvidenceStore
 public interface ISecretRedactor
 {
     string Redact(string value);
+}
+
+public interface ITaskActivityStore
+{
+    Task<TaskActivity> AppendAsync(
+        string taskId,
+        Guid? workflowRunId,
+        Guid correlationId,
+        TaskActivityCategory category,
+        string type,
+        string summary,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<TaskActivity>> GetAfterAsync(
+        string taskId,
+        long afterSequence,
+        int limit,
+        CancellationToken cancellationToken);
 }
 
 public interface ISettingsStore

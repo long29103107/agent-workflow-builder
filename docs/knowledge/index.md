@@ -33,6 +33,8 @@ This folder converts project documentation and source-derived knowledge into Ope
 ## Business Rules
 
 - [Investigation Workflow Rules](business/investigation-workflow.md)
+- [Approval Policy Rules](business/approval-policy.md)
+- [Task Activity And SSE Rules](business/task-activity.md)
 - [Mock-First Provider Boundary Rules](business/mock-first-provider-boundaries.md)
 
 ## Data Models

@@ -13,6 +13,8 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
     public DbSet<AgentExecutionEntity> AgentExecutions => Set<AgentExecutionEntity>();
     public DbSet<EvidenceItemEntity> EvidenceItems => Set<EvidenceItemEntity>();
     public DbSet<ArtifactEntity> Artifacts => Set<ArtifactEntity>();
+    public DbSet<ApprovalEntity> Approvals => Set<ApprovalEntity>();
+    public DbSet<TaskActivityEntity> TaskActivities => Set<TaskActivityEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -129,6 +131,45 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
                 .HasForeignKey(item => item.AgentExecutionId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+
+        modelBuilder.Entity<ApprovalEntity>(entity =>
+        {
+            entity.ToTable("approvals");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ProjectId).HasMaxLength(128);
+            entity.Property(item => item.TaskId).HasMaxLength(128);
+            entity.Property(item => item.Gate).HasMaxLength(64);
+            entity.Property(item => item.Status).HasMaxLength(64);
+            entity.Property(item => item.ArtifactHash).HasMaxLength(128);
+            entity.Property(item => item.TargetBranch).HasMaxLength(256);
+            entity.Property(item => item.CommitSha).HasMaxLength(128);
+            entity.Property(item => item.ApprovedBy).HasMaxLength(256);
+            entity.HasIndex(item => new { item.ProjectId, item.TaskId, item.Gate, item.ApprovedAt });
+            entity.HasOne<ProjectEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.WorkflowRunId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TaskActivityEntity>(entity =>
+        {
+            entity.ToTable("task_activities");
+            entity.HasKey(item => item.Sequence);
+            entity.Property(item => item.Sequence).ValueGeneratedOnAdd();
+            entity.HasIndex(item => item.Id).IsUnique();
+            entity.Property(item => item.TaskId).HasMaxLength(128);
+            entity.Property(item => item.Category).HasMaxLength(64);
+            entity.Property(item => item.Type).HasMaxLength(128);
+            entity.HasIndex(item => new { item.TaskId, item.Sequence });
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.WorkflowRunId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 }
 
@@ -223,4 +264,34 @@ public sealed class ArtifactEntity
     public string Content { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class ApprovalEntity
+{
+    public Guid Id { get; set; }
+    public string ProjectId { get; set; } = string.Empty;
+    public string TaskId { get; set; } = string.Empty;
+    public Guid? WorkflowRunId { get; set; }
+    public string Gate { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? ArtifactHash { get; set; }
+    public string? TargetBranch { get; set; }
+    public string? CommitSha { get; set; }
+    public string ApprovedBy { get; set; } = string.Empty;
+    public DateTimeOffset ApprovedAt { get; set; }
+    public DateTimeOffset? InvalidatedAt { get; set; }
+    public string? InvalidationReason { get; set; }
+}
+
+public sealed class TaskActivityEntity
+{
+    public long Sequence { get; set; }
+    public Guid Id { get; set; }
+    public string TaskId { get; set; } = string.Empty;
+    public Guid? WorkflowRunId { get; set; }
+    public Guid CorrelationId { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public DateTimeOffset Timestamp { get; set; }
 }

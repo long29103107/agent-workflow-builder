@@ -25,7 +25,12 @@ public sealed class WorkflowStateMachineTests
     {
         var store = new InMemoryWorkflowRunStore();
         var evidenceStore = CreateEvidenceStore();
-        var engine = new WorkflowEngine(store, new RecordingLeadAgent(), evidenceStore);
+        var activityStore = CreateActivityStore();
+        var engine = new WorkflowEngine(
+            store,
+            new RecordingLeadAgent(),
+            evidenceStore,
+            activityStore);
 
         var run = await engine.StartInvestigationAsync(
             new InvestigationRequest("task-1", ".", null, null),
@@ -58,6 +63,14 @@ public sealed class WorkflowStateMachineTests
             item.Kind == EvidenceKind.SourceReference && item.SourceReference == "src/Program.cs");
         Assert.Contains(evidence.EvidenceItems, item => item.Kind == EvidenceKind.ToolResult);
         Assert.Equal("investigation-plan.json", Assert.Single(evidence.Artifacts).Name);
+        var activities = await activityStore.GetAfterAsync("task-1", 0, 100, CancellationToken.None);
+        Assert.Contains(activities, item => item.Category == TaskActivityCategory.Workflow);
+        Assert.Contains(activities, item => item.Category == TaskActivityCategory.Agent);
+        Assert.Contains(activities, item => item.Category == TaskActivityCategory.Evidence);
+        Assert.Contains(activities, item => item.Category == TaskActivityCategory.Artifact);
+        Assert.Equal(
+            activities.OrderBy(item => item.Sequence).Select(item => item.Sequence),
+            activities.Select(item => item.Sequence));
     }
 
     [Fact]
@@ -65,7 +78,11 @@ public sealed class WorkflowStateMachineTests
     {
         var store = new InMemoryWorkflowRunStore();
         var evidenceStore = CreateEvidenceStore();
-        var engine = new WorkflowEngine(store, new FailingLeadAgent(), evidenceStore);
+        var engine = new WorkflowEngine(
+            store,
+            new FailingLeadAgent(),
+            evidenceStore,
+            CreateActivityStore());
 
         var run = await engine.StartInvestigationAsync(
             new InvestigationRequest("task-1", ".", null, null),
@@ -96,19 +113,27 @@ public sealed class WorkflowStateMachineTests
     private static InMemoryWorkflowEvidenceStore CreateEvidenceStore() =>
         new(new SecretRedactor(), TimeProvider.System);
 
+    private static InMemoryTaskActivityStore CreateActivityStore() =>
+        new(new SecretRedactor(), TimeProvider.System);
+
     private sealed class RecordingLeadAgent : ILeadAgent
     {
         public Task<InvestigationResult> InvestigateAsync(
             InvestigationRequest request,
-            Action<WorkflowStage, string, string> advanceStage,
+            Func<WorkflowStage, string, string, Task> advanceStage,
             CancellationToken cancellationToken)
         {
-            advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
-            advanceStage(WorkflowStage.ResolvingRepository, "LeadAgent", "Resolving repository.");
-            advanceStage(WorkflowStage.LoadingMemory, "LeadAgent", "Loading memory.");
-            advanceStage(WorkflowStage.Investigating, "LeadAgent", "Investigating.");
-            advanceStage(WorkflowStage.Aggregating, "LeadAgent", "Aggregating.");
-            return Task.FromResult(Result());
+            return InvestigateCoreAsync();
+
+            async Task<InvestigationResult> InvestigateCoreAsync()
+            {
+                await advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
+                await advanceStage(WorkflowStage.ResolvingRepository, "LeadAgent", "Resolving repository.");
+                await advanceStage(WorkflowStage.LoadingMemory, "LeadAgent", "Loading memory.");
+                await advanceStage(WorkflowStage.Investigating, "LeadAgent", "Investigating.");
+                await advanceStage(WorkflowStage.Aggregating, "LeadAgent", "Aggregating.");
+                return Result();
+            }
         }
     }
 
@@ -116,11 +141,16 @@ public sealed class WorkflowStateMachineTests
     {
         public Task<InvestigationResult> InvestigateAsync(
             InvestigationRequest request,
-            Action<WorkflowStage, string, string> advanceStage,
+            Func<WorkflowStage, string, string, Task> advanceStage,
             CancellationToken cancellationToken)
         {
-            advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
-            throw new InvalidOperationException("Investigation failed.");
+            return FailAsync();
+
+            async Task<InvestigationResult> FailAsync()
+            {
+                await advanceStage(WorkflowStage.LoadingTaskContext, "LeadAgent", "Loading task context.");
+                throw new InvalidOperationException("Investigation failed.");
+            }
         }
     }
 }

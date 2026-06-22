@@ -3,6 +3,8 @@ import type {
   PlannerLog,
   RequestSubmissionResult,
   ScheduledTask,
+  TaskActivity,
+  TaskActivityHistory,
   TaskItem,
   ToolEndpointSettings,
   WorkspaceProject,
@@ -269,4 +271,35 @@ export async function fetchWorkflowEvents(runId: string): Promise<WorkflowEvent[
 export async function fetchWorkflowEvidence(runId: string): Promise<WorkflowEvidenceBundle> {
   const response = await fetch(`${apiBaseUrl}/workflows/${runId}/evidence`);
   return readJson<WorkflowEvidenceBundle>(response, "Workflow evidence API");
+}
+
+export async function fetchTaskHistory(
+  taskId: string,
+  afterSequence = 0,
+  limit = 100
+): Promise<TaskActivityHistory> {
+  const query = new URLSearchParams({
+    afterSequence: String(afterSequence),
+    limit: String(limit)
+  });
+  const response = await fetch(`${apiBaseUrl}/tasks/${encodeURIComponent(taskId)}/history?${query}`);
+  return readJson<TaskActivityHistory>(response, "Task history API");
+}
+
+export function subscribeTaskActivity(
+  taskId: string,
+  afterSequence: number,
+  onActivity: (activity: TaskActivity) => void
+): () => void {
+  const query = new URLSearchParams({ afterSequence: String(afterSequence) });
+  const source = new EventSource(
+    `${apiBaseUrl}/tasks/${encodeURIComponent(taskId)}/activity?${query}`
+  );
+  const categories = ["workflow", "agent", "approval", "evidence", "artifact"];
+  const handleActivity = (event: Event) => {
+    onActivity(JSON.parse((event as MessageEvent<string>).data) as TaskActivity);
+  };
+  categories.forEach((category) => source.addEventListener(category, handleActivity));
+
+  return () => source.close();
 }

@@ -45,6 +45,9 @@ public sealed class WorkspaceEndpointsTests
         Assert.Equal(HttpStatusCode.OK, approveResponse.StatusCode);
         Assert.NotNull(approval);
         Assert.Equal(PlannerLogStatus.Approved, approval.PlannerLog.Status);
+        Assert.Equal(ApprovalGate.InvestigationPlan, approval.Approval.Gate);
+        Assert.Equal(ApprovalStatus.Approved, approval.Approval.Status);
+        Assert.NotNull(approval.Approval.Binding.ArtifactHash);
         Assert.NotEmpty(approval.Tasks);
 
         var task = approval.Tasks[0];

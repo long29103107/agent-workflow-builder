@@ -1,9 +1,12 @@
+using System.Text.Json;
 using AgentWorkflow.Core.Application;
 using AgentWorkflow.Core.Domain;
 
 namespace AgentWorkflow.Core.Infrastructure;
 
-public sealed class InMemoryPlannerLogStore(IProjectStore projectStore) : IPlannerLogStore
+public sealed class InMemoryPlannerLogStore(
+    IProjectStore projectStore,
+    IApprovalPolicyEngine approvalPolicyEngine) : IPlannerLogStore
 {
     private readonly Lock _sync = new();
     private readonly Dictionary<string, List<PlannerLog>> _logs = new(StringComparer.OrdinalIgnoreCase);
@@ -124,6 +127,7 @@ public sealed class InMemoryPlannerLogStore(IProjectStore projectStore) : IPlann
             return null;
         }
 
+        PlannerLog snapshot;
         lock (_sync)
         {
             if (!_logs.TryGetValue(workspaceId, out var logs))
@@ -138,7 +142,43 @@ public sealed class InMemoryPlannerLogStore(IProjectStore projectStore) : IPlann
                 return null;
             }
 
+            snapshot = logs[index];
+        }
+
+        var binding = new ApprovalBinding(
+            ApprovalInputHasher.Compute(JsonSerializer.Serialize(
+                new { snapshot.RequestId, snapshot.Steps },
+                PersistenceJson.Options)),
+            project.BranchPolicy.BaseBranch,
+            CommitSha: null);
+        var approval = await approvalPolicyEngine.ApproveAsync(
+            workspaceId,
+            snapshot.Id,
+            new ApproveGateRequest(
+                ApprovalGate.InvestigationPlan,
+                binding,
+                ApprovedBy: "workspace-user"),
+            cancellationToken);
+        await approvalPolicyEngine.EnsureAuthorizedAsync(
+            new ApprovalAuthorizationRequest(
+                workspaceId,
+                snapshot.Id,
+                ApprovalGate.InvestigationPlan,
+                binding),
+            cancellationToken);
+
+        lock (_sync)
+        {
+            var logs = _logs[workspaceId];
+            var index = logs.FindIndex(log =>
+                string.Equals(log.Id, plannerLogId, StringComparison.OrdinalIgnoreCase));
             var current = logs[index];
+            if (current.UpdatedAt != snapshot.UpdatedAt)
+            {
+                throw new InvalidOperationException(
+                    "The planner log changed while approval was being recorded. Retry approval for the latest plan.");
+            }
+
             if (!_tasks.TryGetValue(workspaceId, out var tasks))
             {
                 tasks = [];
@@ -163,7 +203,7 @@ public sealed class InMemoryPlannerLogStore(IProjectStore projectStore) : IPlann
                 tasks.InsertRange(0, generated);
             }
 
-            return new PlannerApprovalResult(current, generated);
+            return new PlannerApprovalResult(current, generated, approval);
         }
     }
 
