@@ -61,6 +61,19 @@ public static class WorkflowApiEndpoints
             return Results.Ok(store.GetEvents(runId));
         });
 
+        workflows.MapGet("/{runId:guid}/evidence", (
+            Guid runId,
+            IWorkflowRunStore runStore,
+            IWorkflowEvidenceStore evidenceStore) =>
+        {
+            if (runStore.GetRun(runId) is null)
+            {
+                return Results.NotFound();
+            }
+
+            return Results.Ok(evidenceStore.GetEvidence(runId));
+        });
+
         return workflows;
     }
 }

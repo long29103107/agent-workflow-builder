@@ -182,6 +182,34 @@ public interface IWorkflowRunStore
     WorkflowRun FailRun(Guid runId, string reason);
 }
 
+public interface IWorkflowEvidenceStore
+{
+    AgentExecution StartExecution(Guid runId, string agentName);
+    AgentExecution CompleteExecution(Guid executionId, AgentExecutionStatus status);
+    EvidenceItem AppendEvidence(
+        Guid runId,
+        Guid agentExecutionId,
+        EvidenceKind kind,
+        string summary,
+        string? sourceReference = null,
+        string? action = null,
+        string? toolName = null,
+        string? toolResult = null);
+    Artifact AppendArtifact(
+        Guid runId,
+        Guid? agentExecutionId,
+        string name,
+        string type,
+        string content,
+        string contentType);
+    WorkflowEvidenceBundle GetEvidence(Guid runId);
+}
+
+public interface ISecretRedactor
+{
+    string Redact(string value);
+}
+
 public interface ISettingsStore
 {
     ToolEndpointSettings GetSettings();

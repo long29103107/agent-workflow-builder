@@ -10,6 +10,9 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
     public DbSet<WorkItemEntity> WorkItems => Set<WorkItemEntity>();
     public DbSet<WorkflowRunEntity> WorkflowRuns => Set<WorkflowRunEntity>();
     public DbSet<WorkflowEventEntity> WorkflowEvents => Set<WorkflowEventEntity>();
+    public DbSet<AgentExecutionEntity> AgentExecutions => Set<AgentExecutionEntity>();
+    public DbSet<EvidenceItemEntity> EvidenceItems => Set<EvidenceItemEntity>();
+    public DbSet<ArtifactEntity> Artifacts => Set<ArtifactEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +81,54 @@ public sealed class AgentWorkflowDbContext(DbContextOptions<AgentWorkflowDbConte
                 .HasForeignKey(item => item.RunId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<AgentExecutionEntity>(entity =>
+        {
+            entity.ToTable("agent_executions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.AgentName).HasMaxLength(256);
+            entity.Property(item => item.Status).HasMaxLength(64);
+            entity.HasIndex(item => new { item.RunId, item.StartedAt });
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EvidenceItemEntity>(entity =>
+        {
+            entity.ToTable("evidence_items");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Kind).HasMaxLength(64);
+            entity.Property(item => item.ToolName).HasMaxLength(256);
+            entity.HasIndex(item => new { item.RunId, item.CreatedAt });
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<AgentExecutionEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.AgentExecutionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ArtifactEntity>(entity =>
+        {
+            entity.ToTable("artifacts");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(500);
+            entity.Property(item => item.Type).HasMaxLength(128);
+            entity.Property(item => item.ContentType).HasMaxLength(256);
+            entity.HasIndex(item => new { item.RunId, item.CreatedAt });
+            entity.HasOne<WorkflowRunEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<AgentExecutionEntity>()
+                .WithMany()
+                .HasForeignKey(item => item.AgentExecutionId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 }
 
@@ -136,4 +187,40 @@ public sealed class WorkflowEventEntity
     public string Agent { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+}
+
+public sealed class AgentExecutionEntity
+{
+    public Guid Id { get; set; }
+    public Guid RunId { get; set; }
+    public string AgentName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+}
+
+public sealed class EvidenceItemEntity
+{
+    public Guid Id { get; set; }
+    public Guid RunId { get; set; }
+    public Guid AgentExecutionId { get; set; }
+    public string Kind { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string? SourceReference { get; set; }
+    public string? Action { get; set; }
+    public string? ToolName { get; set; }
+    public string? ToolResult { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class ArtifactEntity
+{
+    public Guid Id { get; set; }
+    public Guid RunId { get; set; }
+    public Guid? AgentExecutionId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; set; }
 }

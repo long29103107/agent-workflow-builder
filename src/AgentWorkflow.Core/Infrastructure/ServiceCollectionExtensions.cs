@@ -24,6 +24,8 @@ public static class ServiceCollectionExtensions
             Environment.GetEnvironmentVariable("AGENT_WORKFLOW_REPOSITORY_URL") ?? string.Empty,
             "github"));
         services.AddSingleton<IProjectPolicyValidator, ProjectPolicyValidator>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<ISecretRedactor, SecretRedactor>();
         services.AddAgentWorkflowPersistence(postgresConnectionString);
         services.AddSingleton<EngineeringTaskSource>();
         services.AddSingleton<MockJiraMcpTool>();
@@ -48,7 +50,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISubagent, PlanningAgent>();
         services.AddSingleton<ILeadAgent, OpenAiLeadAgent>();
         services.AddSingleton<IWorkflowEngine, WorkflowEngine>();
-        services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ITaskScheduler, InMemoryTaskScheduler>();
 
         return services;
@@ -61,6 +62,7 @@ public static class ServiceCollectionExtensions
         if (string.IsNullOrWhiteSpace(postgresConnectionString))
         {
             services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
+            services.AddSingleton<IWorkflowEvidenceStore, InMemoryWorkflowEvidenceStore>();
             services.AddSingleton<IProjectStore, InMemoryProjectStore>();
             services.AddSingleton<InMemoryEngineeringTaskStore>();
             services.AddSingleton<IEngineeringTaskStore>(provider =>
@@ -73,6 +75,7 @@ public static class ServiceCollectionExtensions
         services.AddPooledDbContextFactory<AgentWorkflowDbContext>(options =>
             options.UseNpgsql(postgresConnectionString));
         services.AddSingleton<IWorkflowRunStore, PostgresWorkflowRunStore>();
+        services.AddSingleton<IWorkflowEvidenceStore, PostgresWorkflowEvidenceStore>();
         services.AddSingleton<IProjectStore, PostgresProjectStore>();
         services.AddSingleton<PostgresEngineeringTaskStore>();
         services.AddSingleton<IEngineeringTaskStore>(provider =>

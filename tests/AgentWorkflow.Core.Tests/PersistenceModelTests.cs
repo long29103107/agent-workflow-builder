@@ -26,6 +26,12 @@ public sealed class PersistenceModelTests
             ?? throw new InvalidOperationException("WorkflowRun persistence mapping is missing.");
         var workflowEvent = context.Model.FindEntityType(typeof(WorkflowEventEntity))
             ?? throw new InvalidOperationException("WorkflowEvent persistence mapping is missing.");
+        var agentExecution = context.Model.FindEntityType(typeof(AgentExecutionEntity))
+            ?? throw new InvalidOperationException("AgentExecution persistence mapping is missing.");
+        var evidenceItem = context.Model.FindEntityType(typeof(EvidenceItemEntity))
+            ?? throw new InvalidOperationException("EvidenceItem persistence mapping is missing.");
+        var artifact = context.Model.FindEntityType(typeof(ArtifactEntity))
+            ?? throw new InvalidOperationException("Artifact persistence mapping is missing.");
 
         Assert.Equal("projects", project.GetTableName());
         Assert.Equal("jsonb", project.FindProperty(nameof(ProjectEntity.PayloadJson))!.GetColumnType());
@@ -37,12 +43,19 @@ public sealed class PersistenceModelTests
         Assert.NotNull(workflowRun.FindProperty(nameof(WorkflowRunEntity.FailureDetails)));
         Assert.Equal("jsonb", workflowRun.FindProperty(nameof(WorkflowRunEntity.ResultJson))!.GetColumnType());
         Assert.Equal("workflow_events", workflowEvent.GetTableName());
+        Assert.Equal("agent_executions", agentExecution.GetTableName());
+        Assert.Equal("evidence_items", evidenceItem.GetTableName());
+        Assert.Equal("artifacts", artifact.GetTableName());
         Assert.Contains(engineeringTask.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(ProjectEntity) &&
             foreignKey.DeleteBehavior == DeleteBehavior.Cascade);
         Assert.Contains(workItem.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(EngineeringTaskEntity));
         Assert.Contains(workflowEvent.GetForeignKeys(), foreignKey =>
+            foreignKey.PrincipalEntityType.ClrType == typeof(WorkflowRunEntity));
+        Assert.Contains(evidenceItem.GetForeignKeys(), foreignKey =>
+            foreignKey.PrincipalEntityType.ClrType == typeof(AgentExecutionEntity));
+        Assert.Contains(artifact.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(WorkflowRunEntity));
     }
 
@@ -56,6 +69,7 @@ public sealed class PersistenceModelTests
         Assert.IsType<InMemoryProjectStore>(provider.GetRequiredService<IProjectStore>());
         Assert.IsType<InMemoryEngineeringTaskStore>(provider.GetRequiredService<IEngineeringTaskStore>());
         Assert.IsType<InMemoryWorkflowRunStore>(provider.GetRequiredService<IWorkflowRunStore>());
+        Assert.IsType<InMemoryWorkflowEvidenceStore>(provider.GetRequiredService<IWorkflowEvidenceStore>());
     }
 
     [Fact]
@@ -68,5 +82,6 @@ public sealed class PersistenceModelTests
         Assert.IsType<PostgresProjectStore>(provider.GetRequiredService<IProjectStore>());
         Assert.IsType<PostgresEngineeringTaskStore>(provider.GetRequiredService<IEngineeringTaskStore>());
         Assert.IsType<PostgresWorkflowRunStore>(provider.GetRequiredService<IWorkflowRunStore>());
+        Assert.IsType<PostgresWorkflowEvidenceStore>(provider.GetRequiredService<IWorkflowEvidenceStore>());
     }
 }

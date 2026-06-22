@@ -312,6 +312,57 @@ public sealed record WorkflowEvent(
     string Type,
     string Message);
 
+public enum AgentExecutionStatus
+{
+    Running,
+    Completed,
+    Failed,
+    Cancelled
+}
+
+public enum EvidenceKind
+{
+    Rationale,
+    SourceReference,
+    Action,
+    ToolResult
+}
+
+public sealed record AgentExecution(
+    Guid Id,
+    Guid RunId,
+    string AgentName,
+    AgentExecutionStatus Status,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? CompletedAt);
+
+public sealed record EvidenceItem(
+    Guid Id,
+    Guid RunId,
+    Guid AgentExecutionId,
+    EvidenceKind Kind,
+    string Summary,
+    string? SourceReference,
+    string? Action,
+    string? ToolName,
+    string? ToolResult,
+    DateTimeOffset CreatedAt);
+
+public sealed record Artifact(
+    Guid Id,
+    Guid RunId,
+    Guid? AgentExecutionId,
+    string Name,
+    string Type,
+    string Content,
+    string ContentType,
+    DateTimeOffset CreatedAt);
+
+public sealed record WorkflowEvidenceBundle(
+    IReadOnlyList<AgentExecution> AgentExecutions,
+    IReadOnlyList<EvidenceItem> EvidenceItems,
+    IReadOnlyList<Artifact> Artifacts);
+
 public sealed record AgentMessage(
     string AgentName,
     string Role,

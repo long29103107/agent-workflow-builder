@@ -5,3 +5,7 @@ New-Item -ItemType Directory -Force "src/AgentWorkflow.Core/Infrastructure/Persi
 ```powershell
 dotnet ef migrations script 20260621050123_InitialPostgresPersistence 20260621132104_AddDurableWorkflowStateMachine --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260621132104_AddDurableWorkflowStateMachine.sql"
 ```
+
+```powershell
+dotnet ef migrations script 20260621132104_AddDurableWorkflowStateMachine 20260622014134_AddStructuredEvidenceAndArtifacts --idempotent --project src/AgentWorkflow.Core --startup-project src/AgentWorkflow.Api --output "src/AgentWorkflow.Core/Infrastructure/Persistence/MigrationScripts/20260622014134_AddStructuredEvidenceAndArtifacts.sql"
+```

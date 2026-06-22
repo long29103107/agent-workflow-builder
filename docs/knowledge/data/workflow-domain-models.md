@@ -4,7 +4,7 @@ title: Workflow Domain Models
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-21
+last_updated: 2026-06-22
 tags:
   - data-model
   - workflow
@@ -25,6 +25,10 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `WorkflowRun`: run ID, task ID, status, durable stage, one-based attempt, timestamps, optional result, and optional failure details.
 - `WorkflowStage`: legal lifecycle states from `Created` through context, repository, memory, investigation, and aggregation work to terminal `Completed` or `Failed`.
 - `WorkflowEvent`: timeline event with run ID, agent, type, and message.
+- `AgentExecution`: one agent execution linked to a run with running, completed, failed, or cancelled lifecycle state.
+- `EvidenceItem`: append-only rationale summary, source reference, action, or tool-result evidence linked to an agent execution.
+- `Artifact`: append-only, typed and redacted artifact content linked to a workflow run and optional agent execution.
+- `WorkflowEvidenceBundle`: ordered agent executions, evidence items, and artifacts for one run.
 - `InvestigationResult`: summary, execution plan, agent messages, repository context, memory items, and graph entities.
 - `ExecutionPlan`: title, ordered steps, risks, and open questions.
 - `MemoryItem`: vector-memory-style item with tags and creation timestamp.
@@ -44,7 +48,7 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 
 ## Persistence
 
-API Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue entries, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied. API enqueue persists the linked WorkflowRun before returning even though the mock-first queue entry itself remains process-local.
+API Projects, EngineeringTasks, WorkItems, WorkflowRuns, WorkflowEvents, AgentExecutions, EvidenceItems, and Artifacts use PostgreSQL when `Persistence:Provider` is `PostgreSql`. CLI, MCP, tests, settings, scheduler queue entries, and workspace planner state keep their in-memory implementations unless a persistent provider is explicitly supplied. API enqueue persists the linked WorkflowRun before returning even though the mock-first queue entry itself remains process-local.
 
 `EngineeringTaskSource` projects platform tasks and their primary WorkItem back to the existing `TaskItem` contract. The current Jira IDs, keys, statuses, priorities, and tags remain compatible with API, CLI, MCP, scheduler, and UI consumers.
 
@@ -52,7 +56,7 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 
 ## Database Models
 
-`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, and `workflow_events`. Workflow runs persist stage, attempt, JSONB result, and failure details. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
+`AgentWorkflowDbContext` maps `projects`, `engineering_tasks`, `work_items`, `workflow_runs`, `workflow_events`, `agent_executions`, `evidence_items`, and `artifacts`. Workflow runs persist stage, attempt, JSONB result, and failure details. Evidence and artifacts are append-only; only AgentExecution terminal status and completion time are updated. EF Core migrations preserve existing runs at the `Created` stage with attempt `1`. Qdrant and Neo4j remain derived mock/future providers rather than authoritative workflow state.
 
 ## Related Files
 
@@ -63,6 +67,9 @@ Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle up
 - `src/AgentWorkflow.Core/Infrastructure/Persistence/AgentWorkflowDbContext.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Persistence/Migrations/`
 - `src/AgentWorkflow.Core/Infrastructure/InMemoryWorkflowRunStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Evidence/InMemoryWorkflowEvidenceStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Persistence/PostgresWorkflowEvidenceStore.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Security/SecretRedactor.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Settings/InMemorySettingsStore.cs`
 
 ## Related Knowledge

@@ -23,6 +23,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Resolve repository connection targets, then query repository, memory, Jira, and Notion abstractions.
 - Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
 - Enforce the durable workflow stage machine and persist stage, attempt, result, and failure details.
+- Persist append-only, redacted agent executions, evidence, and artifacts without hidden reasoning.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
 - Own the Project aggregate, project-policy validation, and in-memory Project store.
 - Own platform EngineeringTasks, typed task lifecycle state, linked Jira/Notion WorkItems, and their in-memory store.
@@ -37,6 +38,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - `IWorkflowEngine.ExecuteInvestigationAsync`
 - `IWorkflowEngine.StartInvestigationAsync`
 - `IWorkflowRunStore.TransitionRun`
+- `IWorkflowEvidenceStore.GetEvidence`
 - `ITaskScheduler.EnqueueAsync`
 - `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`

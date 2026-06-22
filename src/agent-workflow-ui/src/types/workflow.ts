@@ -26,6 +26,9 @@ export type ScheduledTask = {
   workflowRunId: string | null;
   error: string | null;
   assignedAgent: string | null;
+  lastHeartbeatAt: string | null;
+  leaseExpiresAt: string | null;
+  requestedAgents: string[] | null;
 };
 
 export type WorkspaceProject = {
@@ -81,6 +84,48 @@ export type WorkflowEvent = {
   agent: string;
   type: string;
   message: string;
+};
+
+export type AgentExecutionStatus = "Running" | "Completed" | "Failed" | "Cancelled";
+export type EvidenceKind = "Rationale" | "SourceReference" | "Action" | "ToolResult";
+
+export type AgentExecution = {
+  id: string;
+  runId: string;
+  agentName: string;
+  status: AgentExecutionStatus;
+  startedAt: string;
+  completedAt: string | null;
+};
+
+export type EvidenceItem = {
+  id: string;
+  runId: string;
+  agentExecutionId: string;
+  kind: EvidenceKind;
+  summary: string;
+  sourceReference: string | null;
+  action: string | null;
+  toolName: string | null;
+  toolResult: string | null;
+  createdAt: string;
+};
+
+export type Artifact = {
+  id: string;
+  runId: string;
+  agentExecutionId: string | null;
+  name: string;
+  type: string;
+  content: string;
+  contentType: string;
+  createdAt: string;
+};
+
+export type WorkflowEvidenceBundle = {
+  agentExecutions: AgentExecution[];
+  evidenceItems: EvidenceItem[];
+  artifacts: Artifact[];
 };
 
 export type AgentMessage = {

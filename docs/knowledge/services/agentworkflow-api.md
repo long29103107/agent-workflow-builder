@@ -40,6 +40,7 @@ Expose AgentWorkflow.Core behavior through a thin ASP.NET Core Minimal API adapt
 - `POST /api/workflows/investigate`
 - `GET /api/workflows/{runId}`
 - `GET /api/workflows/{runId}/events`
+- `GET /api/workflows/{runId}/evidence`
 - `GET /api/memory/search?query=...`
 - `POST /api/memory`
 - `GET /api/repos/context?path=...`
@@ -93,6 +94,7 @@ HTTP payloads use Core records from [Workflow Domain Models](../data/workflow-do
 
 - `taskId` is required for investigation requests.
 - Unknown workflow run IDs return `404`.
+- Workflow evidence returns one ordered bundle of agent executions, evidence items, and artifacts, or `404` for an unknown run.
 - Memory creation returns a `Created` response with a search URL.
 - Repository connection endpoints use a mock-first Core provider and do not call GitHub over the network yet.
 - Scheduler enqueue rejects unknown tasks and active duplicates.

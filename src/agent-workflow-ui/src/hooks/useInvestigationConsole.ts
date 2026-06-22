@@ -362,12 +362,17 @@ export function useInvestigationConsole() {
     setRun(null);
     setEvents([]);
     try {
-      const nextRun = await startWorkflowInvestigation(
+      const scheduledTask = await startWorkflowInvestigation(
         selectedTask.id,
         repoPath,
         repoUrl,
         activeWorkspaceId
       );
+      if (!scheduledTask.workflowRunId) {
+        throw new Error("Investigation was queued without a workflow run.");
+      }
+
+      const nextRun = await fetchWorkflowRun(scheduledTask.workflowRunId);
       setRun(nextRun);
       setEvents(await fetchWorkflowEvents(nextRun.id));
     } catch (err) {

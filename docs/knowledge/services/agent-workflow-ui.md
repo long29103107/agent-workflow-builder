@@ -4,7 +4,7 @@ title: Agent Workflow UI
 domain: frontend
 owner: project
 status: draft
-last_updated: 2026-06-21
+last_updated: 2026-06-22
 tags:
   - service
   - react
@@ -27,6 +27,7 @@ Provide the React agent workspace dashboard for capturing user requests, showing
 - Capture a direct user request in the Request page.
 - Show previous submitted requests below the request input.
 - Submit requests into Agent Planner logs with `Pending approval` status.
+- Keep workflow scheduling, lease, and structured-evidence response types aligned with Core/API contracts.
 - Edit pending planner steps, including their title, detail, and assigned agent, before approval.
 - Allow approved planner logs to generate Kanban backlog tasks.
 - Show an Agent Planner breakdown in its own routed section.

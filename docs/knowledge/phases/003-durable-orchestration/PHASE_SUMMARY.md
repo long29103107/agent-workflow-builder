@@ -10,13 +10,13 @@ status: in progress
 
 Goal: make every workflow resumable, auditable, and unable to bypass approval policy.
 
-Progress: `3/7` tasks done.
+Progress: `4/7` tasks done.
 
 | Task | Title | Status | Checklist |
 |---|---|---|---:|
 | [003_001](./003_001-add-durable-workflow-state-machine.md) | Add Durable Workflow State Machine | `done` | 4/4 |
 | [003_002](./003_002-add-background-workflow-worker.md) | Add Background Workflow Worker | `done` | 4/4 |
-| [003_003](./003_003-add-structured-evidence-and-artifacts.md) | Add Structured Evidence And Artifacts | `planned` | 0/4 |
+| [003_003](./003_003-add-structured-evidence-and-artifacts.md) | Add Structured Evidence And Artifacts | `done` | 4/4 |
 | [003_004](./003_004-add-approval-policy-engine.md) | Add Approval Policy Engine | `planned` | 0/4 |
 | [003_005](./003_005-add-task-history-and-sse-activity.md) | Add Task History And SSE Activity | `planned` | 0/4 |
 | [003_006](./003_006-add-idempotency-and-stage-recovery.md) | Add Idempotency And Stage Recovery | `planned` | 0/4 |

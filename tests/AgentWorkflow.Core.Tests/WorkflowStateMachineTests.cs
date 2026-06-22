@@ -24,7 +24,8 @@ public sealed class WorkflowStateMachineTests
     public async Task WorkflowEngine_PersistsLeadAgentStageSequenceAndResult()
     {
         var store = new InMemoryWorkflowRunStore();
-        var engine = new WorkflowEngine(store, new RecordingLeadAgent());
+        var evidenceStore = CreateEvidenceStore();
+        var engine = new WorkflowEngine(store, new RecordingLeadAgent(), evidenceStore);
 
         var run = await engine.StartInvestigationAsync(
             new InvestigationRequest("task-1", ".", null, null),
@@ -49,13 +50,22 @@ public sealed class WorkflowStateMachineTests
             "Workflow advanced to Aggregating.",
             "Workflow advanced to Completed."
         ], stageEvents);
+
+        var evidence = evidenceStore.GetEvidence(run.Id);
+        Assert.Equal(AgentExecutionStatus.Completed, Assert.Single(evidence.AgentExecutions).Status);
+        Assert.Contains(evidence.EvidenceItems, item => item.Kind == EvidenceKind.Rationale);
+        Assert.Contains(evidence.EvidenceItems, item =>
+            item.Kind == EvidenceKind.SourceReference && item.SourceReference == "src/Program.cs");
+        Assert.Contains(evidence.EvidenceItems, item => item.Kind == EvidenceKind.ToolResult);
+        Assert.Equal("investigation-plan.json", Assert.Single(evidence.Artifacts).Name);
     }
 
     [Fact]
     public async Task WorkflowEngine_PersistsFailureDetails()
     {
         var store = new InMemoryWorkflowRunStore();
-        var engine = new WorkflowEngine(store, new FailingLeadAgent());
+        var evidenceStore = CreateEvidenceStore();
+        var engine = new WorkflowEngine(store, new FailingLeadAgent(), evidenceStore);
 
         var run = await engine.StartInvestigationAsync(
             new InvestigationRequest("task-1", ".", null, null),
@@ -65,6 +75,7 @@ public sealed class WorkflowStateMachineTests
         Assert.Equal(WorkflowStage.Failed, run.Stage);
         Assert.Equal("Investigation failed.", run.FailureDetails);
         Assert.NotNull(run.CompletedAt);
+        Assert.Equal(AgentExecutionStatus.Failed, Assert.Single(evidenceStore.GetEvidence(run.Id).AgentExecutions).Status);
     }
 
     private static InvestigationResult Result() =>
@@ -76,11 +87,14 @@ public sealed class WorkflowStateMachineTests
                 ".",
                 "repository",
                 new RepositoryConnection("Local", null, ".", "", "repository", "main", "Connected", ""),
-                [],
+                ["src/Program.cs"],
                 [],
                 "Repository context"),
             [],
             []);
+
+    private static InMemoryWorkflowEvidenceStore CreateEvidenceStore() =>
+        new(new SecretRedactor(), TimeProvider.System);
 
     private sealed class RecordingLeadAgent : ILeadAgent
     {

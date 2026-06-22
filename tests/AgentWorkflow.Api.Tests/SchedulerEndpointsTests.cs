@@ -143,9 +143,19 @@ public sealed class SchedulerEndpointsTests
         }
 
         Assert.Equal(ScheduledTaskStatus.Completed, current?.Status);
+        Assert.NotNull(current);
         Assert.NotNull(current?.WorkflowRunId);
         Assert.NotNull(current?.LastHeartbeatAt);
         Assert.Null(current?.LeaseExpiresAt);
+
+        var evidence = await client.GetFromJsonAsync<WorkflowEvidenceBundle>(
+            $"/api/workflows/{current!.WorkflowRunId}/evidence",
+            JsonOptions,
+            CancellationToken.None);
+        Assert.NotNull(evidence);
+        Assert.Equal(AgentExecutionStatus.Completed, Assert.Single(evidence!.AgentExecutions).Status);
+        Assert.Contains(evidence.EvidenceItems, item => item.Kind == EvidenceKind.Rationale);
+        Assert.Contains(evidence.Artifacts, item => item.Type == "ExecutionPlan");
     }
 
     private static JsonSerializerOptions CreateJsonOptions()

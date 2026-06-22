@@ -8,6 +8,7 @@ import type {
   WorkspaceProject,
   WorkspaceUserRequest,
   WorkflowEvent,
+  WorkflowEvidenceBundle,
   WorkflowRun
 } from "../types/workflow";
 
@@ -242,7 +243,7 @@ export async function startWorkflowInvestigation(
   repositoryPath: string,
   repositoryUrl: string,
   workspaceId?: string
-): Promise<WorkflowRun> {
+): Promise<ScheduledTask> {
   const response = await fetch(`${apiBaseUrl}/workflows/investigate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -255,7 +256,7 @@ export async function startWorkflowInvestigation(
     })
   });
 
-  return readJson<WorkflowRun>(response, "Investigation API");
+  return readJson<ScheduledTask>(response, "Investigation API");
 }
 
 export async function fetchWorkflowEvents(runId: string): Promise<WorkflowEvent[]> {
@@ -263,4 +264,9 @@ export async function fetchWorkflowEvents(runId: string): Promise<WorkflowEvent[
   if (!response.ok) return [];
 
   return response.json() as Promise<WorkflowEvent[]>;
+}
+
+export async function fetchWorkflowEvidence(runId: string): Promise<WorkflowEvidenceBundle> {
+  const response = await fetch(`${apiBaseUrl}/workflows/${runId}/evidence`);
+  return readJson<WorkflowEvidenceBundle>(response, "Workflow evidence API");
 }

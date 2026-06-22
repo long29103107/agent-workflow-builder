@@ -38,6 +38,9 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - API investigation requests persist the workflow run at `Created`, enqueue work, and return before Lead Agent execution begins.
 - Processing claims carry a 30-second lease renewed by a five-second heartbeat.
 - Cancellation clears the lease and requeues the scheduled item so graceful host shutdown does not mark it failed.
+- Each workflow attempt records a Lead Agent execution and append-only action evidence for stage progress.
+- Completed investigations record only a user-facing rationale summary, repository source references, aggregate tool-result counts, and the generated execution plan artifact.
+- Evidence fields and artifact content are redacted before persistence; prompts and hidden chain-of-thought are never written to the evidence store.
 
 ## Validation
 
