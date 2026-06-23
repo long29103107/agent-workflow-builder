@@ -35,7 +35,19 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INotionContextTool, MockNotionContextTool>();
         services.AddSingleton<IRepositoryConnectionService, MockRepositoryConnectionService>();
         services.AddSingleton<IRepositoryReader, LocalRepositoryReader>();
-        services.AddSingleton<IExecutionSandboxProvider, MockExecutionSandboxProvider>();
+        services.AddSingleton<IGitHubRepositoryAuthenticator, GitHubRepositoryAuthenticator>();
+        services.AddSingleton<IRepositoryWorkspaceService, RepositoryWorkspaceService>();
+        services.AddSingleton<MockExecutionSandboxProvider>();
+        services.AddSingleton<DockerSandboxOptions>();
+        services.AddSingleton<IDockerCliRunner, DockerCliRunner>();
+        services.AddSingleton<LocalDockerExecutionSandboxProvider>();
+        services.AddSingleton<IExecutionSandboxProvider>(provider =>
+            string.Equals(
+                Environment.GetEnvironmentVariable("AGENT_WORKFLOW_SANDBOX_PROVIDER"),
+                "docker",
+                StringComparison.OrdinalIgnoreCase)
+                ? provider.GetRequiredService<LocalDockerExecutionSandboxProvider>()
+                : provider.GetRequiredService<MockExecutionSandboxProvider>());
         services.AddSingleton<IMemoryService, MockMemoryService>();
         services.AddSingleton<ISettingsStore, InMemorySettingsStore>();
         services.AddSingleton<InMemoryWorkspaceStore>();
@@ -48,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentReasoningService, OpenAiAgentReasoningService>();
         services.AddSingleton<ISubagent, RepositoryInvestigatorAgent>();
         services.AddSingleton<ISubagent, JiraNotionContextAgent>();
+        services.AddSingleton<ISubagent, ArchitectureAgent>();
         services.AddSingleton<ISubagent, MemoryResearchAgent>();
         services.AddSingleton<ISubagent, PlanningAgent>();
         services.AddSingleton<ILeadAgent, OpenAiLeadAgent>();

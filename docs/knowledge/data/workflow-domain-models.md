@@ -34,7 +34,7 @@ Document the Core records that define API, CLI, MCP, and UI workflow payloads.
 - `Artifact`: append-only, typed and redacted artifact content linked to a workflow run and optional agent execution.
 - `WorkflowEvidenceBundle`: ordered agent executions, evidence items, and artifacts for one run.
 - `InvestigationResult`: summary, execution plan, agent messages, repository context, memory items, and graph entities.
-- `ExecutionPlan`: title, ordered steps, risks, and open questions.
+- `ExecutionPlan`: title, ordered steps, risks, open questions, repository source references, and a concise evidence summary.
 - `MemoryItem`: vector-memory-style item with tags and creation timestamp.
 - `GraphEntity`: graph-memory-style entity with related entity IDs.
 - `RepositoryContext`: repository path, name, repository connection, important files, detected technologies, and summary.
@@ -56,7 +56,7 @@ API Projects, EngineeringTasks, WorkItems, WorkflowRuns, WorkflowEvents, AgentEx
 
 `EngineeringTaskSource` projects platform tasks and their primary WorkItem back to the existing `TaskItem` contract. The current Jira IDs, keys, statuses, priorities, and tags remain compatible with API, CLI, MCP, scheduler, and UI consumers.
 
-Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle updates, and linked WorkItem reads/creation without exposing persistence entities.
+Project-scoped APIs expose EngineeringTask lists and details, typed lifecycle updates, and linked WorkItem reads/creation without exposing persistence entities. Investigation plans include deduplicated repository source references and a summary of repository, memory, and graph context used to prepare the plan.
 
 ## Database Models
 

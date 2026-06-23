@@ -134,6 +134,26 @@ public interface IRepositoryConnectionService
     RepositoryConnection ResolveConnection(string? repositoryPath, string? repositoryUrl);
 }
 
+public interface IGitHubRepositoryAuthenticator
+{
+    RepositoryCloneTarget CreateCloneTarget(
+        RepositoryConnection connection,
+        string? accessToken);
+}
+
+public interface IRepositoryWorkspaceService
+{
+    Task<RepositoryWorkspace> CloneAsync(
+        RepositoryCloneRequest request,
+        CancellationToken cancellationToken);
+    Task<RepositoryBranchPreparation> PrepareBranchAsync(
+        RepositoryBranchPreparationRequest request,
+        CancellationToken cancellationToken);
+    Task<RepositoryWorkspaceFinalization> FinalizeAsync(
+        RepositoryWorkspaceFinalizationRequest request,
+        CancellationToken cancellationToken);
+}
+
 public interface IExecutionSandboxProvider
 {
     Task<SandboxWorkspaceLease> ProvisionAsync(

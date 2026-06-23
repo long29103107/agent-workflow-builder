@@ -144,7 +144,7 @@ public sealed class WorkflowStateMachineTests
     private static InvestigationResult Result() =>
         new(
             "Summary",
-            new ExecutionPlan("Plan", [], [], []),
+            new ExecutionPlan("Plan", [], [], [], ["src/Program.cs"], "1 source reference informed this plan."),
             [],
             new RepositoryContext(
                 ".",

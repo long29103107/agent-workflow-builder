@@ -4,7 +4,7 @@ title: AgentWorkflow.Core
 domain: core
 owner: project
 status: draft
-last_updated: 2026-06-22
+last_updated: 2026-06-23
 tags:
   - service
   - core
@@ -19,15 +19,17 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 ## Responsibilities
 
 - Resolve task context through `ITaskSource`.
-- Coordinate the Lead Agent and subagents.
+- Coordinate the Lead Agent and replaceable subagents, including mock-first architecture plan analysis.
 - Resolve repository connection targets, then query repository, memory, Jira, and Notion abstractions.
-- Produce `WorkflowRun`, `InvestigationResult`, `ExecutionPlan`, and event timeline data.
+- Produce `WorkflowRun`, `InvestigationResult`, evidence-backed `ExecutionPlan`, and event timeline data.
 - Enforce the durable workflow stage machine and persist stage, attempt, result, and failure details.
 - Persist append-only, redacted agent executions, evidence, and artifacts without hidden reasoning.
 - Authorize gated actions against durable approvals bound to exact artifacts, branches, and commits.
 - Project redacted workflow, agent, approval, evidence, and artifact changes into ordered task activity.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
 - Own execution sandbox contracts for provision, code actions, command execution, Git actions, artifact capture, and workspace destruction.
+- Enforce sandbox workspace policy for repository-relative paths, protected paths, external writes, and deployment commands.
+- Own repository workspace clone, clean-base checkout, policy branch preparation, artifact finalization, and workspace teardown behavior.
 - Own the Project aggregate, project-policy validation, and in-memory Project store.
 - Own platform EngineeringTasks, typed task lifecycle state, linked Jira/Notion WorkItems, and their in-memory store.
 - Persist Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents through EF Core and PostgreSQL when configured.
@@ -48,6 +50,10 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`
 - `IRepositoryConnectionService.ResolveConnection`
+- `IGitHubRepositoryAuthenticator.CreateCloneTarget`
+- `IRepositoryWorkspaceService.CloneAsync`
+- `IRepositoryWorkspaceService.PrepareBranchAsync`
+- `IRepositoryWorkspaceService.FinalizeAsync`
 - `IExecutionSandboxProvider.ProvisionAsync`
 - `IExecutionSandboxProvider.ExecuteCommandAsync`
 - `IExecutionSandboxProvider.CaptureArtifactAsync`
@@ -80,12 +86,19 @@ See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workf
 - `OPENAI_MODEL`: optional model override, defaults to `gpt-5.1`.
 - `AGENT_WORKFLOW_REPOSITORY_PATH`: optional repository path default.
 - `AGENT_WORKFLOW_REPOSITORY_URL`: optional mock GitHub repository URL default.
+- `AGENT_WORKFLOW_SANDBOX_PROVIDER`: set to `docker` to use the local Docker sandbox provider; unset uses the deterministic mock provider.
+- `AGENT_WORKFLOW_SANDBOX_IMAGE`: optional Docker image override, defaults to `mcr.microsoft.com/dotnet/sdk:10.0`.
+- `AGENT_WORKFLOW_SANDBOX_ARTIFACT_ROOT`: optional host artifact copy root for Docker sandbox captures.
 
 ## Related Files
 
 - `src/AgentWorkflow.Core/Application/WorkflowContracts.cs`
 - `src/AgentWorkflow.Core/Domain/WorkflowModels.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Agents/ArchitectureAgent.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Repository/GitHubRepositoryAuthenticator.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Repository/RepositoryWorkspaceService.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Sandbox/MockExecutionSandboxProvider.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Sandbox/LocalDockerExecutionSandboxProvider.cs`
 - `src/AgentWorkflow.Core/Infrastructure/`
 
 ## Related Knowledge

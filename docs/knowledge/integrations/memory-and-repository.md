@@ -21,9 +21,15 @@ Provide repository context, vector-style memory, and graph-style relationships t
 
 - `MockRepositoryConnectionService` resolves either a local repository path or a GitHub repository URL behind `IRepositoryConnectionService`.
 - `LocalRepositoryReader` inspects local files and returns up to 12 representative files.
-- When a GitHub URL is provided, repository context is currently a mock GitHub workspace summary; real clone and checkout are planned in Phase 002.
+- `IGitHubRepositoryAuthenticator` creates authenticated GitHub clone targets while keeping display URLs credential-free.
+- `IRepositoryWorkspaceService` provisions a sandbox, clones a repository, detects default branch, base SHA, important files, and project type, and returns credential-free clone evidence.
+- `IRepositoryWorkspaceService` prepares implementation branches by fetching the default branch, detaching to the selected base SHA, cleaning and hard-resetting the workspace, force-updating the policy branch, and checking it out.
+- `IRepositoryWorkspaceService` finalizes workspaces by creating repository metadata, diff, status, and log artifacts, applying generated-artifact retention, and then destroying successful workspaces or quarantining failed workspaces.
 - `IExecutionSandboxProvider` owns workspace-scoped provision, code, command, Git, artifact, and destroy contracts.
+- `SandboxWorkspacePolicy` is enforced before sandbox actions to keep paths workspace-relative, reject protected paths, deny external writes unless explicitly allowed, and block deployment commands by default.
 - `MockExecutionSandboxProvider` provides deterministic in-memory sandbox leases, lifecycle events, command results, and artifacts for tests and local runs.
+- `LocalDockerExecutionSandboxProvider` provisions local Docker containers when `AGENT_WORKFLOW_SANDBOX_PROVIDER=docker`.
+- Docker sandbox provisioning applies CPU and memory limits, disables networking by default, rejects credential-like environment variables, rejects writable protected host mounts, and redacts stdout/stderr.
 - `MockMemoryService` stores memory items in process memory.
 - `MockMemoryService` returns static graph relationships for task, repository, and workflow-memory context.
 - CodeGraph provides repository-local source-derived code memory for Codex workflow context and replaces `.codex/memories/` Markdown task logs. This is separate from runtime workflow memory exposed through `IMemoryService`; Markdown phase and knowledge files are still read directly.
@@ -34,8 +40,7 @@ Inferred from source code, Docker Compose, and backlog:
 
 - Qdrant will provide vector memory.
 - Neo4j will provide graph memory.
-- GitHub connectors will clone repositories into isolated workflow workspaces before richer repository intelligence runs.
-- A real sandbox provider will replace the mock provider while preserving the Core execution sandbox contract.
+- Richer repository intelligence is planned after the sandbox and GitHub workspace boundary.
 - GitLab connectors may be added later through the same repository connection boundary.
 
 ## Configuration
@@ -48,7 +53,10 @@ Inferred from source code, Docker Compose, and backlog:
 
 - `src/AgentWorkflow.Core/Infrastructure/Repository/LocalRepositoryReader.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Repository/MockRepositoryConnectionService.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Repository/GitHubRepositoryAuthenticator.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Repository/RepositoryWorkspaceService.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Sandbox/MockExecutionSandboxProvider.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Sandbox/LocalDockerExecutionSandboxProvider.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Memory/MockMemoryService.cs`
 - `docker-compose.yml`
 - `.codex/skills/codegraph-memory/SKILL.md`

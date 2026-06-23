@@ -15,7 +15,7 @@ tags:
 
 ## Purpose
 
-Define the platform-owned Project aggregate that controls repository context and the safety policy applied before future repository write automation.
+Define the platform-owned Project aggregate that controls repository context and the safety policy applied before repository write automation.
 
 ## Aggregate
 
@@ -30,6 +30,7 @@ Define the platform-owned Project aggregate that controls repository context and
 - `ProjectBranchPolicy`: base branch, implementation branch prefix, and force-push policy.
 - `ProjectProtectedPathPolicy`: protected repository-relative paths and production-environment protection.
 - `ProjectApprovalPolicy`: investigation-plan, implementation, pull-request, and merge approval gates.
+- `SandboxWorkspacePolicy`: action-time sandbox policy derived from project safety rules for protected paths, external write access, and deployment command access.
 
 ## Validation
 

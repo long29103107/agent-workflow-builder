@@ -469,7 +469,9 @@ public sealed record ExecutionPlan(
     string Title,
     IReadOnlyList<ExecutionStep> Steps,
     IReadOnlyList<string> Risks,
-    IReadOnlyList<string> OpenQuestions);
+    IReadOnlyList<string> OpenQuestions,
+    IReadOnlyList<string> SourceReferences,
+    string EvidenceSummary);
 
 public sealed record ExecutionStep(
     int Order,
@@ -510,10 +512,66 @@ public sealed record RepositoryConnection(
     string Status,
     string Summary);
 
+public sealed record RepositoryCloneTarget(
+    string CloneUrl,
+    string DisplayUrl,
+    string AuthenticationMode);
+
+public sealed record RepositoryCloneRequest(
+    string WorkspaceId,
+    string ProjectId,
+    RepositoryConnection Connection,
+    TimeSpan LeaseDuration,
+    string? AccessToken = null);
+
+public sealed record RepositoryMetadata(
+    string Owner,
+    string Name,
+    string DefaultBranch,
+    string BaseSha,
+    string ProjectType,
+    IReadOnlyList<string> ImportantFiles);
+
+public sealed record RepositoryWorkspace(
+    SandboxWorkspaceLease Lease,
+    RepositoryConnection Connection,
+    RepositoryMetadata Metadata,
+    IReadOnlyList<SandboxLifecycleEvent> CloneEvidence);
+
+public sealed record RepositoryBranchPreparationRequest(
+    RepositoryWorkspace Workspace,
+    ProjectBranchPolicy BranchPolicy,
+    string TaskId,
+    string? BaseSha = null);
+
+public sealed record RepositoryBranchPreparation(
+    RepositoryWorkspace Workspace,
+    string BaseSha,
+    string BranchName,
+    IReadOnlyList<SandboxLifecycleEvent> Evidence);
+
+public sealed record SandboxArtifactRetentionPolicy(
+    int MaxArtifactCount,
+    bool IncludeGeneratedArtifacts = true);
+
+public sealed record RepositoryWorkspaceFinalizationRequest(
+    RepositoryWorkspace Workspace,
+    bool Succeeded,
+    SandboxArtifactRetentionPolicy RetentionPolicy,
+    IReadOnlyList<string>? GeneratedArtifactPaths = null,
+    bool QuarantineOnFailure = true);
+
+public sealed record RepositoryWorkspaceFinalization(
+    RepositoryWorkspace Workspace,
+    IReadOnlyList<SandboxArtifact> Artifacts,
+    SandboxWorkspaceLease Lease,
+    IReadOnlyList<SandboxLifecycleEvent> Evidence);
+
 public enum SandboxLeaseStatus
 {
     Active,
-    Destroyed
+    Destroyed,
+    Quarantined
 }
 
 public enum SandboxLifecycleEventType
@@ -523,7 +581,8 @@ public enum SandboxLifecycleEventType
     CommandExecuted,
     GitActionExecuted,
     ArtifactCaptured,
-    Destroyed
+    Destroyed,
+    Quarantined
 }
 
 public enum SandboxGitActionKind
@@ -535,6 +594,21 @@ public enum SandboxGitActionKind
     Commit,
     Push
 }
+
+public enum SandboxNetworkMode
+{
+    Disabled,
+    Bridge
+}
+
+public sealed record SandboxResourceLimits(
+    double CpuCount,
+    int MemoryMegabytes);
+
+public sealed record SandboxMount(
+    string HostPath,
+    string ContainerPath,
+    bool Writable);
 
 public sealed record SandboxWorkspaceLease(
     Guid Id,
@@ -560,11 +634,22 @@ public sealed record SandboxProvisionRequest(
     string ProjectId,
     string RepositoryUrl,
     string BaseRef,
-    TimeSpan LeaseDuration);
+    TimeSpan LeaseDuration,
+    SandboxResourceLimits? ResourceLimits = null,
+    SandboxNetworkMode NetworkMode = SandboxNetworkMode.Disabled,
+    IReadOnlyDictionary<string, string>? Environment = null,
+    IReadOnlyList<SandboxMount>? Mounts = null,
+    string? Image = null);
+
+public sealed record SandboxWorkspacePolicy(
+    IReadOnlyList<string> ProtectedPaths,
+    bool AllowExternalWriteAccess = false,
+    bool AllowDeploymentCommands = false);
 
 public sealed record SandboxActionContext(
     Guid LeaseId,
-    string WorkspaceId);
+    string WorkspaceId,
+    SandboxWorkspacePolicy? Policy = null);
 
 public sealed record SandboxCodeActionRequest(
     SandboxActionContext Context,
@@ -591,7 +676,8 @@ public sealed record SandboxArtifactRequest(
 
 public sealed record SandboxDestroyRequest(
     SandboxActionContext Context,
-    string Reason);
+    string Reason,
+    bool Quarantine = false);
 
 public sealed record SandboxActionResult(
     Guid Id,
@@ -607,7 +693,8 @@ public sealed record SandboxCommandResult(
     string StandardOutput,
     string StandardError,
     DateTimeOffset StartedAt,
-    DateTimeOffset CompletedAt);
+    DateTimeOffset CompletedAt,
+    TimeSpan Runtime);
 
 public sealed record SandboxArtifact(
     Guid Id,

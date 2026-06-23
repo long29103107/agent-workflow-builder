@@ -4,7 +4,7 @@ title: Investigation Workflow Rules
 domain: workflow
 owner: project
 status: draft
-last_updated: 2026-06-22
+last_updated: 2026-06-23
 tags:
   - business-rule
   - workflow
@@ -23,6 +23,7 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Subagents are selected by name matching when requested; if no requested agent matches, all subagents run.
 - Subagent suggested steps are ordered by `ExecutionStep.Order`.
 - Risks and open questions are merged from subagent output and reasoning output, then de-duplicated.
+- The Architecture Agent contributes mock-first architecture plan slices through `ISubagent`; the Lead Agent remains the only aggregator.
 - A workflow run starts at `Created`, then advances through `LoadingTaskContext`, `ResolvingRepository`, `LoadingMemory`, `Investigating`, and `Aggregating` before `Completed`.
 - Any non-terminal stage may transition to `Failed`; completed and failed runs are terminal.
 - The Lead Agent is the authority for work-stage progression. The workflow engine persists those transitions and owns terminal completion or failure.
@@ -43,6 +44,7 @@ Describe how an investigation run is created, executed, summarized, and exposed 
 - Cancellation clears the lease and requeues the scheduled item so graceful host shutdown does not mark it failed.
 - Each workflow attempt records a Lead Agent execution and append-only action evidence for stage progress.
 - Completed investigations record only a user-facing rationale summary, repository source references, aggregate tool-result counts, and the generated execution plan artifact.
+- Generated execution plans carry deduplicated repository source references and a concise evidence summary so adapters can show why the plan is grounded in the selected repository context.
 - Evidence fields and artifact content are redacted before persistence; prompts and hidden chain-of-thought are never written to the evidence store.
 
 ## Validation
@@ -69,6 +71,7 @@ Not detected from repository analysis.
 ## Related Source Files
 
 - `src/AgentWorkflow.Core/Infrastructure/Agents/OpenAiLeadAgent.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Agents/ArchitectureAgent.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Orchestration/WorkflowEngine.cs`
 - `src/AgentWorkflow.Core/Domain/WorkflowRetryPolicy.cs`
 - `src/AgentWorkflow.Api/Endpoints/AgentWorkflowApiEndpoints.cs`

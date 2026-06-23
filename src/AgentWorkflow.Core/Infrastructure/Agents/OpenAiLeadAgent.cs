@@ -97,12 +97,20 @@ public sealed class OpenAiLeadAgent : ILeadAgent
             .Concat(reasoning.OpenQuestions)
             .Distinct()
             .ToList();
+        var sourceReferences = repository.ImportantFiles
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var evidenceSummary =
+            $"{sourceReferences.Count} repository source reference(s), " +
+            $"{memories.Count} memory item(s), and {graph.Count} graph entity match(es) informed this plan.";
 
         var plan = new ExecutionPlan(
             $"Execution plan for {task.Key}",
             steps,
             risks,
-            questions);
+            questions,
+            sourceReferences,
+            evidenceSummary);
 
         return new InvestigationResult(reasoning.Summary, plan, messages, repository, memories, graph);
     }

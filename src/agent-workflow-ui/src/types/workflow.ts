@@ -193,6 +193,8 @@ export type InvestigationResult = {
     steps: ExecutionStep[];
     risks: string[];
     openQuestions: string[];
+    sourceReferences: string[];
+    evidenceSummary: string;
   };
   agentMessages: AgentMessage[];
   repositoryContext: {

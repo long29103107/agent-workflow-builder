@@ -50,6 +50,13 @@ export function Results({ result }: ResultsProps) {
               <span key={tech}>{tech}</span>
             ))}
           </div>
+          <h3>Evidence</h3>
+          <p className="agent-note">{result.plan.evidenceSummary}</p>
+          <ul className="compact-list">
+            {result.plan.sourceReferences.map((sourceReference) => (
+              <li key={sourceReference}>{sourceReference}</li>
+            ))}
+          </ul>
           <h3>Agent Notes</h3>
           {result.agentMessages.map((message) => (
             <p className="agent-note" key={message.agentName}>

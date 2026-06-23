@@ -51,6 +51,7 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        SandboxPolicyEnforcer.ValidateCodeAction(request);
         cancellationToken.ThrowIfCancellationRequested();
 
         lock (_syncRoot)
@@ -72,6 +73,7 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        SandboxPolicyEnforcer.ValidateGitAction(request);
         cancellationToken.ThrowIfCancellationRequested();
 
         lock (_syncRoot)
@@ -94,6 +96,7 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Command);
+        SandboxPolicyEnforcer.ValidateWorkingDirectory(request);
         if (request.Timeout <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(request), "Command timeout must be positive.");
@@ -114,7 +117,8 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
                 StandardOutput: $"mock:{lease.WorkspaceId}:{commandLine}",
                 StandardError: string.Empty,
                 StartedAt: now,
-                CompletedAt: now);
+                CompletedAt: now,
+                Runtime: TimeSpan.Zero);
 
             AddEvent(lease.Id, lease.WorkspaceId, SandboxLifecycleEventType.CommandExecuted, $"Executed command '{commandLine}'.");
             return Task.FromResult(result);
@@ -127,7 +131,7 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.RelativePath);
+        var relativePath = SandboxPolicyEnforcer.ValidateArtifactPath(request);
         cancellationToken.ThrowIfCancellationRequested();
 
         lock (_syncRoot)
@@ -137,7 +141,7 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
                 NextGuid(),
                 request.Context,
                 request.Name.Trim(),
-                request.RelativePath.Trim(),
+                relativePath,
                 request.ContentType.Trim(),
                 timeProvider.GetUtcNow());
 
@@ -157,18 +161,24 @@ public sealed class MockExecutionSandboxProvider(TimeProvider timeProvider) : IE
         lock (_syncRoot)
         {
             var lease = RequireLease(request.Context);
-            if (lease.Status is SandboxLeaseStatus.Destroyed)
+            if (lease.Status is SandboxLeaseStatus.Destroyed or SandboxLeaseStatus.Quarantined)
             {
                 return Task.FromResult(lease);
             }
 
             var destroyed = lease with
             {
-                Status = SandboxLeaseStatus.Destroyed,
+                Status = request.Quarantine ? SandboxLeaseStatus.Quarantined : SandboxLeaseStatus.Destroyed,
                 DestroyedAt = timeProvider.GetUtcNow()
             };
             _leases[lease.Id] = destroyed;
-            AddEvent(lease.Id, lease.WorkspaceId, SandboxLifecycleEventType.Destroyed, string.IsNullOrWhiteSpace(request.Reason) ? "Destroyed mock sandbox." : request.Reason.Trim());
+            AddEvent(
+                lease.Id,
+                lease.WorkspaceId,
+                request.Quarantine ? SandboxLifecycleEventType.Quarantined : SandboxLifecycleEventType.Destroyed,
+                string.IsNullOrWhiteSpace(request.Reason)
+                    ? request.Quarantine ? "Quarantined mock sandbox." : "Destroyed mock sandbox."
+                    : request.Reason.Trim());
             return Task.FromResult(destroyed);
         }
     }
