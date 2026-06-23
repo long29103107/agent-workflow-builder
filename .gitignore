@@ -35,8 +35,8 @@ pnpm-debug.log*
 .bun-temp/
 
 # Local code intelligence
-.codegraph/
-.codegraph-*/
+# .codegraph/
+# .codegraph-*/
 
 # Environment and local settings
 .venv/
