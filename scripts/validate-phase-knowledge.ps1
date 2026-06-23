@@ -128,7 +128,7 @@ foreach ($phaseFolder in $phaseFolders) {
     }
 
     $hasStartedTask = @($taskRecords.Values | Where-Object { $_.Phase -eq $phaseFolder.Name -and $_.Status -in @("in progress", "blocked", "done") }).Count -gt 0
-    $expectedPhaseStatus = if ($doneTasks -eq $taskFiles.Count) { "done" } elseif ($hasStartedTask) { "in progress" } else { "planned" }
+    $expectedPhaseStatus = if ($taskFiles.Count -eq 0) { "planned" } elseif ($doneTasks -eq $taskFiles.Count) { "done" } elseif ($hasStartedTask) { "in progress" } else { "planned" }
     if ($summaryStatus -ne $expectedPhaseStatus) {
         $errors.Add("Phase $($phaseFolder.Name) status is '$summaryStatus', expected '$expectedPhaseStatus'.")
     }

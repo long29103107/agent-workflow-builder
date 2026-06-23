@@ -22,6 +22,8 @@ Provide repository context, vector-style memory, and graph-style relationships t
 - `MockRepositoryConnectionService` resolves either a local repository path or a GitHub repository URL behind `IRepositoryConnectionService`.
 - `LocalRepositoryReader` inspects local files and returns up to 12 representative files.
 - When a GitHub URL is provided, repository context is currently a mock GitHub workspace summary; real clone and checkout are planned in Phase 002.
+- `IExecutionSandboxProvider` owns workspace-scoped provision, code, command, Git, artifact, and destroy contracts.
+- `MockExecutionSandboxProvider` provides deterministic in-memory sandbox leases, lifecycle events, command results, and artifacts for tests and local runs.
 - `MockMemoryService` stores memory items in process memory.
 - `MockMemoryService` returns static graph relationships for task, repository, and workflow-memory context.
 - CodeGraph provides repository-local source-derived code memory for Codex workflow context and replaces `.codex/memories/` Markdown task logs. This is separate from runtime workflow memory exposed through `IMemoryService`; Markdown phase and knowledge files are still read directly.
@@ -33,6 +35,7 @@ Inferred from source code, Docker Compose, and backlog:
 - Qdrant will provide vector memory.
 - Neo4j will provide graph memory.
 - GitHub connectors will clone repositories into isolated workflow workspaces before richer repository intelligence runs.
+- A real sandbox provider will replace the mock provider while preserving the Core execution sandbox contract.
 - GitLab connectors may be added later through the same repository connection boundary.
 
 ## Configuration
@@ -45,6 +48,7 @@ Inferred from source code, Docker Compose, and backlog:
 
 - `src/AgentWorkflow.Core/Infrastructure/Repository/LocalRepositoryReader.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Repository/MockRepositoryConnectionService.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Sandbox/MockExecutionSandboxProvider.cs`
 - `src/AgentWorkflow.Core/Infrastructure/Memory/MockMemoryService.cs`
 - `docker-compose.yml`
 - `.codex/skills/codegraph-memory/SKILL.md`

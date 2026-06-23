@@ -510,6 +510,113 @@ public sealed record RepositoryConnection(
     string Status,
     string Summary);
 
+public enum SandboxLeaseStatus
+{
+    Active,
+    Destroyed
+}
+
+public enum SandboxLifecycleEventType
+{
+    Provisioned,
+    CodeApplied,
+    CommandExecuted,
+    GitActionExecuted,
+    ArtifactCaptured,
+    Destroyed
+}
+
+public enum SandboxGitActionKind
+{
+    Clone,
+    Fetch,
+    Checkout,
+    Branch,
+    Commit,
+    Push
+}
+
+public sealed record SandboxWorkspaceLease(
+    Guid Id,
+    string WorkspaceId,
+    string ProjectId,
+    string Provider,
+    string RootPath,
+    SandboxLeaseStatus Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset? DestroyedAt = null);
+
+public sealed record SandboxLifecycleEvent(
+    Guid Id,
+    Guid LeaseId,
+    string WorkspaceId,
+    SandboxLifecycleEventType Type,
+    DateTimeOffset Timestamp,
+    string Summary);
+
+public sealed record SandboxProvisionRequest(
+    string WorkspaceId,
+    string ProjectId,
+    string RepositoryUrl,
+    string BaseRef,
+    TimeSpan LeaseDuration);
+
+public sealed record SandboxActionContext(
+    Guid LeaseId,
+    string WorkspaceId);
+
+public sealed record SandboxCodeActionRequest(
+    SandboxActionContext Context,
+    string Description,
+    IReadOnlyList<string> RelativePaths);
+
+public sealed record SandboxCommandActionRequest(
+    SandboxActionContext Context,
+    string Command,
+    IReadOnlyList<string> Arguments,
+    string WorkingDirectory,
+    TimeSpan Timeout);
+
+public sealed record SandboxGitActionRequest(
+    SandboxActionContext Context,
+    SandboxGitActionKind Action,
+    IReadOnlyList<string> Arguments);
+
+public sealed record SandboxArtifactRequest(
+    SandboxActionContext Context,
+    string Name,
+    string RelativePath,
+    string ContentType);
+
+public sealed record SandboxDestroyRequest(
+    SandboxActionContext Context,
+    string Reason);
+
+public sealed record SandboxActionResult(
+    Guid Id,
+    SandboxActionContext Context,
+    string Summary,
+    DateTimeOffset CompletedAt);
+
+public sealed record SandboxCommandResult(
+    Guid Id,
+    SandboxActionContext Context,
+    string CommandLine,
+    int ExitCode,
+    string StandardOutput,
+    string StandardError,
+    DateTimeOffset StartedAt,
+    DateTimeOffset CompletedAt);
+
+public sealed record SandboxArtifact(
+    Guid Id,
+    SandboxActionContext Context,
+    string Name,
+    string RelativePath,
+    string ContentType,
+    DateTimeOffset CapturedAt);
+
 public sealed record InvestigationRequest(
     string TaskId,
     string? RepositoryPath,

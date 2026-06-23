@@ -134,6 +134,30 @@ public interface IRepositoryConnectionService
     RepositoryConnection ResolveConnection(string? repositoryPath, string? repositoryUrl);
 }
 
+public interface IExecutionSandboxProvider
+{
+    Task<SandboxWorkspaceLease> ProvisionAsync(
+        SandboxProvisionRequest request,
+        CancellationToken cancellationToken);
+    Task<SandboxActionResult> ApplyCodeAsync(
+        SandboxCodeActionRequest request,
+        CancellationToken cancellationToken);
+    Task<SandboxActionResult> RunGitAsync(
+        SandboxGitActionRequest request,
+        CancellationToken cancellationToken);
+    Task<SandboxCommandResult> ExecuteCommandAsync(
+        SandboxCommandActionRequest request,
+        CancellationToken cancellationToken);
+    Task<SandboxArtifact> CaptureArtifactAsync(
+        SandboxArtifactRequest request,
+        CancellationToken cancellationToken);
+    Task<SandboxWorkspaceLease> DestroyAsync(
+        SandboxDestroyRequest request,
+        CancellationToken cancellationToken);
+    IReadOnlyList<SandboxLifecycleEvent> GetLifecycleEvents(Guid leaseId);
+    IReadOnlyList<SandboxArtifact> GetArtifacts(Guid leaseId);
+}
+
 public interface IMemoryService
 {
     Task<MemoryItem> StoreMemoryAsync(MemoryItem item, CancellationToken cancellationToken);

@@ -14,12 +14,12 @@ Tasks use the `PPP_TTT` format.
 | [001-skeleton](./001-skeleton/PHASE_SUMMARY.md) | Skeleton And Operating System | `done` | 31/31 |
 | [002-platform-foundation](./002-platform-foundation/PHASE_SUMMARY.md) | Platform Foundation | `done` | 7/7 |
 | [003-durable-orchestration](./003-durable-orchestration/PHASE_SUMMARY.md) | Durable Orchestration, Approval, And Evidence | `done` | 7/7 |
-| [004-sandbox-github-workspace](./004-sandbox-github-workspace/PHASE_SUMMARY.md) | Sandbox And GitHub Workspace | `planned` | 0/6 |
-| [005-investigation-architecture](./005-investigation-architecture/PHASE_SUMMARY.md) | Investigation And Architecture Agents | `planned` | 0/6 |
-| [006-implementation-testing-review](./006-implementation-testing-review/PHASE_SUMMARY.md) | Implementation, Testing, And Review | `planned` | 0/6 |
-| [007-pull-request-lifecycle](./007-pull-request-lifecycle/PHASE_SUMMARY.md) | Pull Request Lifecycle | `planned` | 0/6 |
-| [008-workspace-ui-observability](./008-workspace-ui-observability/PHASE_SUMMARY.md) | Engineering Workspace UI And Observability | `in progress` | 3/9 |
-| [009-memory-security-hardening](./009-memory-security-hardening/PHASE_SUMMARY.md) | Memory, Security, And Workflow Hardening | `planned` | 0/6 |
+| [004-sandbox-github-workspace](./004-sandbox-github-workspace/PHASE_SUMMARY.md) | Sandbox And GitHub Workspace | `in progress` | 1/6 |
+| [005-investigation-architecture](./005-investigation-architecture/PHASE_SUMMARY.md) | Investigation And Architecture Agents | `planned` | 0/0 |
+| [006-implementation-testing-review](./006-implementation-testing-review/PHASE_SUMMARY.md) | Implementation, Testing, And Review | `planned` | 0/0 |
+| [007-pull-request-lifecycle](./007-pull-request-lifecycle/PHASE_SUMMARY.md) | Pull Request Lifecycle | `planned` | 0/0 |
+| [008-workspace-ui-observability](./008-workspace-ui-observability/PHASE_SUMMARY.md) | Engineering Workspace UI And Observability | `planned` | 0/0 |
+| [009-memory-security-hardening](./009-memory-security-hardening/PHASE_SUMMARY.md) | Memory, Security, And Workflow Hardening | `planned` | 0/0 |
 
 ## Working Rule
 
@@ -29,5 +29,7 @@ Tasks use the `PPP_TTT` format.
 4. Keep phase summary links and progress synchronized.
 5. Load task details only when required.
 6. Run `./scripts/validate-phase-knowledge.ps1` after task or summary changes.
+
+Only break down task files for the current active phase. Future phase folders keep their `PHASE_SUMMARY.md` goal and intentionally stay at `0/0` until that phase becomes active.
 
 `next_task` is derived by the validator from the active phase, task status, and dependencies. Set `next_task_override` in this frontmatter only when an explicit temporary ordering decision is required.

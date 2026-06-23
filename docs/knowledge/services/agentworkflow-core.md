@@ -27,6 +27,7 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - Authorize gated actions against durable approvals bound to exact artifacts, branches, and commits.
 - Project redacted workflow, agent, approval, evidence, and artifact changes into ordered task activity.
 - Queue task executions by priority and process claimed items through the shared workflow engine.
+- Own execution sandbox contracts for provision, code actions, command execution, Git actions, artifact capture, and workspace destruction.
 - Own the Project aggregate, project-policy validation, and in-memory Project store.
 - Own platform EngineeringTasks, typed task lifecycle state, linked Jira/Notion WorkItems, and their in-memory store.
 - Persist Projects, EngineeringTasks, WorkItems, WorkflowRuns, and WorkflowEvents through EF Core and PostgreSQL when configured.
@@ -47,6 +48,10 @@ Own the shared workflow orchestration, contracts, domain models, mock providers,
 - `ITaskScheduler.ProcessNextAsync`
 - `ILeadAgent.InvestigateAsync`
 - `IRepositoryConnectionService.ResolveConnection`
+- `IExecutionSandboxProvider.ProvisionAsync`
+- `IExecutionSandboxProvider.ExecuteCommandAsync`
+- `IExecutionSandboxProvider.CaptureArtifactAsync`
+- `IExecutionSandboxProvider.DestroyAsync`
 - `IProjectStore.GetProjectsAsync`
 - `IEngineeringTaskStore.GetTasksAsync`
 - `IEngineeringTaskStore.UpdateStatusAsync`
@@ -80,6 +85,7 @@ See [Project Aggregate And Policies](../data/project-domain-model.md) and [Workf
 
 - `src/AgentWorkflow.Core/Application/WorkflowContracts.cs`
 - `src/AgentWorkflow.Core/Domain/WorkflowModels.cs`
+- `src/AgentWorkflow.Core/Infrastructure/Sandbox/MockExecutionSandboxProvider.cs`
 - `src/AgentWorkflow.Core/Infrastructure/`
 
 ## Related Knowledge

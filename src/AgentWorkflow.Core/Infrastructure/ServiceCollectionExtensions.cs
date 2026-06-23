@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INotionContextTool, MockNotionContextTool>();
         services.AddSingleton<IRepositoryConnectionService, MockRepositoryConnectionService>();
         services.AddSingleton<IRepositoryReader, LocalRepositoryReader>();
+        services.AddSingleton<IExecutionSandboxProvider, MockExecutionSandboxProvider>();
         services.AddSingleton<IMemoryService, MockMemoryService>();
         services.AddSingleton<ISettingsStore, InMemorySettingsStore>();
         services.AddSingleton<InMemoryWorkspaceStore>();
